@@ -8,6 +8,12 @@
     },
     {
       "path": "./apps/api-gateway"
+    },
+    {
+      "path": "./packages/libs"
+    },
+    {
+      "path": "./packages/db"
     }
   ]
 }

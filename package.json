@@ -6,6 +6,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@prisma/client": "6.19",
     "axios": "^1.13.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -47,6 +48,7 @@
     "esbuild": "^0.19.2",
     "nx": "22.2.7",
     "prettier": "^2.6.2",
+    "prisma": "6.19",
     "react-refresh": "^0.10.0",
     "tslib": "^2.3.0",
     "typescript": "~5.9.2",
