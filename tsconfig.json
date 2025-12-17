@@ -7,9 +7,6 @@
       "path": "./apps/auth-service"
     },
     {
-      "path": "./apps/api-gateway"
-    },
-    {
       "path": "./packages/libs"
     },
     {
