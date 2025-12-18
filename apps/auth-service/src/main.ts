@@ -1,11 +1,11 @@
 import express, { NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-// import swaggerUi from 'swagger-ui-express';
+import swaggerUi from 'swagger-ui-express';
 
 import { errorMiddleware } from '@e-com/libs';
 import authRouter from './routes/auth.route.js';
-// import swaggerDocument from './swagger/swagger-output.json' with { type: 'json' };
+import swaggerDocument from './swagger/swagger-output.json' with { type: 'json' };
 
 const app = express();
 
@@ -25,11 +25,11 @@ app.get('/', (req, res) => {
 });
 
 // Swagger docs
-// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-// app.get('/docs-json', (req, res) => {
-//   res.json(swaggerDocument);
-//   // res.status(200).json(swaggerDocument);
-// });
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.get('/docs-json', (req, res) => {
+  res.json(swaggerDocument);
+  // res.status(200).json(swaggerDocument);
+});
 
 // Routes
 app.use('/api', authRouter);
