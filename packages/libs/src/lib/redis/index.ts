@@ -7,7 +7,13 @@ import { default as Redis } from "ioredis";
 //   password: process.env.REDIS_PASSWORD,
 // });
 
-const redis = new Redis.default(process.env.REDIS_URL as string);
+const redis = new Redis.default(process.env.REDIS_URL!);
 
-redis.set("key", "value");
+redis.on("error", (err) => {
+  console.error("Redis error:", err);
+});
+
+redis.on("connect", () => console.log("Connected to Redis!"));
+redis.on("reconnecting", () => console.log("Reconnecting to Redis..."));
+
 export default redis;
