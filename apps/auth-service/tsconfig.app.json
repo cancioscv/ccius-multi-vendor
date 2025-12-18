@@ -4,12 +4,17 @@
     "outDir": "dist",
     "module": "NodeNext",
     "types": ["node"],
-    "rootDir": "src",
+    "rootDir": "../../",
     "moduleResolution": "NodeNext",
     "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
     "target": "ES2022"
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*.ts",
+    "../auth-service/",
+    "src/**/*.json",
+    "../../packages/**/*.ts"
+  ],
   "exclude": [],
   "references": [
     {
