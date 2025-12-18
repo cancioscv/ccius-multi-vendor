@@ -23,10 +23,10 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
-    "@nx/esbuild": "22.2.7",
-    "@nx/express": "^22.2.7",
+    "@nx/esbuild": "22.3.0",
+    "@nx/express": "22.3.0",
     "@nx/js": "22.3.0",
-    "@nx/node": "^22.2.7",
+    "@nx/node": "22.3.0",
     "@nx/vite": "22.3.0",
     "@nx/web": "22.3.0",
     "@swc-node/register": "~1.9.1",
@@ -46,7 +46,7 @@
     "esbuild": "^0.19.2",
     "jiti": "2.4.2",
     "jsdom": "~22.1.0",
-    "nx": "22.2.7",
+    "nx": "22.3.0",
     "prettier": "^2.6.2",
     "prisma": "6.19",
     "react-refresh": "^0.10.0",

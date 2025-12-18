@@ -2,11 +2,12 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "module": "nodenext",
+    "module": "NodeNext",
     "types": ["node"],
     "rootDir": "src",
-    "moduleResolution": "nodenext",
-    "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo"
+    "moduleResolution": "NodeNext",
+    "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
+    "target": "ES2022"
   },
   "include": ["src/**/*"],
   "exclude": [],
