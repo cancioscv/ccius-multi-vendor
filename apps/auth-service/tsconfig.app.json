@@ -12,7 +12,7 @@
   "include": [
     "src/**/*.ts",
     "../auth-service/",
-    "src/**/*.json",
+    "../auth-service/src/swagger/swagger-output.json",
     "../../packages/**/*.ts"
   ],
   "exclude": [],
