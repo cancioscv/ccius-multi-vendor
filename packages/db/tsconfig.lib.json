@@ -6,8 +6,8 @@
     "outDir": "dist",
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
     "emitDeclarationOnly": true,
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "forceConsistentCasingInFileNames": true,
     "types": ["node"],
     "target": "ES2022"

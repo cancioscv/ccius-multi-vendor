@@ -17,6 +17,12 @@
           "format": [
             "esm"
           ],
+          "thirdParty": false,
+          "target": "node22",
+          "external": [
+            "node:fs",
+            "fs"
+          ],
           "bundle": true,
           "main": "apps/auth-service/src/main.ts",
           "tsConfig": "apps/auth-service/tsconfig.app.json",
