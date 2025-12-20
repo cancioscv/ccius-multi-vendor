@@ -7,11 +7,9 @@
   },
   "host": "localhost:6001",
   "basePath": "/",
-  "schemes": [
-    "http"
-  ],
+  "schemes": ["http"],
   "paths": {
-    "/register-user": {
+    "/api/register-user": {
       "post": {
         "description": "",
         "parameters": [
@@ -22,10 +20,10 @@
               "type": "object",
               "properties": {
                 "name": {
-                  "example": "any"
+                  "example": "ahezio"
                 },
                 "email": {
-                  "example": "any"
+                  "example": "ahezio@yahoo.es"
                 }
               }
             }

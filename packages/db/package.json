@@ -13,5 +13,8 @@
     },
     "./package.json": "./package.json"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "devDependencies": {
+    "@prisma/extension-accelerate": "^3.0.1"
+  }
 }
