@@ -2,12 +2,16 @@
   "name": "@e-com/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "dev": "bunx nx run-many --target=serve --all",
+    "auth-docs": "node apps/auth-service/src/swagger/swagger.ts"
+  },
   "private": true,
   "type": "module",
   "dependencies": {
     "@prisma/client": "6.19",
     "axios": "^1.13.2",
+    "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
@@ -16,6 +20,7 @@
     "express-http-proxy": "^2.1.2",
     "express-rate-limit": "^8.2.1",
     "ioredis": "^5.8.2",
+    "jsonwebtoken": "^9.0.3",
     "morgan": "^1.10.1",
     "nodemailer": "^7.0.11",
     "prisma": "6.19",
@@ -38,6 +43,7 @@
     "@types/express": "^4.17.21",
     "@types/express-http-proxy": "^1.6.7",
     "@types/ioredis": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/morgan": "^1.9.10",
     "@types/node": "20.19.9",
     "@types/nodemailer": "^7.0.4",

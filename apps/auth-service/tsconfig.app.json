@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist",
+    "outDir": "./dist",
     "module": "NodeNext",
     "types": ["node"],
     "rootDir": "../../",
@@ -14,7 +14,7 @@
     "composite": false
   },
   "include": ["src/**/*.ts", "../auth-service/", "../auth-service/src/swagger/swagger-output.json", "../../packages/**/*.ts"],
-  "exclude": [],
+  "exclude": ["node_modules", "dist"],
   "references": [
     {
       "path": "../../packages/db/tsconfig.lib.json"
