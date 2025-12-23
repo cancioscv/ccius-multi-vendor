@@ -1,10 +1,7 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "namedInputs": {
-    "default": [
-      "{projectRoot}/**/*",
-      "sharedGlobals"
-    ],
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
       "default",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
@@ -27,10 +24,7 @@
           "watchDepsName": "watch-deps"
         }
       },
-      "exclude": [
-        "packages/libs/*",
-        "packages/db/*"
-      ]
+      "exclude": ["packages/libs/*", "packages/db/*"]
     },
     {
       "plugin": "@nx/vite/plugin",
@@ -48,10 +42,7 @@
     },
     {
       "plugin": "@nx/js/typescript",
-      "include": [
-        "packages/libs/*",
-        "packages/db/*"
-      ],
+      "include": ["packages/libs/*", "packages/db/*"],
       "options": {
         "typecheck": {
           "targetName": "typecheck"
@@ -73,13 +64,16 @@
   "targetDefaults": {
     "@nx/esbuild:esbuild": {
       "cache": true,
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "production",
-        "^production"
-      ]
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"]
+    }
+  },
+  "generators": {
+    "@nx/next": {
+      "application": {
+        "style": "tailwind",
+        "linter": "none"
+      }
     }
   }
 }
