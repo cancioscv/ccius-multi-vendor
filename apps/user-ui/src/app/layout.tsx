@@ -1,6 +1,8 @@
 import { Poppins, Roboto } from "next/font/google";
 import Header from "@/shared/widgets";
 import "./global.css";
+import Providers from "./providers";
+import { ToastContainer } from "react-toastify";
 
 export const metadata = {
   title: "ccius",
@@ -23,8 +25,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${roboto.variable} ${poppins.variable} antialiased`}>
-        <Header />
-        {children}
+        <Providers>
+          <Header />
+          {children}
+          <ToastContainer position="bottom-right" />
+        </Providers>
       </body>
     </html>
   );

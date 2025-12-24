@@ -62,7 +62,7 @@ export const verifyOtp = async (email: string, otp: string, next: NextFunction) 
   const storedOtp = await redis.get(`otp:${email}`);
 
   if (!storedOtp) {
-    throw new ValidationError("Invalid or expired OTP!");
+    throw new ValidationError("Invalid or expired OTP.");
   }
 
   const attemptsKey = `otp_attempts:${email}`;
@@ -96,7 +96,7 @@ export const handleForgotPassword = async (req: Request, res: Response, next: Ne
     await trackOtpRequests(email, next);
 
     // Generate OTP and send Email
-    await sendOtp(user.email, user.name, "forgot-password-user-email");
+    await sendOtp(user.name, user.email, "forgot-password-user-email");
 
     res.status(200).json({ message: "OTP sent to email. Please verify your account." });
   } catch (error) {

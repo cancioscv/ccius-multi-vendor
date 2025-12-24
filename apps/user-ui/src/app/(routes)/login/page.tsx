@@ -7,6 +7,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { GoogleSignInButton } from "../../../shared/components/google-button";
 import { Eye, EyeOff } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import axios, { AxiosError } from "axios";
 
 type FormData = {
   email: string;
@@ -25,7 +27,24 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm<FormData>();
 
-  function onSubmit(data: FormData) {}
+  const loginMutation = useMutation({
+    mutationFn: async (data: FormData) => {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/login`, data, { withCredentials: true });
+      return response.data;
+    },
+    onSuccess: () => {
+      setServerError(null);
+      router.push("/");
+    },
+    onError: (error: AxiosError) => {
+      const errorMessage = (error.response?.data as { message?: string })?.message || "Invalid credentials";
+      setServerError(errorMessage);
+    },
+  });
+
+  function onSubmit(data: FormData) {
+    loginMutation.mutate(data);
+  }
 
   return (
     <div className="w-full py-10 min-h-[85vh] bg-[#f1f1f1]">
@@ -105,10 +124,10 @@ export default function LoginPage() {
                 Forgot Password?
               </Link>
             </div>
-            <button type="submit" className="w-full text-lg cursor-pointer bg-black text-white py-2 rounded-lg">
-              Login
+            <button disabled={loginMutation.isPending} type="submit" className="w-full text-lg cursor-pointer bg-black text-white py-2 rounded-lg">
+              {loginMutation.isPending ? "Login in..." : "Login"}
             </button>
-            {serverError && <p className="text-red-500 text-sm">{serverError}</p>}
+            {serverError && <p className="text-red-500 text-sm mt-1">{serverError}</p>}
           </form>
         </div>
       </div>
