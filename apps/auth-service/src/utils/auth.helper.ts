@@ -5,7 +5,7 @@ import crypto from "crypto";
 import { sendEmail } from "./sendMail/index.js";
 import { prisma } from "@e-com/db";
 
-export const validateRegistrationData = (data: any, userType: "user" | "seller") => {
+export function validateRegistrationData(data: any, userType: "user" | "seller") {
   const { name, email, password, phoneNumber, country } = data;
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -17,9 +17,9 @@ export const validateRegistrationData = (data: any, userType: "user" | "seller")
   if (!emailRegex.test(email)) {
     throw new ValidationError("Invalid Email");
   }
-};
+}
 
-export const checkOtpRestrictions = async (email: string, next: NextFunction) => {
+export async function checkOtpRestrictions(email: string, next: NextFunction) {
   const locked = await redis.get(`otp_lock:${email}`);
   if (locked) {
     return next(new ValidationError("Accout locked because of multiple failed attempts. Please try again after 30 minutes."));
@@ -34,9 +34,9 @@ export const checkOtpRestrictions = async (email: string, next: NextFunction) =>
   if (cooldown) {
     return next(new ValidationError("Please wait 1 minute before requesting a new OTP"));
   }
-};
+}
 
-export const trackOtpRequests = async (email: string, next: NextFunction) => {
+export async function trackOtpRequests(email: string, next: NextFunction) {
   const otpRequestLKey = `otp_request_count:${email}`;
   const otpRequests = parseInt((await redis.get(otpRequestLKey)) || "0");
 
@@ -46,9 +46,9 @@ export const trackOtpRequests = async (email: string, next: NextFunction) => {
   }
 
   await redis.set(otpRequestLKey, otpRequests + 1, "EX", 3600);
-};
+}
 
-export const sendOtp = async (name: string, email: string, template: string) => {
+export async function sendOtp(name: string, email: string, template: string) {
   const otp = crypto.randomInt(1000, 9999).toString();
 
   const subject = "Verify Your Email";
@@ -56,9 +56,9 @@ export const sendOtp = async (name: string, email: string, template: string) => 
 
   await redis.set(`otp:${email}`, otp, "EX", 300);
   await redis.set(`otp_cooldown:${email}`, "true", "EX", 60);
-};
+}
 
-export const verifyOtp = async (email: string, otp: string, next: NextFunction) => {
+export async function verifyOtp(email: string, otp: string, next: NextFunction) {
   const storedOtp = await redis.get(`otp:${email}`);
 
   if (!storedOtp) {
@@ -81,9 +81,9 @@ export const verifyOtp = async (email: string, otp: string, next: NextFunction) 
   }
 
   await redis.del(`otp:${email}`, attemptsKey);
-};
+}
 
-export const handleForgotPassword = async (req: Request, res: Response, next: NextFunction, userType: "user" | "seller") => {
+export async function handleForgotPassword(req: Request, res: Response, next: NextFunction, userType: "user" | "seller") {
   try {
     const { email } = req.body;
     if (!email) throw new ValidationError("Email is required");
@@ -102,9 +102,9 @@ export const handleForgotPassword = async (req: Request, res: Response, next: Ne
   } catch (error) {
     next(error);
   }
-};
+}
 
-export const verifyForgotPasswordOtp = async (req: Request, res: Response, next: NextFunction) => {
+export async function verifyForgotPasswordOtp(req: Request, res: Response, next: NextFunction) {
   try {
     const { email, otp } = req.body;
 
@@ -116,4 +116,4 @@ export const verifyForgotPasswordOtp = async (req: Request, res: Response, next:
   } catch (error) {
     next(error);
   }
-};
+}

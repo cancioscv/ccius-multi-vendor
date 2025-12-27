@@ -1,6 +1,7 @@
 "use client";
 
 import { navItems } from "@/configs/constants";
+import useUser from "@/hooks/useUser";
 import { AlignLeft, ChevronDown, HeartIcon, ShoppingCart, User } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -8,6 +9,9 @@ import { useEffect, useState } from "react";
 export default function HeaderBottom() {
   const [show, setShow] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
+
+  const { user } = useUser();
+  console.log(user);
 
   useEffect(() => {
     function handleScroll() {
@@ -22,6 +26,7 @@ export default function HeaderBottom() {
 
     return () => window.removeEventListener("scrool", handleScroll);
   }, []);
+
   return (
     <div className={`w-full transition-all duration-300 ${isSticky ? "fixed top-0 left-0 z-[100] bg-white shadow-lg" : "relative"}`}>
       <div className={`w-[80%] relative m-auto flex items-center justify-between ${isSticky ? "pt-3" : "py-0"}`}>

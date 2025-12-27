@@ -8,14 +8,16 @@ import {
   verifyForgotPasswordOtp,
   verifyOtp,
 } from "../utils/auth.helper.js";
-import { AuthError, ValidationError } from "@e-com/libs";
+import { AuthError, CustomRequest, ValidationError } from "@e-com/libs";
 import { prisma } from "@e-com/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { setCookie } from "../utils/cookies/setCookie.js";
 
+const { JsonWebTokenError } = jwt;
+
 // Register new user
-export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
+export async function registerUser(req: Request, res: Response, next: NextFunction) {
   validateRegistrationData(req.body, "user");
   const { name, email } = req.body;
 
@@ -30,10 +32,10 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
   await sendOtp(name, email, "user-activation-mail");
 
   res.status(200).json({ message: "Sent OTP to Email. Please verify your account." });
-};
+}
 
 // Verify user with otp
-export const verifyUser = async (req: Request, res: Response, next: NextFunction) => {
+export async function verifyUser(req: Request, res: Response, next: NextFunction) {
   try {
     const { email, otp, password, name } = req.body;
 
@@ -62,10 +64,10 @@ export const verifyUser = async (req: Request, res: Response, next: NextFunction
   } catch (err) {
     return next(err);
   }
-};
+}
 
 // Login
-export const login = async (req: Request, res: Response, next: NextFunction) => {
+export async function login(req: Request, res: Response, next: NextFunction) {
   try {
     const { email, password } = req.body;
 
@@ -97,15 +99,55 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   } catch (err) {
     return next(err);
   }
-};
+}
 
-// Forgot passoword
-export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+// Refresh token
+export async function refreshToken(req: Request, res: Response, next: NextFunction) {
+  try {
+    const refreshToken = req.cookies.refresh_token;
+
+    if (!refreshToken) {
+      return new ValidationError("Unauthorized. No refresh token.");
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!) as { id: string; role: string };
+
+    if (!decoded || !decoded.id || !decoded.role) {
+      return new JsonWebTokenError("Forbidden!. Invalid refreseh token.");
+    }
+
+    // Find user or seller in the db
+
+    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+    if (!user) {
+      return new AuthError("Forbidden!. User/Seller not found.");
+    }
+
+    // Generate new access token
+    const newAccessToken = jwt.sign(
+      {
+        id: decoded.id,
+        role: decoded.role,
+      },
+      process.env.ACCESS_TOKEN_SECRET as string,
+      { expiresIn: "15m" }
+    );
+
+    setCookie(res, "refresh_token", newAccessToken);
+
+    return res.status(201).json({ success: true, message: "New Access Token set successfully!!!" });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+// Forgot password
+export async function forgotPassword(req: Request, res: Response, next: NextFunction) {
   await handleForgotPassword(req, res, next, "user");
-};
+}
 
 // Reset password
-export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+export async function resetPassword(req: Request, res: Response, next: NextFunction) {
   try {
     const { email, newPassword } = req.body;
     if (!email || !newPassword) return next(new ValidationError("Please enter email and new password."));
@@ -124,9 +166,20 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
   } catch (error) {
     next(error);
   }
-};
+}
 
 // Verify forgot password OTP
-export const verifyUserForgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+export async function verifyForgotPassword(req: Request, res: Response, next: NextFunction) {
   await verifyForgotPasswordOtp(req, res, next);
-};
+}
+
+// Get user from middleware isAuth
+export async function getUser(req: CustomRequest, res: Response, next: NextFunction) {
+  try {
+    console.log("crajo aqui no llegamos para nada");
+    const user = req.user;
+    res.status(201).json({ success: true, user });
+  } catch (error) {
+    next(error);
+  }
+}
