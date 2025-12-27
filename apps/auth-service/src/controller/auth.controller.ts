@@ -176,7 +176,6 @@ export async function verifyForgotPassword(req: Request, res: Response, next: Ne
 // Get user from middleware isAuth
 export async function getUser(req: CustomRequest, res: Response, next: NextFunction) {
   try {
-    console.log("crajo aqui no llegamos para nada");
     const user = req.user;
     res.status(201).json({ success: true, user });
   } catch (error) {

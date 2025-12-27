@@ -39,7 +39,6 @@ export async function isAuth(req: CustomRequest, res: Response, next: NextFuncti
 
   try {
     // Verify token
-    console.log("CARAJO");
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!) as { id: string; role: "user" | "seller" };
 
     // Fetch user from database with Prisma
