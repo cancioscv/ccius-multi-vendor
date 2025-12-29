@@ -5,7 +5,7 @@ import Providers from "./providers";
 import { ToastContainer } from "react-toastify";
 
 export const metadata = {
-  title: "ccius",
+  title: "Ccius User",
   description: "Ccius E-commerce",
 };
 
