@@ -246,7 +246,6 @@ export default function SignupPage() {
                 >
                   {signupMutation.isPending ? "Signing up..." : "Sign up"}
                 </button>
-
                 {signupMutation.isError && signupMutation.error instanceof AxiosError && (
                   <p className="text-red-500 text-sm mt-2">{signupMutation.error.response?.data.message || signupMutation.error.message}</p>
                 )}

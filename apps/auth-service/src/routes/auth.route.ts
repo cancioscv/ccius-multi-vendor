@@ -29,8 +29,8 @@ router.post("/verify-forgot-password", verifyForgotPassword);
 router.get("/logged-user", isAuth, getUser);
 
 // Seller and Shop
-router.post("register-seller", registerSeller);
-router.post("verify-seller", verifySeller);
-router.post("create-shop", createShop);
+router.post("/register-seller", registerSeller);
+router.post("/verify-seller", verifySeller);
+router.post("/create-shop", createShop);
 
 export default router;
