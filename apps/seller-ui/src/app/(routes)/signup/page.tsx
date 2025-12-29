@@ -55,11 +55,12 @@ export default function SignupPage() {
   const verifyOtpMutation = useMutation({
     mutationFn: async () => {
       if (!sellerData) return;
-
+      console.log("PREVOIPS", sellerData);
       const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/verify-seller`, {
         ...sellerData,
         otp: otp.join(""),
       });
+      console.log("AFTER", response);
 
       return response.data;
     },

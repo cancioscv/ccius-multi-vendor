@@ -209,8 +209,8 @@ export async function verifySeller(req: Request, res: Response, next: NextFuncti
   try {
     const { email, name, password, otp, phoneNumber, country } = req.body;
 
-    if (!email || !name || !password || !otp || !phoneNumber || country) {
-      return next(new ValidationError("All filds are required."));
+    if (!email || !name || !password || !otp || !phoneNumber || !country) {
+      return next(new ValidationError("All fields are required."));
     }
 
     const sellerExists = await prisma.seller.findUnique({ where: { email } });
@@ -235,7 +235,7 @@ export async function verifySeller(req: Request, res: Response, next: NextFuncti
 
     res.status(201).json({ seller, message: "Seller created successfully." });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 }
 
