@@ -13,7 +13,11 @@ import {
   registerSeller,
   verifySeller,
   createShop,
+  createStripeConnectLink,
+  loginSeller,
+  getSeller,
 } from "../controller/auth.controller.js";
+import { isSeller } from "../../../../packages/libs/src/middleware/authorizeRoles.js";
 
 const router: Router = Router();
 
@@ -32,5 +36,11 @@ router.get("/logged-user", isAuth, getUser);
 router.post("/register-seller", registerSeller);
 router.post("/verify-seller", verifySeller);
 router.post("/create-shop", createShop);
+router.post("/login-seller", loginSeller);
+
+router.get("/logged-seller", isAuth, isSeller, getSeller);
+
+// Stripe
+router.post("/create-stripe-link", createStripeConnectLink);
 
 export default router;

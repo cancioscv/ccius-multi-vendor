@@ -1,9 +1,9 @@
 import { prisma } from "@e-com/db";
 import jwt from "jsonwebtoken";
 import { NextFunction, Response } from "express";
-import { CustomRequest } from "../types/user.js";
+// import { CustomRequest } from "../types/user.js";
 
-export async function isAuth(req: CustomRequest, res: Response, next: NextFunction) {
+export async function isAuth(req: any, res: Response, next: NextFunction) {
   // try {
   //   const token = req.cookies.access_token || req.headers.authorization?.split(" ")[1];
 
@@ -11,28 +11,26 @@ export async function isAuth(req: CustomRequest, res: Response, next: NextFuncti
   //     return res.status(401).json({ message: "Unauthorized!. Token missing." });
   //   }
 
-  //   const verifiedtoken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!) as Role;
+  //   const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!) as Role;
 
-  //   if (!verifiedtoken) {
+  //   if (!decoded) {
   //     return res.status(401).json({ message: "Unauthorized!. Invalid token." });
   //   }
 
-  //   const user = await prisma.user.findUnique({ where: { id: verifiedtoken.id } });
+  //   const user = await prisma.user.findUnique({ where: { id: decoded.id } });
   //   req.user = user;
 
-  //   console.log("lknaskdhklajhsdkhakdjasd", user);
-
   //   if (!user) {
-  //     return res.status(401).json({ message: "User not found." });
+  //     return res.status(401).json({ message: "Unauthorized: User not found." });
   //   }
 
   //   return next();
   // } catch (error) {
-  //   return res.status(500).json({ message: "Internal Server Error." });
+  // return res.status(401).json({ message: "Unauthorized: Invalid token" });
   // }
 
   // Get token from Authorization header or cookies
-  const token = req.headers.authorization?.split(" ")[1] || req.cookies?.access_token;
+  const token = req.cookies["access_token"] || req.cookies["seller_access_token"] || req.headers.authorization?.split(" ")[1];
   if (!token) {
     return res.status(401).json({ message: "Unauthorized: No token provided" });
   }
@@ -41,17 +39,34 @@ export async function isAuth(req: CustomRequest, res: Response, next: NextFuncti
     // Verify token
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!) as { id: string; role: "user" | "seller" };
 
-    // Fetch user from database with Prisma
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.id },
-    });
+    if (!decoded) {
+      return res.status(401).json({ message: "Unauthorized!. Invalid token." });
+    }
 
-    if (!user) {
+    let account;
+
+    if (decoded.role === "user") {
+      account = await prisma.user.findUnique({
+        where: { id: decoded.id },
+      });
+
+      // Attach user to request
+      req.user = account;
+    } else if (decoded.role === "seller") {
+      account = await prisma.seller.findUnique({
+        where: { id: decoded.id },
+        include: { shop: true },
+      });
+
+      // Attach seller to request
+      req.seller = account;
+    }
+
+    if (!account) {
       return res.status(401).json({ message: "Unauthorized: User not found" });
     }
 
-    // Attach user to request
-    req.user = user;
+    req.role = decoded.role;
     return next();
   } catch (error) {
     return res.status(401).json({ message: "Unauthorized: Invalid token" });

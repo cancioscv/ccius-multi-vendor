@@ -13,6 +13,7 @@ import { prisma } from "@e-com/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { setCookie } from "../utils/cookies/setCookie.js";
+import stripe from "../utils/stripe.js";
 
 const { JsonWebTokenError } = jwt;
 
@@ -83,7 +84,7 @@ export async function login(req: Request, res: Response, next: NextFunction) {
     if (user.password) {
       const passwordMatch = await bcrypt.compare(password, user.password);
       if (!passwordMatch) {
-        return next(new AuthError("Invalid email or password"));
+        return next(new AuthError("Invalid password"));
       }
     }
 
@@ -242,7 +243,7 @@ export async function verifySeller(req: Request, res: Response, next: NextFuncti
 // Create new Shop
 export async function createShop(req: Request, res: Response, next: NextFunction) {
   try {
-    const { name, bio, address, openingHours, website, category, sellerId } = req.body;
+    const { name, bio, address, openingHours, website, category, sellerId } = req.body.data;
     if (!name || !bio || !address || !sellerId || !openingHours || !category) {
       return next(new ValidationError("All fields are required."));
     }
@@ -268,3 +269,90 @@ export async function createShop(req: Request, res: Response, next: NextFunction
 }
 
 // Create Stripe connect account Link
+export async function createStripeConnectLink(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { sellerId } = req.body;
+    if (!sellerId) {
+      return next(new ValidationError("Seller ID is required."));
+    }
+
+    const seller = await prisma.seller.findUnique({ where: { id: sellerId } });
+    if (!seller) {
+      return next(new ValidationError("Seller is not available with this Id."));
+    }
+
+    const account = await stripe.accounts.create({
+      type: "express",
+      email: seller?.email,
+      country: "DE",
+      capabilities: {
+        card_payments: { requested: true },
+        transfers: { requested: true },
+      },
+    });
+
+    await prisma.seller.update({
+      where: { id: sellerId },
+      data: {
+        stripeId: account.id,
+      },
+    });
+
+    const accountLink = await stripe.accountLinks.create({
+      account: account.id,
+      refresh_url: `http://localhost:3000/success`,
+      return_url: `http://localhost:3000/success`,
+      type: "account_onboarding",
+    });
+
+    res.json({ url: accountLink.url, message: "Stripe Connect account created successfully." });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Login seller
+export async function loginSeller(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return next(new ValidationError("Email and password are required."));
+    }
+
+    const seller = await prisma.seller.findUnique({ where: { email } });
+    if (!seller) {
+      return next(new ValidationError("Invalid email or password."));
+    }
+
+    const isMatch = await bcrypt.compare(password, seller.password);
+    if (!isMatch) {
+      return next(new ValidationError("Invalid password."));
+    }
+
+    // Generate access and refresh token
+    const accessToken = jwt.sign({ id: seller.id, role: "seller" }, process.env.ACCESS_TOKEN_SECRET as string, { expiresIn: "15m" });
+    const refreshToken = jwt.sign({ id: seller.id, role: "seller" }, process.env.REFRESH_TOKEN_SECRET as string, { expiresIn: "7d" });
+
+    // Store access and refresh tokens
+    setCookie(res, "seller_access_token", accessToken);
+    setCookie(res, "seller_refresh_token", refreshToken);
+
+    res.status(200).json({ message: "Login succesful", seller: { id: seller.id, email: seller.email, name: seller.name } });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Get logged in Seller from middleware isAuth
+export async function getSeller(req: any, res: Response, next: NextFunction) {
+  try {
+    const seller = req.seller;
+
+    res.status(201).json({
+      success: true,
+      seller,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}

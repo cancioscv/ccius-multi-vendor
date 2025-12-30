@@ -34,6 +34,7 @@
     "react-google-button": "^0.8.0",
     "react-hook-form": "^7.69.0",
     "react-toastify": "^11.0.5",
+    "stripe": "^20.1.0",
     "swagger-autogen": "^2.23.7",
     "swagger-ui-express": "^5.0.1"
   },

@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Eye, EyeOff } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import { countries } from "@/utils/countries";
+import CreateShop from "@/shared/module/auth/create-shop";
 
 type FormData = {
   name: string;
@@ -29,7 +30,7 @@ export default function SignupPage() {
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const router = useRouter();
+  // const router = useRouter();
 
   const {
     register,
@@ -55,12 +56,10 @@ export default function SignupPage() {
   const verifyOtpMutation = useMutation({
     mutationFn: async () => {
       if (!sellerData) return;
-      console.log("PREVOIPS", sellerData);
       const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/verify-seller`, {
         ...sellerData,
         otp: otp.join(""),
       });
-      console.log("AFTER", response);
 
       return response.data;
     },
@@ -107,6 +106,17 @@ export default function SignupPage() {
   function resendOtp() {
     if (sellerData) {
       signupMutation.mutate(sellerData);
+    }
+  }
+
+  async function connectStripe() {
+    try {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/create-stripe-link`, { sellerId });
+      if (response.data.url) {
+        window.location.href = response.data.url;
+      }
+    } catch (error) {
+      console.error("Stripe connection error:", error);
     }
   }
 
@@ -299,6 +309,19 @@ export default function SignupPage() {
               </div>
             )}
           </>
+        )}
+        {activeStep === 2 && <CreateShop sellerId={sellerId} setActiveStep={setActiveStep} />}
+        {activeStep === 3 && (
+          <div className="text-center">
+            <h3 className="text-2xl font-semibold">Withdrawal method</h3>
+            <br />
+            <button
+              className="w-full m-autoflex items-center justify-center gap-3 text-lg bg-[#334155] text-white py-2 rounded-lg"
+              onClick={connectStripe}
+            >
+              Connect Stripe
+            </button>
+          </div>
         )}
       </div>
     </div>
