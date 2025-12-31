@@ -5,9 +5,11 @@ export function isSeller(req: any, res: Response, next: NextFunction) {
   if (req.role !== "seller") {
     return next(new AuthError("Access granted to sellers only!"));
   }
+  next();
 }
 export function isUser(req: any, res: Response, next: NextFunction) {
   if (req.role !== "user") {
     return next(new AuthError("Access granted to users only!"));
   }
+  next();
 }

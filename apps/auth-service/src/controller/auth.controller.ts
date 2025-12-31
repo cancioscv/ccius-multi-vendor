@@ -88,6 +88,9 @@ export async function login(req: Request, res: Response, next: NextFunction) {
       }
     }
 
+    res.clearCookie("seller_access_token");
+    res.clearCookie("seller_refresh_token");
+
     // Generate access and refresh token
     const accessToken = jwt.sign({ id: user.id, role: "user" }, process.env.ACCESS_TOKEN_SECRET!, { expiresIn: "15m" });
     const refreshToken = jwt.sign({ id: user.id, role: "user" }, process.env.REFRESH_TOKEN_SECRET!, { expiresIn: "7d" });
@@ -103,9 +106,9 @@ export async function login(req: Request, res: Response, next: NextFunction) {
 }
 
 // Refresh token
-export async function refreshToken(req: Request, res: Response, next: NextFunction) {
+export async function refreshToken(req: any, res: Response, next: NextFunction) {
   try {
-    const refreshToken = req.cookies.refresh_token;
+    const refreshToken = req.cookies["refresh_token"] || req.cookies["seller_refresh_token"] || req.headers.authorization?.split(" ")[1];
 
     if (!refreshToken) {
       return new ValidationError("Unauthorized. No refresh token.");
@@ -118,9 +121,15 @@ export async function refreshToken(req: Request, res: Response, next: NextFuncti
     }
 
     // Find user or seller in the db
+    let account;
 
-    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
-    if (!user) {
+    if (decoded.role === "user") {
+      account = await prisma.user.findUnique({ where: { id: decoded.id } });
+    } else if (decoded.role === "seller") {
+      account = await prisma.seller.findUnique({ where: { id: decoded.id }, include: { shop: true } });
+    }
+
+    if (!account) {
       return new AuthError("Forbidden!. User/Seller not found.");
     }
 
@@ -134,7 +143,14 @@ export async function refreshToken(req: Request, res: Response, next: NextFuncti
       { expiresIn: "15m" }
     );
 
-    setCookie(res, "refresh_token", newAccessToken);
+    if (decoded.role === "usere") {
+      // setCookie(res, "refresh_token", newAccessToken); // Warning: this was supposed to be refresh_roken instead of access_tokeen
+      setCookie(res, "access_token", newAccessToken);
+    } else if (decoded.role === "seller") {
+      setCookie(res, "seller_access_token", newAccessToken);
+    }
+
+    req.role = decoded.role;
 
     return res.status(201).json({ success: true, message: "New Access Token set successfully!!!" });
   } catch (err) {
@@ -329,6 +345,9 @@ export async function loginSeller(req: Request, res: Response, next: NextFunctio
       return next(new ValidationError("Invalid password."));
     }
 
+    res.clearCookie("access_token");
+    res.clearCookie("refresh_token");
+
     // Generate access and refresh token
     const accessToken = jwt.sign({ id: seller.id, role: "seller" }, process.env.ACCESS_TOKEN_SECRET as string, { expiresIn: "15m" });
     const refreshToken = jwt.sign({ id: seller.id, role: "seller" }, process.env.REFRESH_TOKEN_SECRET as string, { expiresIn: "7d" });
@@ -347,7 +366,6 @@ export async function loginSeller(req: Request, res: Response, next: NextFunctio
 export async function getSeller(req: any, res: Response, next: NextFunction) {
   try {
     const seller = req.seller;
-
     res.status(201).json({
       success: true,
       seller,

@@ -27,7 +27,7 @@ export default function LoginPage() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/login`, data, { withCredentials: true });
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/login-seller`, data, { withCredentials: true });
       return response.data;
     },
     onSuccess: () => {
