@@ -5,7 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { ColorSelector, Input } from "@e-com/ui";
+import { ColorSelector, Input, CustomSpecifications, CustomProperties } from "@e-com/ui";
 
 export default function CreateProductPage() {
   const {
@@ -172,6 +172,38 @@ export default function CreateProductPage() {
               <div className="mt-2">
                 <ColorSelector control={control} errors={errors} />
               </div>
+
+              <div className="mt-2">
+                <CustomSpecifications control={control} errors={errors} />
+              </div>
+
+              <div className="mt-2">
+                <CustomProperties control={control} errors={errors} />
+              </div>
+
+              <div className="mt-2">
+                <label className="block font-semibold text-gray-300 mb-1">Cash On Devlivery *</label>
+                <select
+                  className="w-full border outline-none border-gray-700 bg-transparent rounded-md p-2"
+                  defaultValue="yes"
+                  {...register("cashOnDelivery", {
+                    required: "Cash on Delivery is required.",
+                  })}
+                >
+                  <option value="yes" className="bg-black">
+                    Yes
+                  </option>
+                  <option value="no" className="bg-black">
+                    No
+                  </option>
+                </select>
+                {errors.cashOnDelivery && <p className="text-red-500 text-sm mt-1">{errors.cashOnDelivery.message as string}</p>}
+              </div>
+            </div>
+            <div className="w-2/4">
+              <label htmlFor="category" className="block font-semibold text-gray-300 mb-1">
+                Category *
+              </label>
             </div>
           </div>
         </div>
