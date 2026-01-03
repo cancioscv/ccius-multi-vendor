@@ -17,6 +17,7 @@
     "strict": true,
     "target": "ES2022",
     "customConditions": ["@e-com/source"],
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "jsx": "react-jsx"
   }
 }
