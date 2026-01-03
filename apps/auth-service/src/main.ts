@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
 
 import { errorMiddleware } from '@e-com/libs';
-import authRouter from './routes/auth.route.js';
+import authRouter from './routes/auth.routes.js';
 import swaggerDocument from './swagger/swagger-output.json' with { type: 'json' };
 
 const app = express();

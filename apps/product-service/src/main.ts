@@ -2,8 +2,9 @@ import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { errorMiddleware } from "@e-com/libs";
-// import swaggerUi from 'swagger-ui-express';
-// import swaggerDocument from './swagger/swagger-output.json' with { type: 'json' };
+import productRouter from "./routes/product.routes.js";
+import swaggerUi from 'swagger-ui-express';
+import swaggerDocument from './swagger/swagger-output.json' with { type: 'json' };
 
 const app = express();
 
@@ -23,21 +24,21 @@ app.get("/", (req, res) => {
 });
 
 // Swagger docs
-// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-// app.get('/docs-json', (req, res) => {
-//   res.json(swaggerDocument);
-//   // res.status(200).json(swaggerDocument);
-// });
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.get('/docs-json', (req, res) => {
+  res.json(swaggerDocument);
+  // res.status(200).json(swaggerDocument);
+});
 
 // Routes
-// app.use('/api', authRouter);
+app.use("/api", productRouter);
 
 app.use(errorMiddleware);
 
 const port = process.env.PORT || 6002;
 app.listen(port, () => {
   console.log(`Product Service is running on http://localhost:${port}/api`);
-  // console.log(`Swagger Docs are available at http://localhost:${port}/docs`);
+  console.log(`Swagger Docs are available at http://localhost:${port}/docs`);
 });
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
