@@ -5,7 +5,7 @@ import axiosInstance from "@/utils/axiosInstance";
 import { Input } from "@e-com/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import { ChevronRight, Plus, Trash, Trash2, X } from "lucide-react";
+import { ChevronRight, Plus, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -113,7 +113,7 @@ export default function DiscountCodesPage() {
               {discountCodeData?.map((discount: any) => (
                 <tr key={discount?.id} className="border-b border-gray-800 hover:bg-gray-800 transition">
                   <td className="p-3">{discount?.publicName}</td>
-                  <td className="p-3 capitalize">{discount.discountType === "percentage" ? "Percentage (%)" : "Flatm($)"}</td>
+                  <td className="p-3 capitalize">{discount.discountType === "percentage" ? "Percentage (%)" : "Flat ($)"}</td>
                   <td className="p-3">{discount.discountType === "percentage" ? `${discount.discountValue}%` : `$${discount.discountValue}`}</td>
                   <td className="p-3">{discount.discountCode}</td>
                   <td className="p-3">

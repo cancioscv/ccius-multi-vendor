@@ -21,26 +21,24 @@ export async function createDiscountCode(req: any, res: Response, next: NextFunc
   const { publicName, discountType, discountValue, discountCode } = req.body;
 
   try {
-    if (discountCode) {
-      // TODO: Fix this part
-      const existDiscountCode = await prisma.discountCode.findUnique({ where: { discountCode } });
+    // TODO: Fix this part
+    const existDiscountCode = await prisma.discountCode.findUnique({ where: { discountCode } });
 
-      if (existDiscountCode) {
-        return next(new ValidationError("Discount code already available, please use a different code."));
-      }
-
-      const discount_code = await prisma.discountCode.create({
-        data: {
-          publicName,
-          discountType,
-          discountCode,
-          discountValue: parseFloat(discountValue),
-          sellerId: req.seller.id,
-        },
-      });
-
-      return res.status(201).json({ success: true, discount_code });
+    if (existDiscountCode) {
+      return next(new ValidationError("Discount code already available, please use a different code."));
     }
+
+    const discount_code = await prisma.discountCode.create({
+      data: {
+        publicName,
+        discountType,
+        discountCode,
+        discountValue: parseFloat(discountValue),
+        sellerId: req.seller.id,
+      },
+    });
+
+    return res.status(201).json({ success: true, discount_code });
   } catch (error) {
     return next(error);
   }

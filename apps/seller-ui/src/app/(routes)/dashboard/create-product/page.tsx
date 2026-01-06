@@ -38,6 +38,14 @@ export default function CreateProductPage() {
     retry: 2,
   });
 
+  const { data: discountCodeData = [], isLoading: isLoadingDiscountCode } = useQuery({
+    queryKey: ["discounts"],
+    queryFn: async () => {
+      const res = await axiosInstance.get("/product/api/get-discount-code");
+      return res?.data?.discountCode || [];
+    },
+  });
+
   const categories = data?.categories || [];
   const subCategoriesData = data?.subCategories || {};
 
@@ -375,6 +383,33 @@ export default function CreateProductPage() {
                 <label htmlFor="discount" className="bllock font-semibold text-gray-300 mb-1">
                   Select Discount Codes (optional)
                 </label>
+                {isLoadingDiscountCode ? (
+                  <p className="text-gray-400">Loading discount codes...</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {discountCodeData?.map((code: any) => (
+                      <button
+                        key={code.id}
+                        type="button"
+                        className={`px-3 py-1 rounded-md text-sm font-semibold ${
+                          watch("discountCodeData")?.includes(code.id)
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700"
+                        }`}
+                        onClick={() => {
+                          const currentSelection = watch("discountCodeData") || [];
+                          const updatedSelection = currentSelection?.includes(code.id)
+                            ? currentSelection.filter((id: string) => id !== code.id)
+                            : [...currentSelection, code.id];
+
+                          setValue("discountCodeData", updatedSelection);
+                        }}
+                      >
+                        {code?.publicName} ({code.discountValue} {code.discountType === "percentage" ? "%" : "$"})
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
