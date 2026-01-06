@@ -1,10 +1,11 @@
 "use client";
 
+import DeleteDiscountCodes from "@/shared/components/modals/delete-discount-codes";
 import axiosInstance from "@/utils/axiosInstance";
 import { Input } from "@e-com/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import { ChevronRight, Plus, Trash, X } from "lucide-react";
+import { ChevronRight, Plus, Trash, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -12,6 +13,9 @@ import { toast } from "react-toastify";
 
 export default function DiscountCodesPage() {
   const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedDiscount, setSelectedDiscount] = useState(null);
+
   const queryClient = useQueryClient();
 
   const {
@@ -33,13 +37,13 @@ export default function DiscountCodesPage() {
     queryKey: ["discounts"],
     queryFn: async () => {
       const res = await axiosInstance.get("/product/api/get-discount-code");
-      return res?.data?.discountCodes || [];
+      return res?.data?.discountCode || [];
     },
   });
 
   const createDiscountCodeMutation = useMutation({
     mutationFn: async (data) => {
-      await axiosInstance.post("/product/api/create-discount-code", data);
+      await axiosInstance.post("/product/api/create-discount-code", { data });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["discounts"] });
@@ -48,7 +52,20 @@ export default function DiscountCodesPage() {
     },
   });
 
-  async function handleDeleteDiscount(discount: any) {}
+  const deleteDiscountMutation = useMutation({
+    mutationFn: async (discountId) => {
+      const response = await axiosInstance.delete(`/product/api/delete-discount-code/${discountId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["discounts"] });
+      setShowDeleteModal(false);
+    },
+  });
+
+  async function handleDeleteDiscount(discount: any) {
+    setSelectedDiscount(discount);
+    setShowDeleteModal(true);
+  }
 
   function onSubmit(data: any) {
     if (discountCodeData.length >= 8) {
@@ -101,7 +118,7 @@ export default function DiscountCodesPage() {
                   <td className="p-3">{discount.discountCode}</td>
                   <td className="p-3">
                     <button className="text-red-400 hover:text-red-300 transition" onClick={() => handleDeleteDiscount(discount)}>
-                      <Trash size={18} />
+                      <Trash2 size={18} />
                     </button>
                   </td>
                 </tr>
@@ -176,12 +193,20 @@ export default function DiscountCodesPage() {
               </button>
               {createDiscountCodeMutation.isError && (
                 <p className="text-red-500 text-xs mt-2">
-                  {(createDiscountCodeMutation.error as AxiosError<{ message: string }>)?.response?.data?.message || "Something went wrong!!!."}
+                  {(createDiscountCodeMutation.error as AxiosError<{ message: string }>)?.response?.data?.message || "Something went wrong!"}
                 </p>
               )}
             </form>
           </div>
         </div>
+      )}
+
+      {showDeleteModal && selectedDiscount && (
+        <DeleteDiscountCodes
+          discount={selectedDiscount}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={() => deleteDiscountMutation.mutate((selectedDiscount as any)?.id)}
+        />
       )}
     </div>
   );

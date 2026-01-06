@@ -7,6 +7,6 @@ const router: Router = Router();
 router.get("/categories", getCategories);
 router.post("/create-discount-code", isAuth, createDiscountCode);
 router.get("/get-discount-code", isAuth, getDiscountCode);
-router.delete("/delete-discount-code", isAuth, deleteDiscountCode);
+router.delete("/delete-discount-code/:id", isAuth, deleteDiscountCode);
 
 export default router;

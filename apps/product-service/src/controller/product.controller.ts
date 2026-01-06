@@ -1,4 +1,3 @@
-import { ParamsOf } from "./../../../user-ui/.next/dev/types/routes.d";
 import { NotFoundError, ValidationError } from "@e-com/libs";
 import { prisma } from "@e-com/db";
 import { NextFunction, Request, Response } from "express";
@@ -19,26 +18,29 @@ export async function getCategories(req: Request, res: Response, next: NextFunct
 
 // Create discount code
 export async function createDiscountCode(req: any, res: Response, next: NextFunction) {
+  const { publicName, discountType, discountValue, discountCode } = req.body;
+
   try {
-    const { publicName, discountType, discountValue, discountCode } = req.body;
+    if (discountCode) {
+      // TODO: Fix this part
+      const existDiscountCode = await prisma.discountCode.findUnique({ where: { discountCode } });
 
-    const existDiscountCode = await prisma.discountCode.findUnique({ where: { discountCode } });
+      if (existDiscountCode) {
+        return next(new ValidationError("Discount code already available, please use a different code."));
+      }
 
-    if (existDiscountCode) {
-      return next(new ValidationError("Discount code already available, please use a different code."));
+      const discount_code = await prisma.discountCode.create({
+        data: {
+          publicName,
+          discountType,
+          discountCode,
+          discountValue: parseFloat(discountValue),
+          sellerId: req.seller.id,
+        },
+      });
+
+      return res.status(201).json({ success: true, discount_code });
     }
-
-    const discount_code = await prisma.discountCode.create({
-      data: {
-        publicName,
-        discountType,
-        discountCode,
-        discountValue: parseFloat(discountValue),
-        sellerId: req.seller.id,
-      },
-    });
-
-    return res.status(201).json({ success: true, discount_code });
   } catch (error) {
     return next(error);
   }
@@ -47,9 +49,9 @@ export async function createDiscountCode(req: any, res: Response, next: NextFunc
 // Get discount code
 export async function getDiscountCode(req: any, res: Response, next: NextFunction) {
   try {
-    const discountCodes = await prisma.discountCode.findMany({ where: { sellerId: req.seller.id } });
+    const discountCode = await prisma.discountCode.findMany({ where: { sellerId: req.seller.id } });
 
-    return res.status(201).json({ success: true, discountCodes });
+    return res.status(201).json({ success: true, discountCode });
   } catch (error) {
     return next(error);
   }
