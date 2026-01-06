@@ -18,10 +18,9 @@ export async function getCategories(req: Request, res: Response, next: NextFunct
 
 // Create discount code
 export async function createDiscountCode(req: any, res: Response, next: NextFunction) {
-  const { publicName, discountType, discountValue, discountCode } = req.body;
-
   try {
-    // TODO: Fix this part
+    const { publicName, discountType, discountValue, discountCode } = req.body;
+
     const existDiscountCode = await prisma.discountCode.findUnique({ where: { discountCode } });
 
     if (existDiscountCode) {
@@ -45,11 +44,11 @@ export async function createDiscountCode(req: any, res: Response, next: NextFunc
 }
 
 // Get discount code
-export async function getDiscountCode(req: any, res: Response, next: NextFunction) {
+export async function getDiscountCodes(req: any, res: Response, next: NextFunction) {
   try {
-    const discountCode = await prisma.discountCode.findMany({ where: { sellerId: req.seller.id } });
+    const discountCodes = await prisma.discountCode.findMany({ where: { sellerId: req.seller.id } });
 
-    return res.status(201).json({ success: true, discountCode });
+    return res.status(201).json({ success: true, discountCodes });
   } catch (error) {
     return next(error);
   }

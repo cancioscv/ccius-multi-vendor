@@ -42,7 +42,7 @@ export default function CreateProductPage() {
     queryKey: ["discounts"],
     queryFn: async () => {
       const res = await axiosInstance.get("/product/api/get-discount-code");
-      return res?.data?.discountCode || [];
+      return res?.data?.discountCodes || [];
     },
   });
 

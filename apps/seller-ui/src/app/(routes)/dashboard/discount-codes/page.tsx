@@ -37,13 +37,13 @@ export default function DiscountCodesPage() {
     queryKey: ["discounts"],
     queryFn: async () => {
       const res = await axiosInstance.get("/product/api/get-discount-code");
-      return res?.data?.discountCode || [];
+      return res?.data?.discountCodes || [];
     },
   });
 
   const createDiscountCodeMutation = useMutation({
     mutationFn: async (data) => {
-      await axiosInstance.post("/product/api/create-discount-code", { data });
+      await axiosInstance.post("/product/api/create-discount-code", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["discounts"] });
@@ -54,7 +54,7 @@ export default function DiscountCodesPage() {
 
   const deleteDiscountMutation = useMutation({
     mutationFn: async (discountId) => {
-      const response = await axiosInstance.delete(`/product/api/delete-discount-code/${discountId}`);
+      await axiosInstance.delete(`/product/api/delete-discount-code/${discountId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["discounts"] });
