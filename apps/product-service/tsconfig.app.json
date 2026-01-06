@@ -10,6 +10,12 @@
   "exclude": [],
   "references": [
     {
+      "path": "../user-ui"
+    },
+    {
+      "path": "../../packages/db/tsconfig.lib.json"
+    },
+    {
       "path": "../../packages/libs/tsconfig.lib.json"
     }
   ]

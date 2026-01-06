@@ -1,3 +1,5 @@
+import { ParamsOf } from "./../../../user-ui/.next/dev/types/routes.d";
+import { NotFoundError, ValidationError } from "@e-com/libs";
 import { prisma } from "@e-com/db";
 import { NextFunction, Request, Response } from "express";
 
@@ -10,6 +12,68 @@ export async function getCategories(req: Request, res: Response, next: NextFunct
     }
 
     return res.status(200).json({ categories: config.categories, subCategories: config.subCategories });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Create discount code
+export async function createDiscountCode(req: any, res: Response, next: NextFunction) {
+  try {
+    const { publicName, discountType, discountValue, discountCode } = req.body;
+
+    const existDiscountCode = await prisma.discountCode.findUnique({ where: { discountCode } });
+
+    if (existDiscountCode) {
+      return next(new ValidationError("Discount code already available, please use a different code."));
+    }
+
+    const discount_code = await prisma.discountCode.create({
+      data: {
+        publicName,
+        discountType,
+        discountCode,
+        discountValue: parseFloat(discountValue),
+        sellerId: req.seller.id,
+      },
+    });
+
+    return res.status(201).json({ success: true, discount_code });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Get discount code
+export async function getDiscountCode(req: any, res: Response, next: NextFunction) {
+  try {
+    const discountCodes = await prisma.discountCode.findMany({ where: { sellerId: req.seller.id } });
+
+    return res.status(201).json({ success: true, discountCodes });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Delete discount code
+export async function deleteDiscountCode(req: any, res: Response, next: NextFunction) {
+  try {
+    const { id } = req.params;
+    const sellerId = req.seller?.id;
+
+    const discountToDelete = await prisma.discountCode.findUnique({ where: { id }, select: { id: true, sellerId: true } });
+
+    if (!discountToDelete) {
+      return next(new NotFoundError("Discound code not found."));
+    }
+
+    if (discountToDelete.sellerId !== sellerId) {
+      return next(new ValidationError("Unauthoirized access."));
+    }
+
+    await prisma.discountCode.delete({ where: { id } });
+
+    return res.status(200).json({ message: "Discount code successfully deletd." });
   } catch (error) {
     return next(error);
   }

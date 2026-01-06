@@ -79,3 +79,14 @@ model SiteConfig {
   categories    String[]
   subCategories Json
 }
+
+model DiscountCode {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  publicName    String
+  discountType  String
+  discountValue Float
+  discountCode  String   @unique
+  sellerId      String   @db.ObjectId
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

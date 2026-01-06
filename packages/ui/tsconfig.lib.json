@@ -7,7 +7,12 @@
     "jsx": "react-jsx",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo"
+    "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
+    "lib": [
+      "ESNext",
+      "DOM",
+      "DOM.Iterable" // Recommended for modern web development
+    ]
   },
   "exclude": [
     "out-tsc",
