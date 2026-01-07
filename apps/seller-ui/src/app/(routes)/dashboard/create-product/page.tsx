@@ -1,7 +1,7 @@
 "use client";
 
 import ImagePlaceholder from "@/shared/components/image-placeholder";
-import { ChevronRight, X } from "lucide-react";
+import { ChevronRight, Wand, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
@@ -9,6 +9,7 @@ import { ColorSelector, Input, CustomSpecifications, CustomProperties, RichTextE
 import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "@/utils/axiosInstance";
 import Image from "next/image";
+import { ehancements } from "@/utils/aiEnhancements";
 
 interface UploadedImage {
   fileId: string;
@@ -30,6 +31,9 @@ export default function CreateProductPage() {
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
   const [imageUploading, setImageUploading] = useState(false);
+
+  const [activeEffect, setActiveEffect] = useState<string | null>(null); // AI effects
+  const [processing, setProcessing] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["categories"],
@@ -137,6 +141,20 @@ export default function CreateProductPage() {
 
   function handleSaveDraft() {}
 
+  function applyTransformation(effect: string) {
+    if (!selectedImage || processing) return;
+    setActiveEffect(effect);
+    setProcessing(true);
+
+    try {
+      const transformUrl = `${selectedImage}?tr=${effect}`;
+      setSelectedImage(transformUrl);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setProcessing(false);
+    }
+  }
   return (
     <form className="w-full mx-auto p-8 shadow-md rounded-lg text-white" onSubmit={handleSubmit(onSubmit)}>
       <h2 className="text-2xl py-2 font-semibold font-Poppins">Create Product</h2>
@@ -473,9 +491,30 @@ export default function CreateProductPage() {
               <X size={20} className="cursor-pointer" onClick={() => setOpenImageModal(!openImageModal)} />
             </div>
 
-            <div className="w-full h-[250px] rounded-md overflow-hidden border border-gray-600">
-              <Image src={selectedImage} alt="product image" layout="fill" />
+            <div className="w-full h-[250px] relative rounded-md overflow-hidden border border-gray-600">
+              <Image src={selectedImage} alt="product-image" fill className="object-cover" unoptimized={true} />
             </div>
+
+            {selectedImage && (
+              <div className="mt-4 space-y-2">
+                <h3 className="text-white text-sm font-semibold">AI Enhancements</h3>
+                <div className="grid grid-cols-2 gap-3 max-h-[250px] overflow-y-auto">
+                  {ehancements?.map(({ label, effect }) => (
+                    <button
+                      key={effect}
+                      className={`p-2 rounded-sm flex items-center gap-2 ${
+                        activeEffect === effect ? "bg-blue-600 text-white" : "bg-gray-700 hover:bg-gray-600"
+                      }`}
+                      onClick={() => applyTransformation(effect)}
+                      disabled={processing}
+                    >
+                      <Wand size={18} />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

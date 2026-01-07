@@ -1,4 +1,4 @@
-import { imageKitClient, NotFoundError, ValidationError } from "@e-com/libs";
+import { AuthError, imageKitClient, NotFoundError, ValidationError } from "@e-com/libs";
 import { prisma } from "@e-com/db";
 import { NextFunction, Request, Response } from "express";
 import fs from "fs";
@@ -97,13 +97,50 @@ export async function uploadProductImage(req: Request, res: Response, next: Next
 }
 
 // Delete product image
-
 export async function deleteProductImage(req: Request, res: Response, next: NextFunction) {
   try {
     const { fileId } = req.body;
 
     const response = await imageKitClient.deleteFile(fileId);
     return res.status(201).json({ success: true, response });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Create product
+export async function createProduct(req: any, res: Response, next: NextFunction) {
+  try {
+    const {
+      title,
+      description,
+      detailedDescription,
+      warranty,
+      customSpecifications,
+      customProperties = {},
+      slug,
+      tags,
+      cashOnDelivery,
+      brand,
+      videoUrl,
+      category,
+      subCategory,
+      colors = [],
+      sizes = [],
+      discountCode,
+      stock,
+      salePrice,
+      regularPrice,
+      images = [],
+    } = req.body;
+
+    if (!title || !slug || !description || !category || !subCategory || !salePrice || !images || !tags || !stock || !regularPrice) {
+      return next(new ValidationError("Missing required fields."));
+    }
+
+    if (!req.seller.id) {
+      return next(new AuthError("Only seller can create product."));
+    }
   } catch (error) {
     return next(error);
   }

@@ -56,6 +56,7 @@ export default function ImagePlaceholder({
             <X size={16} />
           </button>
           <button
+            type="button"
             disabled={imageUploading}
             onClick={() => {
               setOpenImageModal(true);
