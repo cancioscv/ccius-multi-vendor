@@ -1,14 +1,19 @@
 "use client";
 
 import ImagePlaceholder from "@/shared/components/image-placeholder";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 import { ColorSelector, Input, CustomSpecifications, CustomProperties, RichTextEditor, SizeSelector } from "@e-com/ui";
 import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "@/utils/axiosInstance";
+import Image from "next/image";
 
+interface UploadedImage {
+  fileId: string;
+  fileUrl: string;
+}
 export default function CreateProductPage() {
   const {
     register,
@@ -21,8 +26,10 @@ export default function CreateProductPage() {
 
   const [openImageModal, setOpenImageModal] = useState(false);
   const [isChanged, setIsChanged] = useState(false);
-  const [images, setImages] = useState<(File | null)[]>([null]);
+  const [images, setImages] = useState<(UploadedImage | null)[]>([null]);
   const [loading, setLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState("");
+  const [imageUploading, setImageUploading] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["categories"],
@@ -60,36 +67,72 @@ export default function CreateProductPage() {
     console.log(data);
   }
 
-  function handleImageChange(file: File | null, index: number) {
-    const updatedImages = [...images];
-    updatedImages[index] = file;
-
-    if (index === images.length - 1 && images.length < 8) {
-      updatedImages.push(null);
-    }
-
-    setImages(updatedImages);
-    setValue("images", updatedImages);
+  function convertFileToBase64(file: File) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
   }
 
-  function handleRemoveImage(index: number) {
-    setImages((prevImages) => {
-      let updatedImages = [...prevImages];
+  async function handleImageChange(file: File | null, index: number) {
+    if (!file) return;
 
-      if (index === -1) {
-        updatedImages[0] = null;
-      } else {
-        updatedImages.splice(index, 1);
+    try {
+      setImageUploading(true);
+      const fileName = await convertFileToBase64(file);
+
+      const res = await axiosInstance.post("/product/api/upload-product-image", { fileName });
+
+      const updatedImages = [...images];
+
+      const uploadedImage: UploadedImage = {
+        fileId: res.data.fileId,
+        fileUrl: res.data.fileUrl,
+      };
+
+      updatedImages[index] = uploadedImage;
+
+      if (index === images.length - 1 && images.length <= 8) {
+        updatedImages.push(null); // limited to upload only 8 images
       }
 
+      setImages(updatedImages);
+      setValue("images", updatedImages);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setImageUploading(false);
+    }
+  }
+
+  async function handleRemoveImage(index: number) {
+    try {
+      const updatedImages = [...images];
+
+      const imageToDelete = updatedImages[index];
+
+      if (imageToDelete && typeof imageToDelete === "object") {
+        await axiosInstance.delete("/product/api/delete-product-image", {
+          data: {
+            fileId: imageToDelete.fileId,
+          },
+        });
+      }
+
+      updatedImages.splice(index, 1);
+
+      // Add null placeholder
       if (!updatedImages.includes(null) && updatedImages.length < 8) {
         updatedImages.push(null);
       }
 
-      return updatedImages;
-    });
-
-    setValue("images", images);
+      setImages(updatedImages);
+      setValue("images", updatedImages);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   function handleSaveDraft() {}
@@ -113,6 +156,9 @@ export default function CreateProductPage() {
               index={0}
               onImageChange={handleImageChange}
               onRemove={handleRemoveImage}
+              setSelectedImage={setSelectedImage}
+              images={images}
+              imageUploading={imageUploading}
             />
           )}
           <div className="grid grid-cols-2 gap-3 mt-4">
@@ -125,6 +171,9 @@ export default function CreateProductPage() {
                 index={index + 1}
                 onImageChange={handleImageChange}
                 onRemove={handleRemoveImage}
+                setSelectedImage={setSelectedImage}
+                images={images}
+                imageUploading={imageUploading}
               />
             ))}
           </div>
@@ -415,6 +464,21 @@ export default function CreateProductPage() {
           </div>
         </div>
       </div>
+
+      {openImageModal && (
+        <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-60 z-50">
+          <div className="bg-gray-800 p-6 rounded-lg w-[450px] text-white">
+            <div className="flex justify-between items-center pb-3 mb-4">
+              <h2 className="text-lg font-semibold">Enhance Product Image</h2>
+              <X size={20} className="cursor-pointer" onClick={() => setOpenImageModal(!openImageModal)} />
+            </div>
+
+            <div className="w-full h-[250px] rounded-md overflow-hidden border border-gray-600">
+              <Image src={selectedImage} alt="product image" layout="fill" />
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mt-6 flex justify-end gap-3">
         {isChanged && (

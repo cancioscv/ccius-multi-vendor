@@ -10,9 +10,23 @@ interface Props {
   defaultImage?: string | null;
   index?: any;
   setOpenImageModal: (openImageModal: boolean) => void;
+  setSelectedImage: (e: string) => void;
+  images: any;
+  imageUploading: boolean;
 }
 
-export default function ImagePlaceholder({ size, small, onImageChange, onRemove, defaultImage = null, index = null, setOpenImageModal }: Props) {
+export default function ImagePlaceholder({
+  size,
+  small,
+  onImageChange,
+  onRemove,
+  defaultImage = null,
+  index = null,
+  setOpenImageModal,
+  setSelectedImage,
+  images,
+  imageUploading,
+}: Props) {
   const [imagePreview, setImagePreview] = useState<string | null>(defaultImage);
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -33,10 +47,22 @@ export default function ImagePlaceholder({ size, small, onImageChange, onRemove,
       <input type="file" accept="image/*" className="hidden" id={`image-upload-${index}`} onChange={handleFileChange} />
       {imagePreview ? (
         <>
-          <button type="button" onClick={() => onRemove?.(index!)} className="absolute top-3 right-3 p-2 !rounded bg-red-600 shadow-lg">
+          <button
+            type="button"
+            disabled={imageUploading}
+            onClick={() => onRemove?.(index!)}
+            className="absolute top-3 right-3 p-2 !rounded bg-red-600 shadow-lg"
+          >
             <X size={16} />
           </button>
-          <button className="absolute top-3 right-[70px] p-2 !rounded bg-blue-500 shadow-lg cursor-pointer" onClick={() => setOpenImageModal(true)}>
+          <button
+            disabled={imageUploading}
+            onClick={() => {
+              setOpenImageModal(true);
+              setSelectedImage(images[index].fileUrl);
+            }}
+            className="absolute top-3 right-[70px] p-2 !rounded bg-blue-500 shadow-lg cursor-pointer"
+          >
             <WandSparkles size={16} />
           </button>
         </>

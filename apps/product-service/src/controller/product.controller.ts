@@ -1,7 +1,7 @@
-import { NotFoundError, ValidationError } from "@e-com/libs";
+import { imageKitClient, NotFoundError, ValidationError } from "@e-com/libs";
 import { prisma } from "@e-com/db";
 import { NextFunction, Request, Response } from "express";
-
+import fs from "fs";
 // Get categories
 export async function getCategories(req: Request, res: Response, next: NextFunction) {
   try {
@@ -73,6 +73,37 @@ export async function deleteDiscountCode(req: any, res: Response, next: NextFunc
     await prisma.discountCode.delete({ where: { id } });
 
     return res.status(200).json({ message: "Discount code successfully deletd." });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Upload product image
+export async function uploadProductImage(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { fileName } = req.body;
+    if (!fileName) return;
+
+    const response = await imageKitClient.upload({
+      file: fileName,
+      fileName: `product-${Date.now()}.jpg`,
+      folder: "/products",
+    });
+
+    return res.status(201).json({ fileUrl: response.url, fileId: response.fileId });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Delete product image
+
+export async function deleteProductImage(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { fileId } = req.body;
+
+    const response = await imageKitClient.deleteFile(fileId);
+    return res.status(201).json({ success: true, response });
   } catch (error) {
     return next(error);
   }
