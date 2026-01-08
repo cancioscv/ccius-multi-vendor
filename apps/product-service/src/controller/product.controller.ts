@@ -127,20 +127,70 @@ export async function createProduct(req: any, res: Response, next: NextFunction)
       subCategory,
       colors = [],
       sizes = [],
-      discountCode,
+      discountCodeData,
       stock,
       salePrice,
       regularPrice,
       images = [],
     } = req.body;
-
     if (!title || !slug || !description || !category || !subCategory || !salePrice || !images || !tags || !stock || !regularPrice) {
       return next(new ValidationError("Missing required fields."));
     }
-
     if (!req.seller.id) {
       return next(new AuthError("Only seller can create product."));
     }
+    const slugExist = await prisma.product.findUnique({ where: { slug } });
+    if (slugExist) {
+      return next(new ValidationError("Slug already exist. Please provide a different slug."));
+    }
+
+    // function checkImage(images) {
+    //   return images?.every((image: any) => {
+    //     if (image !== null) {
+    //       return {
+    //         fileId: image.fileId,
+    //         url: image.filedUrl,
+    //       };
+    //     }
+    //   });
+    // }
+    const data = {
+      shopId: req.seller?.shop?.id,
+      title,
+      description,
+      detailedDescription,
+      warranty,
+      customSpecifications: customSpecifications || {},
+      customProperties: customProperties || {},
+      slug,
+      tags: Array.isArray(tags) ? tags : tags.split(","),
+      cashOnDelivery,
+      brand,
+      videoUrl,
+      category,
+      subCategory,
+      colors: colors || [],
+      sizes: sizes || [],
+      discountCodes: discountCodeData?.map((codeId: string) => codeId),
+      stock: parseInt(stock),
+      salePrice: parseFloat(salePrice),
+      regularPrice: parseFloat(regularPrice),
+      images: {
+        create: images
+          ?.filter((img: any) => img && img.fileId && img.fileUrl)
+          .map((image: any) => ({
+            fileId: image.fileId,
+            url: image.fileUrl,
+          })),
+      },
+    };
+
+    const newProduct = await prisma.product.create({
+      data,
+      include: { images: true },
+    });
+
+    return res.status(201).json({ success: true, newProduct });
   } catch (error) {
     return next(error);
   }

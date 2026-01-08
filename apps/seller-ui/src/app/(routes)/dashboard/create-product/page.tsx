@@ -10,6 +10,8 @@ import { useQuery } from "@tanstack/react-query";
 import axiosInstance from "@/utils/axiosInstance";
 import Image from "next/image";
 import { ehancements } from "@/utils/aiEnhancements";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 interface UploadedImage {
   fileId: string;
@@ -34,6 +36,8 @@ export default function CreateProductPage() {
 
   const [activeEffect, setActiveEffect] = useState<string | null>(null); // AI effects
   const [processing, setProcessing] = useState(false);
+
+  const router = useRouter();
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["categories"],
@@ -67,8 +71,17 @@ export default function CreateProductPage() {
     return selectedCategory ? subCategoriesData[selectedCategory] || [] : [];
   }, [selectedCategory, subCategoriesData]);
 
-  function onSubmit(data: any) {
-    console.log(data);
+  async function onSubmit(data: any) {
+    try {
+      setLoading(true);
+      await axiosInstance.post("product/api/create-product", data);
+      router.push("/dashboard/all-products");
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "An expected error occurred!");
+    } finally {
+      setLoading(false);
+    }
   }
 
   function convertFileToBase64(file: File) {
@@ -355,6 +368,22 @@ export default function CreateProductPage() {
                 {errors.subCategories && <p className=" text-red-500 text-sx mt-1">{errors.subCategories.message as string}</p>}
               </div>
 
+              <div className="mt-6 mb-6">
+                <Input
+                  type="textarea"
+                  rows={7}
+                  cols={10}
+                  label="Detailed Description * (min. 100 words)"
+                  placeholder="Enter product detailed description."
+                  {...register("detailedDescription", {
+                    required: "Detailed Description is required",
+                    validate: (value) => {
+                      const wordCount = value?.split(/\s+/).filter((word: string) => word).length;
+                      return wordCount >= 100 || "Detailed description must be at least 100 words.";
+                    },
+                  })}
+                />
+              </div>
               {/* <div className="mt-2">
                 <label htmlFor="detailedDescription" className="bllock font-semibold text-gray-300 mb-1">
                   Detailed Description * (min. 100 words)

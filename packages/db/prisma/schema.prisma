@@ -110,7 +110,7 @@ model Product {
   detailedDescription  String
   images               Image[]
   videoUrl             String?
-  tags                 String?
+  tags                 String[]
   brand                String?
   colors               String[]
   sizes                String[]
