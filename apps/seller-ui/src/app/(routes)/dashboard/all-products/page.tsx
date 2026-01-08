@@ -5,7 +5,7 @@ import axiosInstance from "@/utils/axiosInstance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useReactTable, getCoreRowModel, getFilteredRowModel, flexRender } from "@tanstack/react-table";
 
-import { Search, Pencil, Trash2, Eye, Plus, BarChart, Star, ChevronRight } from "lucide-react";
+import { Search, Pencil, Trash2, Eye, Plus, BarChart, Star, ChevronRight, ArchiveRestore } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -14,11 +14,20 @@ async function fetchProducts() {
   const res = await axiosInstance.get("/product/api/get-seller-products");
   return res?.data?.products;
 }
+
+async function deleteProduct(productId: string) {
+  return await axiosInstance.delete(`/product/api/delete-product/${productId}`);
+}
+
+async function restoreProduct(productId: string) {
+  return await axiosInstance.put(`/product/api/restore-product/${productId}`);
+}
+
 export default function SellerProductsPage() {
   const [globalFilter, setGlobalFilter] = useState("");
   const [analitycsData, setAnalyticsData] = useState(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
-  const [showDeleteModal, setShowDeleteeModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>();
 
   const queryClient = useQueryClient();
@@ -29,12 +38,20 @@ export default function SellerProductsPage() {
     staleTime: 1000 * 60 * 5,
   });
 
-  const deleteMutation = useMutation({});
-  const restoreMutation = useMutation({});
-
-  function openAnalytics(data) {}
-
-  function openDeleteModal(data) {}
+  const deleteMutation = useMutation({
+    mutationFn: deleteProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["seller-products"] });
+      setShowDeleteModal(false);
+    },
+  });
+  const restoreMutation = useMutation({
+    mutationFn: restoreProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["seller-products"] });
+      setShowDeleteModal(false);
+    },
+  });
 
   const columns = useMemo(() => {
     return [
@@ -95,6 +112,7 @@ export default function SellerProductsPage() {
         header: "Actions",
         cell: ({ row }: any) => (
           <div className="flex gap-3">
+            {/* TODO: Add Tooltips to icons */}
             <Link href={`/product/${row.original.id}`} className="text-blue-400 hover:text-blue-300 transition">
               <Eye size={18} />
             </Link>
@@ -104,9 +122,15 @@ export default function SellerProductsPage() {
             <button className="text-green-400 hover:text-green-300 transition" onClick={() => openAnalytics(row.original)}>
               <BarChart size={18} />
             </button>
-            <button className="text-red-400 hover:text-red-300 transition" onClick={() => openDeleteModal(row.original)}>
-              <Trash2 size={18} />
-            </button>
+            {row.original.isDeleted ? (
+              <button className="text-green-400 hover:text-green-300 transition" onClick={() => openDeleteModal(row.original)}>
+                <ArchiveRestore size={18} />
+              </button>
+            ) : (
+              <button className="text-red-400 hover:text-red-300 transition" onClick={() => openDeleteModal(row.original)}>
+                <Trash2 size={18} />
+              </button>
+            )}
           </div>
         ),
       },
@@ -122,6 +146,13 @@ export default function SellerProductsPage() {
     state: { globalFilter },
     onGlobalFilterChange: setGlobalFilter,
   });
+
+  function openAnalytics(product: any) {}
+
+  function openDeleteModal(product: any) {
+    setShowDeleteModal(true);
+    setSelectedProduct(product);
+  }
 
   return (
     <div className="w-full min-h-screen p-8">
@@ -191,7 +222,7 @@ export default function SellerProductsPage() {
         {showDeleteModal && (
           <DeleteProductModal
             product={selectedProduct}
-            onClose={() => setShowDeleteeModal(false)}
+            onClose={() => setShowDeleteModal(false)}
             onConfirm={() => deleteMutation.mutate(selectedProduct?.id)}
             onRestore={() => restoreMutation.mutate(selectedProduct?.id)}
           />

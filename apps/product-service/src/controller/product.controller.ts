@@ -215,3 +215,83 @@ export async function getSellerProducts(req: any, rese: Response, next: NextFunc
     return next(error);
   }
 }
+
+// Delete product
+export async function deleteProduct(req: any, res: Response, next: NextFunction) {
+  try {
+    // Check if the product is owned by the seller
+    // TODO: Rework all this part, i dont like it. Althoug that is so because it is restorable
+    const { productId } = req.params;
+    const sellerId = req.seller?.shop?.id;
+    if (!productId || !sellerId) return;
+
+    const product = await prisma.product.findUnique({ where: { id: productId }, select: { id: true, shopId: true, isDeleted: true } });
+
+    if (!product) {
+      return next(new ValidationError("Product not found."));
+    }
+    if (product.shopId !== sellerId) {
+      return next(new ValidationError("Unauthorized too delete this product."));
+    }
+
+    if (product.isDeleted) {
+      return next(new ValidationError("Product is already deleted."));
+    }
+
+    const deletedProduct = await prisma.product.update({
+      where: { id: productId },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours.
+      },
+    });
+    return res.status(200).json({
+      merssage: "Product is scheduled to be deleted in 24 hours. You can restore it within this time.",
+      deletedAt: deletedProduct.deletedAt,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Restore product
+
+export async function restoreProduct(req: any, res: Response, next: NextFunction) {
+  try {
+    const { productId } = req.params;
+
+    const sellerId = req.seller?.shop?.id;
+
+    const product = await prisma.product.findUnique({
+      where: {
+        id: productId,
+      },
+      select: {
+        id: true,
+        shopId: true,
+        isDeleted: true,
+      },
+    });
+
+    if (!product) {
+      return next(new ValidationError("Product not found."));
+    }
+
+    if (product.shopId !== sellerId) {
+      return next(new ValidationError("Unauthorized!"));
+    }
+
+    if (!product.isDeleted) {
+      return res.status(400).json({ message: "Product is not marked as 'deleted' state" });
+    }
+
+    await prisma.product.update({
+      where: { id: productId },
+      data: { isDeleted: false, deletedAt: null },
+    });
+
+    return res.status(200).json({ message: "Product succesfully restored." });
+  } catch (error) {
+    return res.status(500).json({ message: "Something went wrong!!", error });
+  }
+}

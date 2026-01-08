@@ -8,6 +8,8 @@ import {
   getCategories,
   getDiscountCodes,
   uploadProductImage,
+  deleteProduct,
+  restoreProduct,
 } from "../controller/product.controller.js";
 import { isAuth } from "@e-com/libs";
 
@@ -23,5 +25,7 @@ router.post("/upload-product-image", isAuth, uploadProductImage);
 router.delete("/delete-product-image", isAuth, deleteProductImage);
 router.post("/create-product", isAuth, createProduct);
 router.get("/get-seller-products", isAuth, getSellerProducts);
+router.delete("/delete-product/:productId", isAuth, deleteProduct);
+router.put("/restore-product/:productId", isAuth, restoreProduct);
 
 export default router;
