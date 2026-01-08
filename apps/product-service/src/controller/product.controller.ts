@@ -154,6 +154,8 @@ export async function createProduct(req: any, res: Response, next: NextFunction)
     //     }
     //   });
     // }
+
+    // TODO: Unique constraint failed on the constraint: `Image_userId_key`
     const data = {
       shopId: req.seller?.shop?.id,
       title,
@@ -191,6 +193,24 @@ export async function createProduct(req: any, res: Response, next: NextFunction)
     });
 
     return res.status(201).json({ success: true, newProduct });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Get logged in seller
+export async function getSellerProducts(req: any, rese: Response, next: NextFunction) {
+  try {
+    const products = await prisma.product.findMany({
+      where: {
+        shopId: req?.seller?.shop?.id,
+      },
+      include: {
+        images: true,
+      },
+    });
+
+    return rese.status(200).json({ success: true, products });
   } catch (error) {
     return next(error);
   }
