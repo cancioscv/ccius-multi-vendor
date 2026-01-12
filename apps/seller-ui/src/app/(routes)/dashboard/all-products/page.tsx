@@ -60,8 +60,8 @@ export default function SellerProductsPage() {
         header: "Image",
         cell: ({ row }: any) => (
           <Image
-            src={row.original.images[0]?.url}
-            alt={row.original.images[0]?.url}
+            src={row.original.images[0]?.url || "/placeholder.png"}
+            alt={row.original.images[0]?.url || ""}
             width={200}
             height={200}
             className="w-12 h-12 rounded-md object-cover"

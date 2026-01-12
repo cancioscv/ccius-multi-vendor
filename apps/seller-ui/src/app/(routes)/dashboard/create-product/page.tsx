@@ -23,6 +23,7 @@ export default function CreateProductPage() {
     control,
     watch,
     setValue,
+    getValues,
     handleSubmit,
     formState: { errors },
   } = useForm();

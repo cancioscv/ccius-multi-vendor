@@ -194,9 +194,9 @@ export async function verifyForgotPassword(req: Request, res: Response, next: Ne
 export async function getUser(req: CustomRequest, res: Response, next: NextFunction) {
   try {
     const user = req.user;
-    res.status(201).json({ success: true, user });
+     res.status(201).json({ success: true, user });
   } catch (error) {
-    next(error);
+     next(error);
   }
 }
 

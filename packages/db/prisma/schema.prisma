@@ -132,4 +132,5 @@ model Product {
   updatedAt            DateTime      @updatedAt
   shopId               String        @db.ObjectId
   shop                 Shop          @relation(fields: [shopId], references: [id])
+  totalSales           Int           @default(0)
 }

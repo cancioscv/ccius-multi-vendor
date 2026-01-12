@@ -10,8 +10,10 @@ import {
   uploadProductImage,
   deleteProduct,
   restoreProduct,
+  getAllProducts,
 } from "../controller/product.controller.js";
 import { isAuth } from "@e-com/libs";
+import { get } from "http";
 
 const router: Router = Router();
 
@@ -23,9 +25,12 @@ router.delete("/delete-discount-code/:id", isAuth, deleteDiscountCode);
 // Images
 router.post("/upload-product-image", isAuth, uploadProductImage);
 router.delete("/delete-product-image", isAuth, deleteProductImage);
+
+// Product
 router.post("/create-product", isAuth, createProduct);
 router.get("/get-seller-products", isAuth, getSellerProducts);
 router.delete("/delete-product/:productId", isAuth, deleteProduct);
 router.put("/restore-product/:productId", isAuth, restoreProduct);
+router.get("/all-products/", getAllProducts);
 
 export default router;

@@ -1,7 +1,7 @@
 import { AuthError, imageKitClient, NotFoundError, ValidationError } from "@e-com/libs";
-import { prisma } from "@e-com/db";
+import { Prisma, prisma } from "@e-com/db";
 import { NextFunction, Request, Response } from "express";
-import fs from "fs";
+
 // Get categories
 export async function getCategories(req: Request, res: Response, next: NextFunction) {
   try {
@@ -144,26 +144,33 @@ export async function createProduct(req: any, res: Response, next: NextFunction)
       return next(new ValidationError("Slug already exist. Please provide a different slug."));
     }
 
-    // function checkImage(images) {
-    //   return images?.every((image: any) => {
-    //     if (image !== null) {
-    //       return {
-    //         fileId: image.fileId,
-    //         url: image.filedUrl,
-    //       };
-    //     }
-    //   });
-    // }
+    //  Upload all images to imagekit
+    // const uploadedImages = await Promise.all(
+    //   images.map(async (img: any, index: number) => {
+    //     if (!img.base64) return null;
 
-    // TODO: Unique constraint failed on the constraint: `Image_userId_key`
+    //     const uploadResponse = await imageKitClient.upload({
+    //       file: img.base64,
+    //       fileName: `product-${Date.now()}-${index}.jpg`,
+    //       folder: "/products",
+    //     });
+
+    //     return {
+    //       fileId: uploadResponse.fileId,
+    //       url: uploadResponse.url,
+    //     };
+    //   })
+    // );
+
+    // TODO: Unique constraint failed on the constraint: `Image_userId_key`. I can't create a second product with same userId
     const data = {
       shopId: req.seller?.shop?.id,
       title,
       description,
       detailedDescription,
       warranty,
-      customSpecifications: customSpecifications || {},
-      customProperties: customProperties || {},
+      customSpecifications: customSpecifications,
+      customProperties: customProperties,
       slug,
       tags: Array.isArray(tags) ? tags : tags.split(","),
       cashOnDelivery,
@@ -173,10 +180,13 @@ export async function createProduct(req: any, res: Response, next: NextFunction)
       subCategory,
       colors: colors || [],
       sizes: sizes || [],
-      discountCodes: discountCodeData?.map((codeId: string) => codeId),
+      discountCodes: discountCodeData?.map((codeId: string) => codeId) || [],
       stock: parseInt(stock),
       salePrice: parseFloat(salePrice),
       regularPrice: parseFloat(regularPrice),
+      startingDate: req.body.startingDate ? new Date(req.body.startingDate) : null,
+      endingDate: req.body.endingDate ? new Date(req.body.endingDate) : null,
+      // images: uploadedImages.filter(Boolean), // removes nulls
       images: {
         create: images
           ?.filter((img: any) => img && img.fileId && img.fileUrl)
@@ -199,7 +209,7 @@ export async function createProduct(req: any, res: Response, next: NextFunction)
 }
 
 // Get logged in seller
-export async function getSellerProducts(req: any, rese: Response, next: NextFunction) {
+export async function getSellerProducts(req: any, res: Response, next: NextFunction) {
   try {
     const products = await prisma.product.findMany({
       where: {
@@ -210,7 +220,7 @@ export async function getSellerProducts(req: any, rese: Response, next: NextFunc
       },
     });
 
-    return rese.status(200).json({ success: true, products });
+    return res.status(200).json({ success: true, products });
   } catch (error) {
     return next(error);
   }
@@ -293,5 +303,60 @@ export async function restoreProduct(req: any, res: Response, next: NextFunction
     return res.status(200).json({ message: "Product succesfully restored." });
   } catch (error) {
     return res.status(500).json({ message: "Something went wrong!!", error });
+  }
+}
+
+// Get seller stripe information
+export async function getStripeAccount(req: Request, res: Response, next: NextFunction) {
+  //missing function
+}
+
+// Get all products
+export async function getAllProducts(req: Request, res: Response, next: NextFunction) {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+    const type = req.query.type;
+
+    const baseFilter = {
+      OR: [{ startingDate: null }, { endingDate: null }],
+    };
+
+    const orderBy: Prisma.ProductOrderByWithRelationInput =
+      type === "latest" ? { createdAt: "desc" as Prisma.SortOrder } : { totalSales: "desc" as Prisma.SortOrder }; // Listing the newest otherwise most popular products
+
+    const [products, total, top10Products] = await Promise.all([
+      prisma.product.findMany({
+        skip,
+        take: limit,
+        include: {
+          images: true,
+          shop: true,
+        },
+        where: baseFilter,
+        orderBy: {
+          totalSales: "desc",
+        },
+      }),
+
+      prisma.product.count({ where: baseFilter }),
+      prisma.product.findMany({
+        take: 10,
+        where: baseFilter,
+        orderBy,
+      }),
+    ]);
+
+    return res.status(200).json({
+      products,
+      top10By: type === "latest" ? "latest" : "topSales",
+      top10Products,
+      total,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    return next(error);
   }
 }

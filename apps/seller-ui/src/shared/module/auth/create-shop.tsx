@@ -14,7 +14,7 @@ export default function CreateShop({ sellerId, setActiveStep }: CreateShopProps)
     formState: { errors },
   } = useForm();
 
-  const createShopMutatio = useMutation({
+  const createShopMutation = useMutation({
     mutationFn: async (data: FormData) => {
       const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/create-shop`, { data });
       return response.data;
@@ -26,7 +26,7 @@ export default function CreateShop({ sellerId, setActiveStep }: CreateShopProps)
 
   async function onSubmit(data: any) {
     const shopData = { ...data, sellerId };
-    createShopMutatio.mutate(shopData);
+    createShopMutation.mutate(shopData);
   }
 
   const countWords = (text: string) => text.trim().split(/\S+/).length;

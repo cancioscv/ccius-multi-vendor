@@ -1,7 +1,7 @@
 import { prisma } from "@e-com/db";
 import cron from "node-cron";
 
-cron.schedule("0 * * * * ", async () => {
+cron.schedule("* * * * * ", async () => {
   try {
     const now = new Date();
 
