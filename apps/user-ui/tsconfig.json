@@ -33,5 +33,10 @@
     "../../dist/apps/user-ui/.next/types/**/*.ts",
     "next-env.d.ts"
   ],
-  "exclude": ["out-tsc", "dist", "node_modules", "jest.config.ts", "jest.config.cts", "src/**/*.spec.ts", "src/**/*.test.ts", ".next"]
+  "exclude": ["out-tsc", "dist", "node_modules", "jest.config.ts", "jest.config.cts", "src/**/*.spec.ts", "src/**/*.test.ts", ".next"],
+  "references": [
+    {
+      "path": "../../packages/db"
+    }
+  ]
 }

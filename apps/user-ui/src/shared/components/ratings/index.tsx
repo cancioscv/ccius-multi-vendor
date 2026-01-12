@@ -9,7 +9,7 @@ export default function Ratings({ ratings }: Props) {
 
   for (let i = 1; i <= 5; i++) {
     if (i < ratings) {
-      stars.push(<Star key={`full-${i}`} fill="#eab308" />);
+      stars.push(<Star key={`full-${i}`} fill="#eab308" stroke="#eab308" />);
     } else if (i === Math.ceil(ratings) && !Number.isInteger(ratings)) {
       stars.push(<StarHalf key={`half-${i}`} />);
     } else {

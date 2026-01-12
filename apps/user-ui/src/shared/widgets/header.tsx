@@ -4,9 +4,12 @@ import { HeartIcon, Search, ShoppingCart, User } from "lucide-react";
 import Link from "next/link";
 import HeaderBottom from "./header-bottom";
 import useUser from "@/hooks/useUser";
+import { useCartStore } from "@/store";
 
 export default function Header() {
   const { user, isLoading } = useUser();
+
+  const { cart, wishList } = useCartStore();
   return (
     <div className="w-full bg-white">
       <div className="w-[80%] py-5 m-auto flex items-center justify-between">
@@ -54,13 +57,13 @@ export default function Header() {
             <Link href="/wishlist" className="relative">
               <HeartIcon />
               <div className="w-6 h-6 border-2 border-white bg-red-500 rounded-full flex items-center justify-center absolute top-[-10px] right-[-10px]">
-                <span className="text-white font-medium text-sm">0</span>
+                <span className="text-white font-medium text-sm">{wishList?.length}</span>
               </div>
             </Link>
             <Link href="/cart" className="relative">
               <ShoppingCart />
               <div className="w-6 h-6 border-2 border-white bg-red-500 rounded-full flex items-center justify-center absolute top-[-10px] right-[-10px]">
-                <span className="text-white font-medium text-sm">0</span>
+                <span className="text-white font-medium text-sm">{cart?.length}</span>
               </div>
             </Link>
           </div>

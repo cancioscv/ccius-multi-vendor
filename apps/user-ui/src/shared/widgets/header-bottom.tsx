@@ -2,6 +2,7 @@
 
 import { navItems } from "@/configs/constants";
 import useUser from "@/hooks/useUser";
+import { useCartStore } from "@/store";
 import { AlignLeft, ChevronDown, HeartIcon, ShoppingCart, User } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -12,6 +13,8 @@ export default function HeaderBottom() {
 
   const { user, isLoading } = useUser();
   console.log(user);
+
+  const { cart, wishList } = useCartStore();
 
   useEffect(() => {
     function handleScroll() {
@@ -84,13 +87,13 @@ export default function HeaderBottom() {
                 <Link href="/wishlist" className="relative">
                   <HeartIcon />
                   <div className="w-6 h-6 border-2 border-white bg-red-500 rounded-full flex items-center justify-center absolute top-[-10px] right-[-10px]">
-                    <span className="text-white font-medium text-sm">0</span>
+                    <span className="text-white font-medium text-sm">{wishList?.length}</span>
                   </div>
                 </Link>
                 <Link href="/cart" className="relative">
                   <ShoppingCart />
                   <div className="w-6 h-6 border-2 border-white bg-red-500 rounded-full flex items-center justify-center absolute top-[-10px] right-[-10px]">
-                    <span className="text-white font-medium text-sm">0</span>
+                    <span className="text-white font-medium text-sm">{cart?.length}</span>
                   </div>
                 </Link>
               </div>

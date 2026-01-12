@@ -133,4 +133,5 @@ model Product {
   shopId               String        @db.ObjectId
   shop                 Shop          @relation(fields: [shopId], references: [id])
   totalSales           Int           @default(0)
+  quantity             Int?          @default(0)
 }

@@ -4,6 +4,10 @@ import { useState } from "react";
 import Ratings from "../ratings";
 import { Heart, MapPin, MessageCircleMore, Minus, Plus, ShoppingCart, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useCartStore } from "@/store";
+import useUser from "@/hooks/useUser";
+import useLocationTracking from "@/hooks/useLocationTracking";
+import useDeviceTracking from "@/hooks/useDeviceTracking";
 
 interface Props {
   product: any;
@@ -15,12 +19,50 @@ export default function ProductDetailsCard({ product, setOpen }: Props) {
   const [isSizeSelected, setIsSizeSelected] = useState(product?.sizes?.[0] || "");
   const [quantity, setQuantity] = useState(1);
 
+  const { cart, wishList, addToCart, removeFromCart, addToWishlist, removeFromWishlist } = useCartStore();
+  const isInCart = cart.some((item) => item.id === product.id);
+  const isWishlisted = wishList.some((item) => item.id === product.id);
+
+  const { user } = useUser();
+  const { location } = useLocationTracking();
+  const { deviceInfo } = useDeviceTracking();
+
   const router = useRouter();
 
   const estimatedDelivery = new Date(); // This depends on DHL or so.
   estimatedDelivery.setDate(estimatedDelivery.getDate() + 5);
 
   function handleChat() {}
+
+  function handleAddToCart() {
+    addToCart(
+      {
+        ...product,
+        quantity,
+        selectedOptions: { color: isColorSelected, size: isSizeSelected },
+      },
+      user,
+      location,
+      deviceInfo
+    );
+  }
+
+  function handleAddToWishList() {
+    if (isWishlisted) {
+      removeFromWishlist(product.id, user, location, deviceInfo);
+    } else {
+      addToWishlist(
+        {
+          ...product,
+          quantity,
+          selectedOptions: { color: isColorSelected, size: isSizeSelected },
+        },
+        user,
+        location,
+        deviceInfo
+      );
+    }
+  }
 
   return (
     <div className="fixed flex items-center justify-center top-0 left-0 h-screen w-full bg-[#0000001d] z-50" onClick={() => setOpen(false)}>
@@ -165,41 +207,19 @@ export default function ProductDetailsCard({ product, setOpen }: Props) {
               </div>
 
               <button
-                onClick={() => {}}
-                className={`flex items-center gap-2 px-4 py-2 bg-[#ff5722] hover:bg-[#e64a19] text-white font-medium rounded-lg transition `}
+                disabled={isInCart}
+                onClick={handleAddToCart}
+                className={`flex items-center gap-2 px-4 py-2 bg-[#ff5722] hover:bg-[#e64a19] text-white font-medium rounded-lg transition ${
+                  isInCart ? "cursor-not-allowed" : "cursor-pointer"
+                }`}
               >
                 <ShoppingCart size={18} />
                 Add to Cart
               </button>
 
-              <button className="opacity-[.7] cursor-pointer">
-                <Heart size={30} fill="red" color="transparent" />
+              <button className="opacity-[.7] cursor-pointer" onClick={handleAddToWishList}>
+                <Heart size={30} fill={isWishlisted ? "red" : "transparent"} color={isWishlisted ? "transpareent" : "black"} />
               </button>
-              {/*
-              <button className="opacity-[.7] cursor-pointer">
-                <Heart
-                  size={30}
-                  fill={isWishlisted ? "red" : "transparent"}
-                  color={isWishlisted ? "transparent" : "black"}
-                  onClick={() =>
-                    isWishlisted
-                      ? removeFromWishlist(data.id, user, location, deviceInfo)
-                      : addToWishlist(
-                          {
-                            ...data,
-                            quantity,
-                            selectedOptions: {
-                              color: isColorSelected,
-                              size: isSizeSelected,
-                            },
-                          },
-                          user,
-                          location,
-                          deviceInfo
-                        )
-                  }
-                />
-              </button> */}
             </div>
             {/* Stock */}
             <div className="mt-3">
