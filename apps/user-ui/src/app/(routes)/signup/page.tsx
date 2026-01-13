@@ -34,7 +34,7 @@ export default function SignupPage() {
 
   const signupMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/register-user`, data);
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/create-user`, data);
 
       return response.data;
     },

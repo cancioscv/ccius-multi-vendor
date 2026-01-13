@@ -9,7 +9,7 @@
   "basePath": "/api",
   "schemes": ["http"],
   "paths": {
-    "/register-user": {
+    "/create-user": {
       "post": {
         "description": "",
         "parameters": [

@@ -5,12 +5,12 @@ import {
   forgotPassword,
   login,
   refreshToken,
-  registerUser,
+  createUser,
   resetPassword,
   verifyUser,
   verifyForgotPassword,
   getUser,
-  registerSeller,
+  createSeller,
   verifySeller,
   createShop,
   createStripeConnectLink,
@@ -22,7 +22,7 @@ import { isSeller } from "../../../../packages/libs/src/middleware/authorizeRole
 const router: Router = Router();
 
 // User
-router.post("/register-user", registerUser);
+router.post("/create-user", createUser);
 router.post("/verify-user", verifyUser);
 router.post("/login", login);
 router.post("/refresh-token", refreshToken);
@@ -33,7 +33,7 @@ router.post("/verify-forgot-password", verifyForgotPassword);
 router.get("/logged-user", isAuth, getUser);
 
 // Seller and Shop
-router.post("/register-seller", registerSeller);
+router.post("/create-seller", createSeller);
 router.post("/verify-seller", verifySeller);
 router.post("/create-shop", createShop);
 router.post("/login-seller", loginSeller);

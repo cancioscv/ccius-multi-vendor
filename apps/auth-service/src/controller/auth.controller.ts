@@ -18,7 +18,7 @@ import stripe from "../utils/stripe.js";
 const { JsonWebTokenError } = jwt;
 
 // Register new user
-export async function registerUser(req: Request, res: Response, next: NextFunction) {
+export async function createUser(req: Request, res: Response, next: NextFunction) {
   validateRegistrationData(req.body, "user");
   const { name, email } = req.body;
 
@@ -194,14 +194,14 @@ export async function verifyForgotPassword(req: Request, res: Response, next: Ne
 export async function getUser(req: CustomRequest, res: Response, next: NextFunction) {
   try {
     const user = req.user;
-     res.status(201).json({ success: true, user });
+    res.status(201).json({ success: true, user });
   } catch (error) {
-     next(error);
+    next(error);
   }
 }
 
 // Register new Seller
-export async function registerSeller(req: Request, res: Response, next: NextFunction) {
+export async function createSeller(req: Request, res: Response, next: NextFunction) {
   try {
     validateRegistrationData(req.body, "seller");
     const { name, email } = req.body;
