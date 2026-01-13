@@ -6,15 +6,16 @@ const LOCATION_STORAGE_KEY = "user_location";
 const LOCATION_EXPIRY_DAYS = 20;
 
 function getStoredLocation() {
-  const storedData = localStorage.getItem(LOCATION_STORAGE_KEY);
+  if (typeof window !== "undefined") {
+    const storedData = localStorage.getItem(LOCATION_STORAGE_KEY);
+    if (!storedData) return null;
 
-  if (!storedData) return null;
+    const parsedData = JSON.parse(storedData);
+    const expiryTime = LOCATION_EXPIRY_DAYS * 24 * 60 * 60 * 1000; // 20 days in ms
+    const isExpired = Date.now() - parsedData.timestamp > expiryTime;
 
-  const parsedData = JSON.parse(storedData);
-  const expiryTime = LOCATION_EXPIRY_DAYS * 24 * 60 * 60 * 1000; // 20 days in ms
-  const isExpired = Date.now() - parsedData.timestamp > expiryTime;
-
-  return isExpired ? null : parsedData;
+    return isExpired ? null : parsedData;
+  }
 }
 
 export default function useLocationTracking() {

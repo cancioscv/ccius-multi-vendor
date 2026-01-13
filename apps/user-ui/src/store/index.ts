@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 import { Prisma } from "@e-com/db";
 
@@ -8,16 +8,19 @@ type Location = {
   city: string;
 } | null;
 
-type Store = {
+interface CartState {
   cart: Prisma.ProductCreateInput[];
   wishList: Prisma.ProductCreateInput[];
   addToCart: (product: Prisma.ProductCreateInput, user: Prisma.UserCreateInput, location: Location, deviceInfo: string) => void;
   removeFromCart: (id: string, user: Prisma.UserCreateInput, location: Location, deviceInfo: string) => void;
   addToWishlist: (product: Prisma.ProductCreateInput, user: Prisma.UserCreateInput, location: Location, deviceInfo: string) => void;
   removeFromWishlist: (id: string, user: Prisma.UserCreateInput, location: Location, deviceInfo: string) => void;
-};
+  isInCart: (product: string) => boolean;
+  clearCart: () => void;
+  hasHydrated: boolean;
+}
 
-export const useCartStore = create<Store>()(
+export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       cart: [],
@@ -44,6 +47,10 @@ export const useCartStore = create<Store>()(
           };
         });
       },
+      clearCart: () => set({ cart: [] }),
+      isInCart: (productId) => {
+        return get().cart.some((item) => item.id === productId);
+      },
       addToWishlist: (product, user, location, deviceInfo) => {
         set((state) => {
           const existingProduct = state.wishList.find((item) => item.id === product.id);
@@ -64,9 +71,17 @@ export const useCartStore = create<Store>()(
           };
         });
       },
+      hasHydrated: false,
     }),
+
     {
       name: "cart",
+      storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.hasHydrated = true;
+        }
+      },
     }
   )
 );

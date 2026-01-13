@@ -28,7 +28,7 @@ app.set("trus proxy", 1);
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: (req: any) => (req.user ? 1000 : 100),
-  message: { error: "Too many requests frm this IP, please try again later" },
+  message: { error: "Too many requests from this IP, please try again later" },
   standardHeaders: true,
   legacyHeaders: true,
   // keyGenerator: (req: any) => req.ip, // The keyGenerator is implicit and uses req.ip by default

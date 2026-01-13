@@ -23,6 +23,7 @@ module.exports = {
         Roboto: ["var(--font-roboto)"],
         Poppins: ["var(--font-poppins)"],
         Oregano: ["var(--font-oregano)"],
+        Jost: ["var(--font-jost)"],
       },
     },
   },

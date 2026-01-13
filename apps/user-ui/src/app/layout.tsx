@@ -1,4 +1,4 @@
-import { Poppins, Roboto, Oregano } from "next/font/google";
+import { Poppins, Roboto, Oregano, Jost } from "next/font/google";
 import Header from "@/shared/widgets";
 import "./global.css";
 import Providers from "./providers";
@@ -27,10 +27,16 @@ const oregano = Oregano({
   variable: "--font-oregano",
 });
 
+const jost = Jost({
+  subsets: ["latin"],
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-jost",
+});
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`antialiased ${roboto.variable} ${poppins.variable}  ${oregano.variable} `}>
+      <body className={`antialiased ${roboto.variable} ${poppins.variable}  ${oregano.variable} ${jost.variable} `}>
         <Providers>
           <Header />
           {children}

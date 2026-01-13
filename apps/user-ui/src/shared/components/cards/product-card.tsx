@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { toast } from "react-toastify";
+
 import Ratings from "../ratings";
 import { useEffect, useState } from "react";
 import { Eye, Heart, ShoppingBag } from "lucide-react";
@@ -17,9 +19,10 @@ export default function ProductCard({ product, isEvent }: Props) {
   const [timeLeft, setTimeLeft] = useState("");
   const [open, setOpen] = useState(false);
 
-  const { addToCart, addToWishlist, removeFromWishlist, wishList, cart } = useCartStore();
+  const { addToCart, addToWishlist, removeFromWishlist, wishList, cart, isInCart } = useCartStore();
+  // const isInCart = useCartStore((state) => state.isInCart(product.id));
   const isWishlisted = wishList.some((item) => item.id === product.id);
-  const isInCart = cart.some((item) => item.id === product.id);
+  // const isInCart = cart.some((item) => item.id === product.id);
 
   const { location } = useLocationTracking();
   const { deviceInfo } = useDeviceTracking();
@@ -49,6 +52,13 @@ export default function ProductCard({ product, isEvent }: Props) {
     }
     return;
   }, [isEvent, product?.endingDate]);
+
+  function handleAddToCart() {
+    if (!isInCart(product?.id)) {
+      addToCart({ ...product, quantity: 1 }, user, location, deviceInfo);
+      toast.success("Product was added to Cart");
+    }
+  }
 
   return (
     <div className="w-full min-h-[350px] h-max bg-white rounded-lg relative">
@@ -115,9 +125,9 @@ export default function ProductCard({ product, isEvent }: Props) {
         </div>
         <div className="bg-white rounded-full p-[6px] shadow-md">
           <ShoppingBag
-            className="cursor-pointer hover:scale-110 transition text-[#4b5563]"
+            className={`cursor-pointer hover:scale-110 transition text-[#4b5563] ${isInCart(product.id) && " text-gray-400 pointer-events-none"}`}
             size={22}
-            onClick={() => !isInCart && addToCart({ ...product, quantity: 1 }, user, location, deviceInfo)}
+            onClick={handleAddToCart}
           />
         </div>
       </div>
