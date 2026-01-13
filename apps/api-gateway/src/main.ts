@@ -5,7 +5,7 @@ import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 // import swaggerUi from "swagger-ui-express";
 // import axios from "axios";
-import cookirParser from "cookie-parser";
+import cookieParser from "cookie-parser";
 import initializeSiteConfig from "./libs/initializeSiteConfig.js";
 
 const app = express();
@@ -21,7 +21,7 @@ app.use(
 app.use(morgan("dev"));
 app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ limit: "100mb", extended: true }));
-app.use(cookirParser());
+app.use(cookieParser());
 
 app.set("trus proxy", 1);
 
@@ -35,6 +35,7 @@ const apiLimiter = rateLimit({
 });
 
 app.use(apiLimiter);
+
 app.get("/gateway-health", (req, res) => {
   res.send({ message: "Welcome to api-gateway!" });
 });
