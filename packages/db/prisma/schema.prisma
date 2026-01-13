@@ -135,3 +135,44 @@ model Product {
   totalSales           Int           @default(0)
   quantity             Int?          @default(0)
 }
+
+model UserAnalytics {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String   @unique
+  country         String?
+  city            String?
+  device          String?
+  lastVisited     DateTime
+  actions         Json?
+  recommendations Json?
+  lastTrained     DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProductAnalytics {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  productId       String   @unique
+  shopId          String
+  views           Int      @default(0)
+  addedToCart     Int      @default(0)
+  addedToWishlist Int      @default(0)
+  purchases       Int      @default(0)
+  lastViewedAt    DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ShopAnalytics {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  totalVisitors Int      @default(0)
+  countryStats  Json? // Store aggregated country data { "US": 20, "IN": 50, "UK": 15 }
+  cityStats     Json? // Store aggregated city data { "New York": 10, "Delhi": 25 }
+  deviceStats   Json? // Store aggregated device data { "Mobile": 50, "Desktop": 30 }
+  lastVisitedAt DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

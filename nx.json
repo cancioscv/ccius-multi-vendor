@@ -24,7 +24,7 @@
           "watchDepsName": "watch-deps"
         }
       },
-      "exclude": ["packages/libs/*", "packages/db/*"]
+      "exclude": ["packages/libs/*", "packages/db/*", "packages/kafka/*", "packages/analytics/*"]
     },
     {
       "plugin": "@nx/vite/plugin",
@@ -42,7 +42,7 @@
     },
     {
       "plugin": "@nx/js/typescript",
-      "include": ["packages/libs/*", "packages/db/*"],
+      "include": ["packages/libs/*", "packages/db/*", "packages/kafka/*", "packages/analytics/*"],
       "options": {
         "typecheck": {
           "targetName": "typecheck"
