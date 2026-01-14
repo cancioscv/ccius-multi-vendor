@@ -17,6 +17,9 @@
   "exclude": ["node_modules", "dist"],
   "references": [
     {
+      "path": "../../packages/kafka/tsconfig.lib.json"
+    },
+    {
       "path": "../../packages/db/tsconfig.lib.json"
     },
     {

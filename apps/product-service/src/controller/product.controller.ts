@@ -360,3 +360,249 @@ export async function getAllProducts(req: Request, res: Response, next: NextFunc
     return next(error);
   }
 }
+
+// Get product
+export async function getProductById(req: Request, res: Response, next: NextFunction) {
+  try {
+    const product = await prisma.product.findUnique({
+      where: {
+        slug: req.params.slug,
+      },
+      include: {
+        images: true,
+        shop: true,
+      },
+    });
+
+    return res.status(201).json({ success: true, product });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Get filtered products
+export async function getFilteredProducts(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { priceRange = [0, 10000], categories = [], colors = [], sizes = [], page = 1, limit = 12 } = req.query;
+
+    const parsedPriceRange = typeof priceRange === "string" ? priceRange.split(",").map(Number) : [0, 10000];
+    const parsedPage = Number(page);
+    const parsedLimit = Number(limit);
+
+    const skip = (parsedPage - 1) * parsedLimit;
+
+    const filters: Record<string, any> = {
+      salePrice: {
+        gte: parsedPriceRange[0],
+        lte: parsedPriceRange[1],
+      },
+      startingDate: null,
+    };
+
+    if (categories && String(categories).length > 0) {
+      filters.category = {
+        in: Array.isArray(categories) ? categories : String(categories).split(","),
+      };
+    }
+    if (colors && (colors as string[]).length > 0) {
+      filters.colors = {
+        hasSome: Array.isArray(colors) ? colors : [colors],
+      };
+    }
+
+    if (sizes && (sizes as string[]).length > 0) {
+      filters.sizes = {
+        hasSome: Array.isArray(sizes) ? sizes : [sizes],
+      };
+    }
+
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where: filters,
+        skip,
+        take: parsedLimit,
+        include: {
+          images: true,
+          shop: true,
+        },
+      }),
+      prisma.product.count({ where: filters }),
+    ]);
+
+    const totalPages = Math.ceil(total / parsedLimit);
+
+    return res.status(200).json({
+      products,
+      pagination: {
+        total,
+        page: parsedPage,
+        totalPages,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Get filtered offers
+export async function getFilteredOffers(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { priceRange = [0, 10000], categories = [], colors = [], sizes = [], page = 1, limit = 12 } = req.query;
+
+    const parsedPriceRange = typeof priceRange === "string" ? priceRange.split(",").map(Number) : [0, 10000];
+    const parsedPage = Number(page);
+    const parsedLimit = Number(limit);
+
+    const skip = (parsedPage - 1) * parsedLimit;
+
+    const filters: Record<string, any> = {
+      salePrice: {
+        gte: parsedPriceRange[0],
+        lte: parsedPriceRange[1],
+      },
+      NOT: {
+        startingDate: null,
+      },
+    };
+
+    if (categories && String(categories).length > 0) {
+      filters.category = {
+        in: Array.isArray(categories) ? categories : String(categories).split(","),
+      };
+    }
+    if (colors && (colors as string[]).length > 0) {
+      filters.colors = {
+        hasSome: Array.isArray(colors) ? colors : [colors],
+      };
+    }
+
+    if (sizes && (sizes as string[]).length > 0) {
+      filters.sizes = {
+        hasSome: Array.isArray(sizes) ? sizes : [sizes],
+      };
+    }
+
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where: filters,
+        skip,
+        take: parsedLimit,
+        include: {
+          images: true,
+          shop: true,
+        },
+      }),
+      prisma.product.count({ where: filters }),
+    ]);
+
+    const totalPages = Math.ceil(total / parsedLimit);
+
+    return res.status(200).json({
+      products,
+      pagination: {
+        total,
+        page: parsedPage,
+        totalPages,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Get filtered shops
+export async function getFilteredShops(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { categories = [], countries = [], page = 1, limit = 12 } = req.query;
+
+    const parsedPage = Number(page);
+    const parsedLimit = Number(limit);
+
+    const skip = (parsedPage - 1) * parsedLimit;
+
+    const filters: Record<string, any> = {};
+
+    if (categories && String(categories).length > 0) {
+      filters.category = {
+        in: Array.isArray(categories) ? categories : String(categories).split(","),
+      };
+    }
+
+    if (countries && (countries as string[]).length > 0) {
+      filters.countries = {
+        in: Array.isArray(countries) ? countries : String(countries).split(","),
+      };
+    }
+
+    const [shops, total] = await Promise.all([
+      prisma.shop.findMany({
+        where: filters,
+        skip,
+        take: parsedLimit,
+        include: {
+          sellers: true,
+          products: true,
+          followers: true,
+        },
+      }),
+      prisma.shop.count({ where: filters }),
+    ]);
+
+    const totalPages = Math.ceil(total / parsedLimit);
+
+    return res.status(200).json({
+      shops,
+      pagination: {
+        total,
+        page: parsedPage,
+        totalPages,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Search products
+
+export async function searchProducts(req: Request, res: Response, next: NextFunction) {
+  try {
+    const query = req.query.q as string;
+
+    if (!query || query.trim().length === 0) {
+      return res.status(400).json({ message: "Search query is required." });
+    }
+
+    const products = await prisma.product.findMany({
+      where: {
+        OR: [
+          {
+            title: {
+              contains: query,
+              mode: "insensitive",
+            },
+          },
+          {
+            description: {
+              contains: query,
+              mode: "insensitive",
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+      },
+      take: 10,
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return res.status(200).json({ products });
+  } catch (error) {
+    return next(error);
+  }
+}

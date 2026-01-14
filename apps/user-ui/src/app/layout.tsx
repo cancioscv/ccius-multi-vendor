@@ -6,7 +6,7 @@ import { ToastContainer } from "react-toastify";
 
 export const metadata = {
   title: "Ccius User",
-  description: "Ccius E-commerce",
+  description: "Ccius Marketplace",
 };
 
 const roboto = Roboto({

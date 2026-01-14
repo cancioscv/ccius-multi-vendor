@@ -15,7 +15,8 @@ interface CartState {
   removeFromCart: (id: string, user: Prisma.UserCreateInput, location: Location, deviceInfo: string) => void;
   addToWishlist: (product: Prisma.ProductCreateInput, user: Prisma.UserCreateInput, location: Location, deviceInfo: string) => void;
   removeFromWishlist: (id: string, user: Prisma.UserCreateInput, location: Location, deviceInfo: string) => void;
-  isInCart: (product: string) => boolean;
+  isInCart: (productId: string) => boolean;
+  isWishlisted: (productId: string) => boolean;
   clearCart: () => void;
   hasHydrated: boolean;
 }
@@ -31,7 +32,9 @@ export const useCartStore = create<CartState>()(
         set((state) => {
           const existingProduct = state.cart.find((item) => item.id === product.id);
           if (existingProduct) {
-            cart: state.cart.map((item) => (item.id === product.id ? { ...item, quantity: (item.quantity ?? 1) + 1 } : item));
+            return {
+              cart: state.cart.map((item) => (item.id === product.id ? { ...item, quantity: (item.quantity ?? 1) + 1 } : item)),
+            };
           }
 
           return {
@@ -70,6 +73,9 @@ export const useCartStore = create<CartState>()(
             wishList: state.wishList?.filter((item) => item.id !== id),
           };
         });
+      },
+      isWishlisted: (productId) => {
+        return get().wishList.some((item) => item.id === productId);
       },
       hasHydrated: false,
     }),

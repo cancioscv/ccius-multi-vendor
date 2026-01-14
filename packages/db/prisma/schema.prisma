@@ -30,6 +30,7 @@ model User {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   shopReviews ShopReview[]
+  followings  Follower[] // watch this
 }
 
 model ShopReview {
@@ -57,11 +58,12 @@ model Shop {
   openingHours String?
   website      String?
   socialLinks  Json[]
-  ratings      Float        @default(0)
+  ratings      Float        @default(2)
   reviews      ShopReview[]
   createdAt    DateTime     @default(now())
   updateAt     DateTime     @updatedAt
   products     Product[]
+  followers    Follower[]
 }
 
 model Seller {
@@ -119,7 +121,7 @@ model Product {
   stock                Int
   salePrice            Float
   regularPrice         Float
-  ratings              Float         @default(5)
+  ratings              Float         @default(4)
   warranty             String?
   customSpecifications Json?
   customProperties     Json
@@ -175,4 +177,14 @@ model ShopAnalytics {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Follower {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId
+  shopId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+  shop   Shop?  @relation(fields: [shopId], references: [id])
+
+  @@unique([userId, shopId]) // One user can follow the same shop only once
 }
