@@ -14,7 +14,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { setCookie } from "../utils/cookies/setCookie.js";
 import stripe from "../utils/stripe.js";
-import { producer } from "../utils/kafka.js";
+// import { producer } from "../utils/kafka.js";
 
 const { JsonWebTokenError } = jwt;
 
@@ -54,7 +54,7 @@ export async function verifyUser(req: Request, res: Response, next: NextFunction
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await prisma.user.create({
+    await prisma.user.create({
       data: {
         name,
         email,
@@ -62,12 +62,12 @@ export async function verifyUser(req: Request, res: Response, next: NextFunction
       },
     });
 
-    producer.send("user.created", {
-      value: {
-        username: user.name,
-        email: user.email,
-      },
-    });
+    // producer.send("user.created", {
+    //   value: {
+    //     username: user.name,
+    //     email: user.email,
+    //   },
+    // });
 
     res.status(201).json({ succeed: true, message: "User registered successfully." });
   } catch (err) {

@@ -73,7 +73,7 @@ export default function ProductDetails({ product }: any) {
       query.set("priceRange", priceRange.join(","));
       query.set("page", "1");
       query.set("limit", "5");
-      const res = await axiosInstance.get(`/product/api/get-filtered-products?${query.toString()}`);
+      const res = await axiosInstance.get(`/product/api/filtered-products?${query.toString()}`);
       setRecommendedProducts(res.data.products);
     } catch (error) {
       console.error("Failed to fetch filtered products", error);

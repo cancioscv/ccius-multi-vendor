@@ -113,7 +113,7 @@ export default function ProductDetailsCard({ product, setOpen }: Props) {
 
                   {/* Shop Ratings */}
                   <span className="block mt-1">
-                    <Ratings ratings={product?.shop?.ratings} />
+                    <Ratings ratings={product?.ratings} />
                   </span>
 
                   {/* Shop Location */}

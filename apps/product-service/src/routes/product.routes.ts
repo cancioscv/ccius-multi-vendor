@@ -16,6 +16,7 @@ import {
   getFilteredOffers,
   getFilteredShops,
   searchProducts,
+  getTopShops,
 } from "../controller/product.controller.js";
 import { isAuth } from "@e-com/libs";
 import { get } from "http";
@@ -37,9 +38,11 @@ router.get("/get-seller-products", isAuth, getSellerProducts);
 router.delete("/delete-product/:productId", isAuth, deleteProduct);
 router.put("/restore-product/:productId", isAuth, restoreProduct);
 router.get("/all-products/", getAllProducts);
+router.get("/product/:slug", getProductById);
 router.get("/filtered-products", getFilteredProducts);
 router.get("/filtered-offers", getFilteredOffers);
 router.get("/filtered-shops", getFilteredShops);
 router.get("/search-products", searchProducts);
+router.get("/top-shops", getTopShops);
 
 export default router;

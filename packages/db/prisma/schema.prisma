@@ -31,6 +31,55 @@ model User {
   updatedAt   DateTime     @updatedAt
   shopReviews ShopReview[]
   followings  Follower[] // watch this
+  orders      Order[]
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  PAID
+  PARTIALLY_REFUNDED
+  REFUNDED
+  FAILED
+  CANCELLED
+}
+
+model OrderItem {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId         String   @db.ObjectId
+  order           Order    @relation(fields: [orderId], references: [id], name: "OrderItemRelation")
+  productId       String
+  quantity        Int
+  price           Float
+  selectedOptions Json?
+  createdAt       DateTime @default(now())
+}
+
+model Order {
+  id                String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String        @db.ObjectId
+  user              User          @relation(fields: [userId], references: [id])
+  shopId            String        @db.ObjectId
+  shop              Shop          @relation(fields: [shopId], references: [id])
+  total             Float
+  shippingAddressId String?
+  couponCode        String?
+  discountAmount    Float?
+  deliveryStatus    OrderStatus   @default(PENDING)
+  paymentStatus     PaymentStatus @default(PENDING)
+  items             OrderItem[]   @relation("OrderItemRelation")
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 }
 
 model ShopReview {
@@ -64,6 +113,7 @@ model Shop {
   updateAt     DateTime     @updatedAt
   products     Product[]
   followers    Follower[]
+  orders       Order[]
 }
 
 model Seller {

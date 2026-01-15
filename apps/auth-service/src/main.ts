@@ -7,7 +7,7 @@ import authRouter from "./routes/auth.routes.js";
 // import swaggerUi from 'swagger-ui-express';
 // import swaggerDocument from './swagger/swagger-output.json' with { type: 'json' };
 
-import { producer } from "./utils/kafka.js";
+// import { producer } from "./utils/kafka.js";
 
 const app = express();
 
@@ -41,7 +41,7 @@ app.use(errorMiddleware);
 const port = process.env.PORT || 6001;
 app.listen(port, async () => {
   try {
-    await producer.connect();
+    // await producer.connect();
 
     console.log(`Auth Service is running on http://localhost:${port}/api`);
     console.log(`Swagger Docs are available at http://localhost:${port}/docs`);

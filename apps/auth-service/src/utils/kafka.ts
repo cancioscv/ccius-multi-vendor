@@ -1,5 +1,5 @@
-import { createKafkaClient, createProducer } from "@e-com/kafka";
+// import { createKafkaClient, createProducer } from "@e-com/kafka";
 
-const kafka = createKafkaClient("auth-service");
+// const kafka = createKafkaClient("auth-service");
 
-export const producer = createProducer(kafka);
+// export const producer = createProducer(kafka);
