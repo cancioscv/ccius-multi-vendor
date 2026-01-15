@@ -1,8 +1,9 @@
 import { Poppins, Roboto, Oregano, Jost } from "next/font/google";
-import Header from "@/shared/widgets";
+import Header from "@/shared/widgets/header";
 import "./global.css";
 import Providers from "./providers";
 import { ToastContainer } from "react-toastify";
+import Footer from "@/shared/widgets/footer";
 
 export const metadata = {
   title: "Ccius User",
@@ -36,10 +37,11 @@ const jost = Jost({
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`antialiased ${roboto.variable} ${poppins.variable}  ${oregano.variable} ${jost.variable} `}>
+      <body className={`antialiased ${roboto.variable} ${poppins.variable}  ${oregano.variable} ${jost.variable} bg-[#f5f5f5]`}>
         <Providers>
           <Header />
           {children}
+          <Footer />
           <ToastContainer position="bottom-right" />
         </Providers>
       </body>
