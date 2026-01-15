@@ -94,7 +94,7 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="w-full bg-[#f5f5f5] pb-10">
+    <div className="w-full pb-10">
       <div className="w-[90%] lg:w-[80%] m-auto">
         <div className="pb-[50px]">
           <h1 className="md:pt-[40px] font-medium text-[44px] leading-1 mb-[14px] font-jost">All Products</h1>

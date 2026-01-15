@@ -36,7 +36,7 @@ export default function Page() {
   });
 
   return (
-    <div className="bg-[#f5f5f5]">
+    <div>
       <Hero />
       <div className="md:w-[80%] w-[90%] my-10 m-auto">
         {!isLoading && isLoggedIn && (
