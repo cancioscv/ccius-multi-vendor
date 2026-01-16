@@ -32,6 +32,9 @@
     },
     {
       "path": "./packages/analytics"
+    },
+    {
+      "path": "./apps/order-service"
     }
   ]
 }
