@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { isAuth } from "@e-com/libs";
+import { isAuth, isSeller } from "@e-com/libs";
 
 import {
   forgotPassword,
@@ -16,8 +16,12 @@ import {
   createStripeConnectLink,
   loginSeller,
   getSeller,
+  getLayoutData,
+  changePassword,
+  addUserAddress,
+  getShippingAddresses,
+  deleteUserAddress,
 } from "../controller/auth.controller.js";
-import { isSeller } from "../../../../packages/libs/src/middleware/authorizeRoles.js";
 
 const router: Router = Router();
 
@@ -29,8 +33,11 @@ router.post("/refresh-token", refreshToken);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 router.post("/verify-forgot-password", verifyForgotPassword);
-
+router.post("/change-password", isAuth, changePassword);
 router.get("/logged-user", isAuth, getUser);
+router.post("/add-address", isAuth, addUserAddress);
+router.get("/shipping-addresses", isAuth, getShippingAddresses);
+router.delete("/delete-address/:addressId", isAuth, deleteUserAddress);
 
 // Seller and Shop
 router.post("/create-seller", createSeller);
@@ -42,5 +49,7 @@ router.get("/logged-seller", isAuth, isSeller, getSeller);
 
 // Stripe
 router.post("/create-stripe-link", createStripeConnectLink);
+
+router.get("/get-layouts", getLayoutData);
 
 export default router;

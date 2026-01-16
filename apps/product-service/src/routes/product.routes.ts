@@ -20,7 +20,6 @@ import {
   getAllOffers,
 } from "../controller/product.controller.js";
 import { isAuth } from "@e-com/libs";
-import { get } from "http";
 
 const router: Router = Router();
 

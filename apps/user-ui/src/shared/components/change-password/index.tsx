@@ -17,7 +17,7 @@ export default function ChangePassword() {
     setError("");
     setMessage("");
     try {
-      await axiosInstance.post("/api/change-password", {
+      await axiosInstance.post(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/change-password`, {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
         confirmPassword: data?.confirmPassword,

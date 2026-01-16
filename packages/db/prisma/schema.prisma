@@ -133,6 +133,8 @@ model SiteConfig {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
   categories    String[]
   subCategories Json
+  logo          String?
+  banner        String?
 }
 
 model DiscountCode {
@@ -237,4 +239,23 @@ model Follower {
   shop   Shop?  @relation(fields: [shopId], references: [id])
 
   @@unique([userId, shopId]) // One user can follow the same shop only once
+}
+
+enum AddressType {
+  HOME
+  WORK
+  OTHER
+}
+
+model Address {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String      @db.ObjectId
+  addressType AddressType
+  name        String
+  street      String
+  city        String
+  zip         String
+  country     String
+  isDefault   Boolean     @default(true)
+  createdAt   DateTime    @default(now())
 }

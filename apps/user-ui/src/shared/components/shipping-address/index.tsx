@@ -7,6 +7,11 @@ import { MapPin, Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
+enum ADDRESS_TYPE {
+  HOME = "HOME",
+  WORK = "WORK",
+  OTHER = "OTHER",
+}
 export default function ShippingAddress() {
   const [showModal, setShowModal] = useState(false);
   const queryClient = useQueryClient();
@@ -18,19 +23,19 @@ export default function ShippingAddress() {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      label: "Home",
+      addressType: ADDRESS_TYPE.HOME,
       name: "",
       street: "",
       city: "",
       zip: "",
-      country: "Bangladesh",
+      country: "DE",
       isDefault: "false",
     },
   });
 
   const { mutate: addAddress } = useMutation({
     mutationFn: async (payload: any) => {
-      const res = await axiosInstance.post("/auth/api/add-address", payload);
+      const res = await axiosInstance.post("/api/add-address", payload);
       return res.data.address;
     },
     onSuccess: () => {
@@ -44,7 +49,7 @@ export default function ShippingAddress() {
   const { data: addresses, isLoading } = useQuery({
     queryKey: ["shipping-addresses"],
     queryFn: async () => {
-      const res = await axiosInstance.get("/auth/api/shipping-addresses");
+      const res = await axiosInstance.get("/api/shipping-addresses");
       return res.data.addresses;
     },
   });
@@ -58,7 +63,7 @@ export default function ShippingAddress() {
 
   const { mutate: deleteAddress } = useMutation({
     mutationFn: async (id: string) => {
-      await axiosInstance.delete(`/auth/api/delete-address/${id}`);
+      await axiosInstance.delete(`/api/delete-address/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shipping-addresses"] });
@@ -88,23 +93,23 @@ export default function ShippingAddress() {
                 {address.isDefault && (
                   <span className="absolute top-2 right-2 bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full">Default</span>
                 )}
-                <div className="flex items-start gap-2 text-sm text-gray-700">
+                <div className="flex items-start gap-2 text-sm text-gray-700 min-h-20">
                   <MapPin className="w-5 h-5 mt-0.5 text-gray-500" />
                   <div>
                     <p className="font-medium">
-                      {address.label} - {address.name}
+                      {address.addressType} - {address.name}
                     </p>
                     <p>
                       {address.street}, {address.city}, {address.zip}, {address.country}
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-3 mt-4">
+                <div className="flex gap-3 mt-4 absolute bottom-2">
                   <button
-                    className="flex items-center gap-1 !cursor-pointer text-xs text-red-500 hover:underline"
+                    className="flex items-center gap-1 !cursor-pointer text-xs text-red-500 hover:underline "
                     onClick={() => deleteAddress(address.id)}
                   >
-                    <Trash2 className="w-4 h-4" /> Delete
+                    <Trash2 className="w-4 h-4" /> Remove
                   </button>
                 </div>
               </div>
@@ -122,37 +127,67 @@ export default function ShippingAddress() {
             </button>
             <h3 className="text-lg font-semibold mb-4 text-gray-800">Add New Address</h3>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-              <select {...register("label")} className="form-input">
-                <option value="Home">Home</option>
-                <option value="Work">Work</option>
-                <option value="Other">Other</option>
+              <select {...register("addressType")} className="w-full border outline-none border-gray-300 bg-transparent rounded-md p-2">
+                <option value={ADDRESS_TYPE.HOME} className="bg-black">
+                  Home
+                </option>
+                <option value={ADDRESS_TYPE.WORK} className="bg-black">
+                  Work
+                </option>
+                <option value={ADDRESS_TYPE.OTHER} className="bg-black">
+                  Other
+                </option>
               </select>
 
-              <input placeholder="Name" {...register("name", { required: "Name is required" })} className="form-input" />
+              <input
+                type="text"
+                placeholder="Name"
+                {...register("name", { required: "Name is required" })}
+                className="w-full p-2 border border-gray-300 rounded-[4px] mb-1 outline-none"
+              />
               {errors.name && <p className="text-red-500 text-xs">{errors.name.message}</p>}
 
-              <input placeholder="Street" {...register("street", { required: "Street is required" })} className="form-input" />
+              <input
+                type="text"
+                placeholder="Street"
+                {...register("street", { required: "Street is required" })}
+                className="w-full p-2 border border-gray-300 rounded-[4px] mb-1 outline-none"
+              />
               {errors.street && <p className="text-red-500 text-xs">{errors.street.message}</p>}
 
-              <input placeholder="City" {...register("city", { required: "City is required" })} className="form-input" />
+              <input
+                type="text"
+                placeholder="City"
+                {...register("city", { required: "City is required" })}
+                className="w-full p-2 border border-gray-300 rounded-[4px] mb-1 outline-none"
+              />
               {errors.city && <p className="text-red-500 text-xs">{errors.city.message}</p>}
 
-              <input placeholder="ZIP Code" {...register("zip", { required: "ZIP code is required" })} className="form-input" />
+              <input
+                type="text"
+                placeholder="ZIP Code"
+                {...register("zip", { required: "ZIP code is required" })}
+                className="w-full p-2 border border-gray-300 rounded-[4px] mb-1 outline-none"
+              />
 
-              <select {...register("country")} className="form-input">
+              <select {...register("country")} className="w-full border outline-none border-gray-300 bg-transparent rounded-md p-2">
                 {countries.map((country) => (
-                  <option key={country.code} value={country.code}>
+                  <option key={country.code} value={country.code} className="bg-black">
                     {country.name}
                   </option>
                 ))}
               </select>
 
-              <select {...register("isDefault")} className="form-input">
-                <option value="true">Set as Default</option>
-                <option value="false">Not Default</option>
+              <select {...register("isDefault")} className="w-full border outline-none border-gray-300 bg-transparent rounded-md p-2">
+                <option value="true" className="">
+                  Set as Default
+                </option>
+                <option value="false" className="">
+                  Not Default
+                </option>
               </select>
 
-              <button type="submit" className="w-full bg-blue-600 text-white text-sm py-2 rounded-md hover:bg-blue-700 transition">
+              <button type="submit" className="w-full bg-blue-600 text-white text-sm py-2 rounded-md hover:bg-blue-300 transition">
                 Save Address
               </button>
             </form>

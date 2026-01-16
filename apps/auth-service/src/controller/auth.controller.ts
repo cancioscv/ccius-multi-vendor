@@ -8,7 +8,7 @@ import {
   verifyForgotPasswordOtp,
   verifyOtp,
 } from "../utils/auth.helper.js";
-import { AuthError, CustomRequest, ValidationError } from "@e-com/libs";
+import { AuthError, CustomRequest, NotFoundError, ValidationError } from "@e-com/libs";
 import { prisma } from "@e-com/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -378,6 +378,127 @@ export async function getSeller(req: any, res: Response, next: NextFunction) {
       success: true,
       seller,
     });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Get Layout data
+export async function getLayoutData(req: Request, res: Response, next: NextFunction) {
+  try {
+    const layout = await prisma.siteConfig.findFirst();
+    return res.status(200).json({ success: true, layout });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Change password
+export async function changePassword(req: any, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user?.id;
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return next(new ValidationError("Please enter all fields."));
+    }
+    if (newPassword !== confirmPassword) {
+      return next(new ValidationError("New password do not match"));
+    }
+    if (newPassword === currentPassword) {
+      return next(new ValidationError("New password must be different than current password."));
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user || !user.password) {
+      return next(new AuthError("User not found or password not set."));
+    }
+
+    const comparePassword = await bcrypt.compare(currentPassword, user.password);
+
+    if (!comparePassword) {
+      return next(new AuthError("Current password is incorrect."));
+    }
+
+    const hashedPasswod = await bcrypt.hash(newPassword, 12);
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPasswod },
+    });
+
+    return res.status(201).json({ message: "Password updated successfully." });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Register user address
+export async function addUserAddress(req: any, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user?.id;
+    const { name, street, city, zip, country, isDefault, addressType } = req.body;
+    if (!name || !street || !zip || !city || !country || !addressType) {
+      return next(new ValidationError("All fiels are required!!!"));
+    }
+
+    if (isDefault) {
+      await prisma.address.updateMany({
+        where: {
+          userId,
+          isDefault: true,
+        },
+        data: { isDefault: false },
+      });
+    }
+
+    const data = { userId, addressType, name, street, city, zip, country, isDefault };
+
+    const newAddress = await prisma.address.create({ data });
+
+    return res.status(201).json({ success: true, address: newAddress });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Get user shipping addresses
+export async function getShippingAddresses(req: any, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user?.id;
+
+    const addresses = await prisma.address.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return res.status(200).json({ success: true, addresses });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Delete user address
+export async function deleteUserAddress(req: any, res: Response, next: NextFunction) {
+  try {
+    const userId = req.user?.id;
+    const { addressId } = req.params;
+
+    if (!addressId) {
+      return next(new ValidationError("Address Id is required."));
+    }
+
+    const foundAddress = await prisma.address.findFirst({
+      where: { id: addressId, userId },
+    });
+
+    if (!foundAddress) {
+      return next(new NotFoundError("Address not found."));
+    }
+
+    await prisma.address.delete({ where: { id: addressId } });
+
+    return res.status(200).json({ success: true, message: "Address deleted successfully." });
   } catch (error) {
     return next(error);
   }
