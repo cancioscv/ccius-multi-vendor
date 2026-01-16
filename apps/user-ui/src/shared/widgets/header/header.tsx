@@ -5,29 +5,90 @@ import Link from "next/link";
 import HeaderBottom from "./header-bottom";
 import useUser from "@/hooks/useUser";
 import { useCartStore } from "@/store";
+import useLayout from "@/hooks/useLayout";
+import { useState } from "react";
+import Image from "next/image";
+import axiosInstance from "@/utils/axiosInstance";
 
 export default function Header() {
   const { user, isLoading } = useUser();
-
   const { cart, wishList } = useCartStore();
+  const { layout } = useLayout();
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+
+  async function handleSearch() {
+    if (!searchQuery.trim()) return;
+    setLoadingSuggestions(true);
+
+    try {
+      const res = await axiosInstance.get(`/product/api/search-products?q=${encodeURIComponent(searchQuery)}`);
+      setSuggestions(res.data.products.slice(0, 10));
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  }
+
   return (
     <div className="w-full bg-white">
       <div className="w-[80%] py-5 m-auto flex items-center justify-between">
         <div>
           <Link href="/">
-            <span className="text-3xl font-[500]">Ccius</span>
+            <Image
+              src={layout?.logo || "https://ik.imagekit.io/sjbr5usgh/logo/Blue%20Waves%20Surfing%20Club%20Logo.png?updatedAt=1744371251216"}
+              alt=""
+              width={300}
+              height={100}
+              className="h-[70px] ml-[-50px] mb-[-30px] object-cover"
+            />
           </Link>
         </div>
+        {/* Search input */}
         <div className="w-[50%] relative">
           <input
             type="text"
+            value={searchQuery}
             placeholder="Search for products..."
             className="w-full px-4 font-Poppins font-medium border-[2.5px] border-gray-500 outline-none h-[55px]"
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <div className="w-[60px] cursor-pointer flex items-center justify-center h-[55px] bg-gray-500 absolute top-0 right-0">
+          <div
+            className="w-[60px] cursor-pointer flex items-center justify-center h-[55px] bg-gray-500 absolute top-0 right-0"
+            onClick={handleSearch}
+          >
             <Search className="h-4 w-4" color="white" />
           </div>
+
+          {/* Suggestions dropdown */}
+          {suggestions.length > 0 && (
+            <div className="absolute w-full top-[60px] bg-white border border-gray-200 shadow-md z-50 max-h-[300px] overflow-y-auto">
+              {suggestions.map((item) => (
+                <Link
+                  href={`/product/${item.slug}`}
+                  key={item.id}
+                  onClick={() => {
+                    setSuggestions([]);
+                    setSearchQuery("");
+                  }}
+                  className="block px-4 py-2 text-sm hover:bg-blue-50 text-gray-800"
+                >
+                  {item.title}
+                </Link>
+              ))}
+            </div>
+          )}
+          {loadingSuggestions && (
+            <div className="absolute w-full top-[60px] bg-white border border-gray-200 shadow-md z-50 px-4 py-3 text-sm text-gray-500">
+              Searching...
+            </div>
+          )}
         </div>
+
+        {/* Profile & Icons */}
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-2">
             {user && !isLoading ? (
@@ -53,6 +114,8 @@ export default function Header() {
               </>
             )}
           </div>
+
+          {/* Wishlist & Cart */}
           <div className="flex items-center gap-5">
             <Link href="/wishlist" className="relative">
               <HeartIcon />
@@ -69,6 +132,7 @@ export default function Header() {
           </div>
         </div>
       </div>
+
       <div className="border-b border-gray-300" />
       <HeaderBottom />
     </div>

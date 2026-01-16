@@ -647,6 +647,8 @@ export async function getTopShops(req: Request, res: Response, next: NextFunctio
       },
     });
 
+    console.log("SHOPS", shops);
+
     // Merge sales with shop data
     const enrichedShops = shops.map((shop) => {
       const salesData = topShopsData.find((s) => s.shopId === shop.id);
@@ -660,5 +662,51 @@ export async function getTopShops(req: Request, res: Response, next: NextFunctio
     return res.status(200).json({ shops: top10Shops });
   } catch (error) {
     return next(error);
+  }
+}
+
+export async function getAllOffers(req: Request, res: Response, next: NextFunction) {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
+    const baseFilter = {
+      AND: [{ startingDate: { not: null } }, { endingDate: { not: null } }],
+    };
+
+    const [offers, total, top10BySales] = await Promise.all([
+      prisma.product.findMany({
+        where: baseFilter,
+        skip,
+        take: limit,
+        include: {
+          images: true,
+          shop: true,
+        },
+        orderBy: {
+          totalSales: "desc",
+        },
+      }),
+      prisma.product.count({ where: baseFilter }),
+      prisma.product.findMany({
+        where: baseFilter,
+        take: 10,
+        orderBy: {
+          totalSales: "desc",
+        },
+      }),
+    ]);
+
+    return res.status(200).json({
+      offers,
+      total,
+      top10BySales,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to fetch offers/events" });
+    // return next(error);
   }
 }

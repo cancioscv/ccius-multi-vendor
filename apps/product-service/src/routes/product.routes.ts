@@ -17,6 +17,7 @@ import {
   getFilteredShops,
   searchProducts,
   getTopShops,
+  getAllOffers,
 } from "../controller/product.controller.js";
 import { isAuth } from "@e-com/libs";
 import { get } from "http";
@@ -44,5 +45,6 @@ router.get("/filtered-offers", getFilteredOffers);
 router.get("/filtered-shops", getFilteredShops);
 router.get("/search-products", searchProducts);
 router.get("/top-shops", getTopShops);
+router.get("/all-offers", getAllOffers);
 
 export default router;

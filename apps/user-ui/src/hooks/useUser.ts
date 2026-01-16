@@ -19,7 +19,7 @@ export default function useUser() {
   } = useQuery({
     queryKey: ["user"],
     queryFn: fetchUser,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 5, // Date is fresh for 5 mins
     retry: false,
     enabled: isLoggedIn,
   });
