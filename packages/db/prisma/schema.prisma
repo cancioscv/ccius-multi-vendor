@@ -35,10 +35,10 @@ model User {
 }
 
 enum OrderStatus {
-  PENDING
-  CONFIRMED
-  PROCESSING
+  ORDERED
+  PACKED
   SHIPPED
+  OUT_OF_DELIVERY
   DELIVERED
   CANCELLED
   REFUNDED
@@ -75,7 +75,7 @@ model Order {
   shippingAddressId String?
   couponCode        String?
   discountAmount    Float?
-  deliveryStatus    OrderStatus   @default(PENDING)
+  deliveryStatus    OrderStatus   @default(ORDERED)
   paymentStatus     PaymentStatus @default(PENDING)
   items             OrderItem[]   @relation("OrderItemRelation")
   createdAt         DateTime      @default(now())
@@ -137,15 +137,20 @@ model SiteConfig {
   banner        String?
 }
 
+enum DiscountType {
+  PERCENTAGE
+  FLAT
+}
+
 model DiscountCode {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  id            String       @id @default(auto()) @map("_id") @db.ObjectId
   publicName    String
-  discountType  String
+  discountType  DiscountType @default(PERCENTAGE)
   discountValue Float
-  discountCode  String   @unique
-  sellerId      String   @db.ObjectId
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  discountCode  String       @unique
+  sellerId      String       @db.ObjectId
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
 
 enum ProductStatus {
@@ -258,4 +263,21 @@ model Address {
   country     String
   isDefault   Boolean     @default(true)
   createdAt   DateTime    @default(now())
+}
+
+enum NotificationType {
+  IS_READ
+  UNREAD
+}
+
+model Notification {
+  id           String           @id @default(auto()) @map("_id") @db.ObjectId
+  buyerId      String           @db.ObjectId
+  receiverId   String
+  redirectLink String?
+  title        String
+  message      String
+  status       NotificationType @default(UNREAD)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 }

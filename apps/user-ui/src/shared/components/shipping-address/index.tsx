@@ -7,7 +7,7 @@ import { MapPin, Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-enum ADDRESS_TYPE {
+enum ADDRESS_TYPE { // TODO: Get this enum from prisma
   HOME = "HOME",
   WORK = "WORK",
   OTHER = "OTHER",
