@@ -133,6 +133,15 @@
         "express": "^4.21.2",
       },
     },
+    "apps/seller-service": {
+      "name": "@e-com/seller-service",
+      "version": "0.0.1",
+      "dependencies": {
+        "@e-com/db": "workspace:*",
+        "@e-com/libs": "workspace:*",
+        "express": "^4.21.2",
+      },
+    },
     "apps/seller-ui": {
       "name": "@e-com/seller-ui",
       "version": "0.0.1",
@@ -506,6 +515,8 @@
     "@e-com/order-service": ["@e-com/order-service@workspace:apps/order-service"],
 
     "@e-com/product-service": ["@e-com/product-service@workspace:apps/product-service"],
+
+    "@e-com/seller-service": ["@e-com/seller-service@workspace:apps/seller-service"],
 
     "@e-com/seller-ui": ["@e-com/seller-ui@workspace:apps/seller-ui"],
 
