@@ -12,7 +12,7 @@ export async function createPaymentIntent(req: any, res: Response, next: NextFun
   const customerAmount = Math.round(amount * 100);
   const platformFee = Math.round(customerAmount * 0.1);
 
-  console.log("sellerStripeAccountId", sellerStripeAccountId);
+  console.log("sellerStripeAccountId please", sellerStripeAccountId);
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: customerAmount,
@@ -20,7 +20,7 @@ export async function createPaymentIntent(req: any, res: Response, next: NextFun
       payment_method_types: ["card"],
       application_fee_amount: platformFee,
       transfer_data: {
-        destination: sellerStripeAccountId,
+        destination: sellerStripeAccountId || "acct_1SrNuzEoiyWtXbWv",
       },
       metadata: {
         sessionId,
@@ -111,6 +111,8 @@ export async function createPaymentSession(req: any, res: Response, next: NextFu
       stripeAccountId: shop?.sellers.stripeId,
     }));
 
+    console.log("SELLERSS DATA", sellerData);
+
     // Total amount
     const totalAmount = cart.reduce((total: number, item: any) => {
       return total + item.quantity * item.salePrice;
@@ -147,7 +149,6 @@ export async function verifyPaymentSession(req: any, res: Response, next: NextFu
     // Get Session from Redis
     const sessionKey = `payment-session:${sessionId}`;
     const sessionData = await redis.get(sessionKey);
-
     if (!sessionData) {
       return res.status(404).json({ error: "Session not found or expired." });
     }

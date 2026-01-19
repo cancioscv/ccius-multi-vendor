@@ -33,7 +33,6 @@ export default function CheckoutPage() {
 
       try {
         const res = await axiosInstance.get(`/order/api/verify-payment-session?sessionId=${sessionId}`);
-
         const { totalAmount, sellers, cart, coupon } = res.data.session;
 
         if (!sellers || sellers.length === 0 || totalAmount === undefined || totalAmount === null) {

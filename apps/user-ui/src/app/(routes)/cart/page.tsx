@@ -107,7 +107,7 @@ export default function CartPage() {
   const { data: addresses = [] } = useQuery<any[], Error>({
     queryKey: ["shipping-addresses"],
     queryFn: async () => {
-      const res = await axiosInstance.get("/auth/api/shipping-addresses");
+      const res = await axiosInstance.get("/api/shipping-addresses");
       return res.data.addresses;
     },
   });
