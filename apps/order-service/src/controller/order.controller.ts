@@ -46,18 +46,17 @@ export async function createPaymentSession(req: any, res: Response, next: NextFu
     }
 
     const normalizedCart = JSON.stringify(
-      cart.map((item: any) => ({
-        id: item.id,
-        quantity: item.quantity,
-        salePrice: item.salePrice,
-        shopId: item.shopId,
-        selectedOptions: item.selectedOptions || {},
-      }))
-      // .sort((a, b) => {
-      //   console.log("AAAAAAAA", a);
-      //   console.log("BBBBB", b);
-      //   if (a && b) return a.id.localCompare(b.id);
-      // })
+      cart
+        .map((item: any) => ({
+          id: item.id,
+          quantity: item.quantity,
+          salePrice: item.salePrice,
+          shopId: item.shopId,
+          selectedOptions: item.selectedOptions || {},
+        }))
+        .sort((a, b) => {
+          if (a && b) return a.id.localCompare(b.id);
+        })
     );
 
     const keys = await redis.keys("payment-session:*");
@@ -69,18 +68,17 @@ export async function createPaymentSession(req: any, res: Response, next: NextFu
         const session = JSON.parse(data);
         if (session.userId === userId) {
           const existingCart = JSON.stringify(
-            session.cart.map((item: any) => ({
-              id: item.id,
-              quantity: item.quantity,
-              salePrice: item.salePrice,
-              shopId: item.shopId,
-              selectedOptions: item.selectedOptions || {},
-            }))
-            // .sort((a: any, b: any) => {
-            //   console.log("AAAAAAAA", a);
-            //   console.log("BBBBB", b);
-            //   if (a && b) return a.id.localCompare(b.id);
-            // }) // This is I think for keeping the valid session from Redis
+            session.cart
+              .map((item: any) => ({
+                id: item.id,
+                quantity: item.quantity,
+                salePrice: item.salePrice,
+                shopId: item.shopId,
+                selectedOptions: item.selectedOptions || {},
+              }))
+              .sort((a: any, b: any) => {
+                if (a && b) return a.id.localCompare(b.id);
+              }) // This is I think for keeping the valid session from Redis
           );
 
           if (existingCart === normalizedCart) {

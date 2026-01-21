@@ -647,8 +647,6 @@ export async function getTopShops(req: Request, res: Response, next: NextFunctio
       },
     });
 
-    console.log("SHOPS", shops);
-
     // Merge sales with shop data
     const enrichedShops = shops.map((shop) => {
       const salesData = topShopsData.find((s) => s.shopId === shop.id);
