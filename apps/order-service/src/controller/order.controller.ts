@@ -1,4 +1,4 @@
-import { prisma, OrderStatus, DiscountType } from "@e-com/db";
+import { prisma, OrderStatus, PaymentStatus, DiscountType } from "@e-com/db";
 import Stripe from "stripe";
 import { NextFunction, Response } from "express";
 import redis, { NotFoundError, ValidationError } from "@e-com/libs";
@@ -232,7 +232,7 @@ export async function createOrder(req: any, res: Response, next: NextFunction) {
             userId,
             shopId,
             total: orderTotal,
-            paymentStatus: "PAID",
+            paymentStatus: PaymentStatus.PAID,
             shippingAddressId: shippingAddressId || null,
             couponCode: coupon.code || null,
             discountAmount: coupon?.discountAmount || 0,
