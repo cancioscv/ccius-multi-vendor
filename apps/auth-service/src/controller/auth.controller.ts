@@ -256,6 +256,7 @@ export async function verifySeller(req: Request, res: Response, next: NextFuncti
 
     const seller = await prisma.seller.create({
       data: sellerData,
+      include: { shop: true },
     });
 
     res.status(201).json({ seller, message: "Seller created successfully." });
@@ -285,7 +286,9 @@ export async function createShop(req: Request, res: Response, next: NextFunction
       shopData.website = website;
     }
 
-    const shop = await prisma.shop.create({ data: shopData });
+    const shop = await prisma.shop.create({
+      data: shopData,
+    });
     res.status(201).json({ success: true, shop });
   } catch (error) {
     next(error);

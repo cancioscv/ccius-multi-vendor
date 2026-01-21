@@ -94,7 +94,7 @@
 
         <div class="order-summary">
           <% cart.forEach(item => { %>
-          <p>🛒 <strong><%= item.title %></strong> — <%= item.quantity %> × $<%= item.sale_price.toFixed(2) %></p>
+          <p>🛒 <strong><%= item.title %></strong> — <%= item.quantity %> × $<%= item.salePrice.toFixed(2) %></p>
           <% }) %>
           <p class="total">Total: $<%= totalAmount.toFixed(2) %></p>
         </div>

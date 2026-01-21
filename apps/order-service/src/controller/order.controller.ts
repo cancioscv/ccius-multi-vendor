@@ -12,7 +12,6 @@ export async function createPaymentIntent(req: any, res: Response, next: NextFun
   const customerAmount = Math.round(amount * 100);
   const platformFee = Math.round(customerAmount * 0.1);
 
-  console.log("sellerStripeAccountId please", sellerStripeAccountId);
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: customerAmount,
@@ -20,7 +19,7 @@ export async function createPaymentIntent(req: any, res: Response, next: NextFun
       payment_method_types: ["card"],
       application_fee_amount: platformFee,
       transfer_data: {
-        destination: sellerStripeAccountId || "acct_1SrNuzEoiyWtXbWv",
+        destination: sellerStripeAccountId,
       },
       metadata: {
         sessionId,
@@ -47,15 +46,18 @@ export async function createPaymentSession(req: any, res: Response, next: NextFu
     }
 
     const normalizedCart = JSON.stringify(
-      cart
-        .map((item: any) => ({
-          id: item.id,
-          quantity: item.quantity,
-          salePrice: item.salePrice,
-          shopId: item.shopId,
-          selectedOptions: item.selectedOptions || {},
-        }))
-        .sort((a, b) => a.id.localCompare(b.id))
+      cart.map((item: any) => ({
+        id: item.id,
+        quantity: item.quantity,
+        salePrice: item.salePrice,
+        shopId: item.shopId,
+        selectedOptions: item.selectedOptions || {},
+      }))
+      // .sort((a, b) => {
+      //   console.log("AAAAAAAA", a);
+      //   console.log("BBBBB", b);
+      //   if (a && b) return a.id.localCompare(b.id);
+      // })
     );
 
     const keys = await redis.keys("payment-session:*");
@@ -67,15 +69,18 @@ export async function createPaymentSession(req: any, res: Response, next: NextFu
         const session = JSON.parse(data);
         if (session.userId === userId) {
           const existingCart = JSON.stringify(
-            session.cart
-              .map((item: any) => ({
-                id: item.id,
-                quantity: item.quantity,
-                salePrice: item.salePrice,
-                shopId: item.shopId,
-                selectedOptions: item.selectedOptions || {},
-              }))
-              .sort((a: any, b: any) => a.id.localCompare(b.id)) // This is I think for keeping the valid session from Redis
+            session.cart.map((item: any) => ({
+              id: item.id,
+              quantity: item.quantity,
+              salePrice: item.salePrice,
+              shopId: item.shopId,
+              selectedOptions: item.selectedOptions || {},
+            }))
+            // .sort((a: any, b: any) => {
+            //   console.log("AAAAAAAA", a);
+            //   console.log("BBBBB", b);
+            //   if (a && b) return a.id.localCompare(b.id);
+            // }) // This is I think for keeping the valid session from Redis
           );
 
           if (existingCart === normalizedCart) {
@@ -110,8 +115,6 @@ export async function createPaymentSession(req: any, res: Response, next: NextFu
       sellerId: shop?.sellerId,
       stripeAccountId: shop?.sellers.stripeId,
     }));
-
-    console.log("SELLERSS DATA", sellerData);
 
     // Total amount
     const totalAmount = cart.reduce((total: number, item: any) => {
@@ -149,13 +152,13 @@ export async function verifyPaymentSession(req: any, res: Response, next: NextFu
     // Get Session from Redis
     const sessionKey = `payment-session:${sessionId}`;
     const sessionData = await redis.get(sessionKey);
+
     if (!sessionData) {
       return res.status(404).json({ error: "Session not found or expired." });
     }
 
     // Parse and return session
     const session = JSON.parse(sessionData);
-
     return res.status(200).json({ success: true, session });
   } catch (error) {
     return next(error);
@@ -239,7 +242,7 @@ export async function createOrder(req: any, res: Response, next: NextFunction) {
               create: orderItems.map((item: any) => ({
                 productId: item.id,
                 quantity: item.quantity,
-                priec: item.salePrice,
+                price: item.salePrice,
                 selectedOptions: item.selectedOptions,
               })),
             },

@@ -27,6 +27,17 @@ export default function WishlistPage() {
     }));
   }
 
+  function handleAddToCart(item: any) {
+    addToCart(
+      {
+        ...item,
+        selectedOptions: { color: item?.colors?.[0] || "", size: item.sizes[0] || "" },
+      },
+      user,
+      location,
+      deviceInfo
+    );
+  }
   return (
     <div className="w-full bg-white">
       <div className="md:w-[80%] w-[95%] mx-auto min-h-screen">
@@ -85,7 +96,7 @@ export default function WishlistPage() {
                     <td>
                       <button
                         className="bg-[#2295FF] cursor-öpointer text-white px-5 py-2 rounded-md hover:bg-[#007bff] transition-all"
-                        onClick={() => addToCart(item, user, location, deviceInfo)}
+                        onClick={() => handleAddToCart(item)}
                       >
                         Add to Cart
                       </button>

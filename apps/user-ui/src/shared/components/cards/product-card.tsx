@@ -24,6 +24,9 @@ export default function ProductCard({ product, isEvent }: Props) {
   const isWishlisted = wishList.some((item) => item.id === product.id);
   // const isInCart = cart.some((item) => item.id === product.id);
 
+  const isColorSelected =product?.colors?.[0] || "";
+  const isSizeSelected =product?.sizes?.[0] || "";
+
   const { location } = useLocationTracking();
   const { deviceInfo } = useDeviceTracking();
   const { user } = useUser();
@@ -55,7 +58,7 @@ export default function ProductCard({ product, isEvent }: Props) {
 
   function handleAddToCart() {
     if (!isInCart(product?.id)) {
-      addToCart({ ...product, quantity: 1 }, user, location, deviceInfo);
+      addToCart({ ...product, quantity: 1, selectedOptions: { color: isColorSelected, size: isSizeSelected } }, user, location, deviceInfo);
       toast.success("Product was added to Cart");
     }
   }

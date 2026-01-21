@@ -12,7 +12,7 @@ async function initializeSiteConfig() {
             Electronics: ["Mobile", "Laptops", "Accessories", "Gaming"],
             Fashion: ["Men", "Women", "Kids", "Footwear"],
             "Home & Kitchen": ["Furniture", "Appliances", "Decor"],
-            "Sports & Fitness": ["Gym Equipment", "Outdoor Sports", "Wearables"],
+            "Sport & Fitness": ["Gym Equipment", "Outdoor Sports", "Wearables"],
           },
         },
       });
