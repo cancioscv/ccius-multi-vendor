@@ -11,7 +11,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 async function fetchProducts() {
-  const res = await axiosInstance.get("/product/api/get-seller-products");
+  const res = await axiosInstance.get("/product/api/shop-products");
   return res?.data?.products;
 }
 

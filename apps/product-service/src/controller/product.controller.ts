@@ -208,8 +208,8 @@ export async function createProduct(req: any, res: Response, next: NextFunction)
   }
 }
 
-// Get logged in seller
-export async function getSellerProducts(req: any, res: Response, next: NextFunction) {
+// Get logged-in seller products
+export async function getShopProducts(req: any, res: Response, next: NextFunction) {
   try {
     const products = await prisma.product.findMany({
       where: {

@@ -36,10 +36,8 @@ enum OrderStatus {
   ORDERED
   PACKED
   SHIPPED
-  OUT_OF_DELIVERY
+  OUT_FOR_DELIVERY
   DELIVERED
-  CANCELLED
-  REFUNDED
 }
 
 enum PaymentStatus {

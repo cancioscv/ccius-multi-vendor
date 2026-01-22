@@ -1,6 +1,5 @@
 "use client";
 
-import useSeller from "@/hooks/useSeller";
 import useSidebar from "@/hooks/useSidebar";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
@@ -24,11 +23,12 @@ import {
 } from "lucide-react";
 import SidebarItem from "./sidebar.item";
 import SidebarMenu from "./sidebar.menu";
+import useRequireAuth from "@/hooks/useRequiredAuth";
 
 export default function SidebarWrapper() {
   const { activeSidebar, setActiveSidebar } = useSidebar();
   const pathname = usePathname();
-  const { seller } = useSeller();
+  const { seller } = useRequireAuth();
 
   useEffect(() => {
     setActiveSidebar(pathname);

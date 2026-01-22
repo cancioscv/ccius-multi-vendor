@@ -9,16 +9,16 @@ enum DiscountType {
   PERCENTAGE = "PERCENTAGE",
   FLAT = "FLAT",
 }
-const deliveryStatuses = ["ORDERED", "PACKED", "SHIPPED", "OUT_OF_DELIVERY", "DELIVERED"]; // TODO: Refactore
+const deliveryStatuses = ["ORDERED", "PACKED", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"]; // TODO: Refactore
 // const deliveryStatuses = [
 //   { label: "Ordered", value: "ORDERED"},
 //   { label: "Packed", value: "PACKED"},
 //   { label: "Shipped", value: "SHIPPED"},
-//   { label: "Out of Delivery", value: "OUT_OF_DELIVERY"},
+//   { label: "Out of Delivery", value: "OUT_FOR_DELIVERY"},
 //   { label: "Delivered", value: "DELIVERED"},
 // ]
 
-export default function OrderDetails() {
+export default function OrderDetails({ path }: { path: string | undefined }) {
   const params = useParams();
   const orderId = params.id as string;
 
@@ -71,10 +71,11 @@ export default function OrderDetails() {
   if (!order) {
     return <p className="text-center text-sm text-red-500">Order not found.</p>;
   }
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
       <div className="my-4">
-        <span className="text-white flex items-center gap-2 font-semibold cursor-pointer" onClick={() => router.push("/dashboard/orders")}>
+        <span className="text-white flex items-center gap-2 font-semibold cursor-pointer" onClick={() => router.push(`/dashboard/${path}`)}>
           <ArrowLeft />
           Go Back to Dashboard
         </span>

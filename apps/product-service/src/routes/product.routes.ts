@@ -4,7 +4,7 @@ import {
   createProduct,
   deleteDiscountCode,
   deleteProductImage,
-  getSellerProducts,
+  getShopProducts,
   getCategories,
   getDiscountCodes,
   uploadProductImage,
@@ -34,7 +34,7 @@ router.delete("/delete-product-image", isAuth, deleteProductImage);
 
 // Product
 router.post("/create-product", isAuth, createProduct);
-router.get("/get-seller-products", isAuth, getSellerProducts);
+router.get("/shop-products", isAuth, getShopProducts);
 router.delete("/delete-product/:productId", isAuth, deleteProduct);
 router.put("/restore-product/:productId", isAuth, restoreProduct);
 router.get("/all-products/", getAllProducts);

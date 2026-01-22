@@ -13,3 +13,10 @@ export function isUser(req: any, res: Response, next: NextFunction) {
   }
   next();
 }
+
+export function isAdmin(req: any, res: Response, next: NextFunction) {
+  if (req.role !== "admin") {
+    return next(new AuthError("Access granted to Admin only!"));
+  }
+  next();
+}

@@ -1,7 +1,8 @@
-import express from "express";
+import express, { NextFunction, Response, Request } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { errorMiddleware } from "@e-com/libs";
+import sellerRouter from "./routes/seller.routes.js";
 
 const app = express();
 
@@ -21,7 +22,7 @@ app.get("/", (req, res) => {
 });
 
 // Routes
-// app.use("/api", sellerRouter);
+app.use("/api", sellerRouter);
 
 app.use(errorMiddleware);
 
@@ -30,3 +31,8 @@ const server = app.listen(port, () => {
   console.log(`Seller Service running on http://localhost:${port}/api`);
 });
 server.on("error", console.error);
+
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.log(err);
+  return res.status(err.status || 500).json({ message: err.message || "Internal Server Error" });
+});

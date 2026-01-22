@@ -46,17 +46,16 @@ export async function createPaymentSession(req: any, res: Response, next: NextFu
     }
 
     const normalizedCart = JSON.stringify(
-      cart
-        .map((item: any) => ({
-          id: item.id,
-          quantity: item.quantity,
-          salePrice: item.salePrice,
-          shopId: item.shopId,
-          selectedOptions: item.selectedOptions || {},
-        }))
-        .sort((a, b) => {
-          if (a && b) return a.id.localCompare(b.id);
-        })
+      cart.map((item: any) => ({
+        id: item.id,
+        quantity: item.quantity,
+        salePrice: item.salePrice,
+        shopId: item.shopId,
+        selectedOptions: item.selectedOptions || {},
+      }))
+      // .sort((a, b) => {
+      //   if (a && b) return a.id.localCompare(b.id);
+      // })
     );
 
     const keys = await redis.keys("payment-session:*");
@@ -68,17 +67,16 @@ export async function createPaymentSession(req: any, res: Response, next: NextFu
         const session = JSON.parse(data);
         if (session.userId === userId) {
           const existingCart = JSON.stringify(
-            session.cart
-              .map((item: any) => ({
-                id: item.id,
-                quantity: item.quantity,
-                salePrice: item.salePrice,
-                shopId: item.shopId,
-                selectedOptions: item.selectedOptions || {},
-              }))
-              .sort((a: any, b: any) => {
-                if (a && b) return a.id.localCompare(b.id);
-              }) // This is I think for keeping the valid session from Redis
+            session.cart.map((item: any) => ({
+              id: item.id,
+              quantity: item.quantity,
+              salePrice: item.salePrice,
+              shopId: item.shopId,
+              selectedOptions: item.selectedOptions || {},
+            }))
+            // .sort((a: any, b: any) => {
+            //   if (a && b) return a.id.localCompare(b.id);
+            // }) // This is I think for keeping the valid session from Redis
           );
 
           if (existingCart === normalizedCart) {
@@ -503,15 +501,7 @@ export async function updateDeliveryStatus(req: any, res: Response, next: NextFu
       return res.status(400).json({ error: "Missing OrderID and Delivery Status." });
     }
 
-    const allowedStatuses = [
-      OrderStatus.ORDERED,
-      OrderStatus.PACKED,
-      OrderStatus.SHIPPED,
-      OrderStatus.OUT_OF_DELIVERY,
-      OrderStatus.DELIVERED,
-      OrderStatus.CANCELLED,
-      OrderStatus.REFUNDED,
-    ];
+    const allowedStatuses = [OrderStatus.ORDERED, OrderStatus.PACKED, OrderStatus.SHIPPED, OrderStatus.OUT_FOR_DELIVERY, OrderStatus.DELIVERED];
 
     if (!allowedStatuses.includes(deliveryStatus)) {
       return next(new ValidationError("Invalid delivery status."));
@@ -593,6 +583,29 @@ export async function verifyCouponCode(req: any, res: Response, next: NextFuncti
       discountedPrductId: matchingProduct.id,
       discountType: discount.discountType,
       message: `Discount applied to product ${matchingProduct.id}`,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Get Admin orders
+export async function getAdminOrders(req: any, res: Response, next: NextFunction) {
+  try {
+    // Get all orders
+    const orders = await prisma.order.findMany({
+      include: {
+        user: true,
+        shop: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      orders,
     });
   } catch (error) {
     return next(error);

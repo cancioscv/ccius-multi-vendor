@@ -1,4 +1,4 @@
-import { prisma } from "@e-com/db";
+import { NotificationType, prisma } from "@e-com/db";
 import { AuthError, ForbiddenError, imageKitClient, NotFoundError, ValidationError } from "@e-com/libs";
 import { NextFunction, Response, Request } from "express";
 
@@ -149,7 +149,7 @@ export async function updateProfilePicture(req: any, res: Response, next: NextFu
 
     return res.status(200).json({
       success: true,
-      updatedSeller,
+      updatedSeller, // Watch: This updatedSeller is not just anywhere
       message: `${editType === "cover" ? "Cover picture" : "Avatar"} updated successfully`,
     });
   } catch (error) {
@@ -158,7 +158,7 @@ export async function updateProfilePicture(req: any, res: Response, next: NextFu
 }
 
 // Edit seller profil/shop profile?
-export async function editSellerProfile(req: any, res: Response, next: NextFunction) {
+export async function editShop(req: any, res: Response, next: NextFunction) {
   try {
     const { name, bio, address, openingHours, website, socialLinks } = req.body;
 
@@ -196,10 +196,270 @@ export async function editSellerProfile(req: any, res: Response, next: NextFunct
 
     return res.status(200).json({
       success: true,
-      updatedShop,
+      updatedShop, // Watch: This is also used nowhere
       message: "Shop profile updated successfully.",
     });
   } catch (error) {
     return next(error);
+  }
+}
+
+// Get seller info (public preview)
+export async function getSellerInfo(req: Request, res: Response, next: NextFunction) {
+  const shopId = req.params.id;
+  try {
+    const shop = await prisma.shop.findUnique({
+      where: { id: shopId },
+    });
+
+    const followersCount = await prisma.follower.count({ where: { shopId: shop?.id } });
+
+    return res.status(200).json({ success: true, shop, followersCount });
+  } catch (error) {
+    return next();
+  }
+}
+
+// Get seller's products (public preview)
+export async function getSellerProducts(req: any, res: Response, next: NextFunction) {
+  const shopId = req.query.id!;
+
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const skip = (page - 1) * limit;
+  try {
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where: {
+          startingDate: null,
+          shopId,
+        },
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: "desc",
+        },
+        include: {
+          images: true,
+          shop: true,
+        },
+      }),
+      prisma.product.count({
+        where: {
+          startingDate: null,
+          shopId,
+        },
+      }),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      products,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Get seller events (public preview)
+export async function getSellerEvents(req: any, res: Response, next: NextFunction) {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const skip = (page - 1) * limit;
+
+  const shopId = req.query.id!;
+  try {
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where: {
+          startingDate: {
+            not: null,
+          },
+          shopId,
+        },
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: "desc",
+        },
+        include: {
+          images: true,
+        },
+      }),
+      prisma.product.count({
+        where: {
+          startingDate: null,
+          shopId,
+        },
+      }),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      products,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Follow a shop
+export async function followShop(req: any, res: Response, next: NextFunction) {
+  const { shopId } = req.body;
+  const userId = req.user?.id;
+  try {
+    if (!shopId) {
+      return next(new ValidationError("Shop Id is required."));
+    }
+
+    // Check is shop is already followed up
+    const existingFollow = await prisma.follower.findFirst({
+      where: {
+        shopId,
+        userId,
+      },
+    });
+
+    if (existingFollow) {
+      return res.status(200).json({ success: true, message: "Already following this shop." });
+    }
+
+    // Create follow. TODO: Verify well this model.
+    const follow = await prisma.follower.create({
+      data: {
+        userId,
+        shopId,
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      follow,
+      message: "Shop followed.",
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Unfollow a ship
+export async function unfollowShop(req: any, res: Response, next: NextFunction) {
+  const { shopId } = req.body;
+  const userId = req.user?.id;
+  try {
+    if (!shopId) {
+      return next(new ValidationError("Shop Id is required."));
+    }
+
+    // Check is shop is already followed up
+    const existingFollow = await prisma.follower.findFirst({
+      where: {
+        shopId,
+        userId,
+      },
+    });
+
+    if (!existingFollow) {
+      return res.status(200).json({ success: false, message: "You are not following this shop." });
+    }
+
+    // Delete follow.
+    await prisma.follower.delete({
+      where: {
+        id: existingFollow.id,
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Shop unfollowed",
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Check if shop is being followed
+export async function isFollowing(req: any, res: Response, next: NextFunction) {
+  const { shopId } = req.body;
+  const userId = req.user?.id;
+  try {
+    if (!shopId) {
+      return next(new ValidationError("Shop Id is required."));
+    }
+
+    // Check is shop is already followed up
+    const isFollowing = await prisma.follower.findFirst({
+      where: {
+        shopId,
+        userId,
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      isFollowing,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Get seller's notifications
+export async function getSellerNotifications(req: any, res: Response, next: NextFunction) {
+  const sellerId = req.seller?.id;
+
+  try {
+    if (!sellerId) {
+      return next(new ValidationError("Seller Id is required."));
+    }
+
+    const notifications = await prisma.notification.findMany({
+      where: {
+        receiverId: sellerId,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      notifications,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Mark notification as read
+export async function markNotificationAsRead(req: any, res: Response, next: NextFunction) {
+  const { notificationId } = req.body;
+  try {
+    if (!notificationId) {
+      return next(new ValidationError("Notification Id is required"));
+    }
+
+    const notification = await prisma.notification.update({
+      where: {
+        id: notificationId,
+      },
+      data: {
+        status: NotificationType.IS_READ,
+      },
+    });
+
+    return res.status(201).json({ success: true, notification });
+  } catch (error) {
+    return next();
   }
 }

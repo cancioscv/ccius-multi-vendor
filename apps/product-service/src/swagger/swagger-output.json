@@ -7,9 +7,7 @@
   },
   "host": "localhost:6002",
   "basePath": "/",
-  "schemes": [
-    "http"
-  ],
+  "schemes": ["http"],
   "paths": {
     "/categories": {
       "get": {
@@ -196,7 +194,7 @@
         }
       }
     },
-    "/get-seller-products": {
+    "/shop-products": {
       "get": {
         "description": "",
         "responses": {
