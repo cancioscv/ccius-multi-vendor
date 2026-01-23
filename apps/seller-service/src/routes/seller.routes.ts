@@ -27,7 +27,7 @@ router.get("/seller-info/:id", isAuth, getSellerInfo);
 router.get("/seller-products/:id", isAuth, getSellerProducts);
 router.get("/seller-events/:id", isAuth, getSellerEvents);
 router.post("/follow-shop", isAuth, followShop);
-router.post("/unfollow-shop", isAuth, unfollowShop); // Watch: Should not bee this delete request?
+router.post("/unfollow-shop", isAuth, unfollowShop); // Watch: Should not be this delete request?
 router.get("/is-following/:id", isAuth, isFollowing);
 router.get("/seller-notifications", isAuth, isSeller, getSellerNotifications);
 router.put("mark-notification-as-read", isAuth, markNotificationAsRead);
