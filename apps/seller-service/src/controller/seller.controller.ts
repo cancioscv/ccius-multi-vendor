@@ -2,8 +2,8 @@ import { NotificationType, prisma } from "@e-com/db";
 import { AuthError, ForbiddenError, imageKitClient, NotFoundError, ValidationError } from "@e-com/libs";
 import { NextFunction, Response, Request } from "express";
 
-// Delete shop (soft delete)
-export async function deleteShop(req: any, res: Response, next: NextFunction) {
+// Delete shop and its seller (soft delete)
+export async function deleteShopAndSeller(req: any, res: Response, next: NextFunction) {
   const sellerId = req.seller?.id;
   try {
     const seller = await prisma.seller.findUnique({
@@ -37,14 +37,16 @@ export async function deleteShop(req: any, res: Response, next: NextFunction) {
       }),
     ]);
 
-    return res.status(200).json({ message: "Shop and its Seller marked for deletion. It will permanently be deleted in 28 days." });
+    return res.status(200).json({
+      message: "Shop and its Seller marked for deletion. It will permanently be deleted in 28 days.",
+    });
   } catch (error) {
     return next(error);
   }
 }
 
-// Restore Shop
-export async function restoreShop(req: any, res: Response, next: NextFunction) {
+// Restore shop and its seller
+export async function restoreShopAndSeller(req: any, res: Response, next: NextFunction) {
   const sellerId = req.seller?.id;
   try {
     const seller = await prisma.seller.findUnique({

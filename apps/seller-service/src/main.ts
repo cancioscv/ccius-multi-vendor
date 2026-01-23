@@ -1,4 +1,5 @@
 import express, { NextFunction, Response, Request } from "express";
+import "./jobs/seller-cron.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { errorMiddleware } from "@e-com/libs";

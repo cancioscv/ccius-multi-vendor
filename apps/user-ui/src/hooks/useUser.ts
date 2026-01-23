@@ -13,7 +13,7 @@ export default function useUser() {
   const { isLoggedIn, setLoggedIn } = useAuthStore();
   const {
     data: user,
-    isLoading,
+    isPending: isLoading,
     isError,
     // refetch,
   } = useQuery({

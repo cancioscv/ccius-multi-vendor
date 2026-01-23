@@ -1,7 +1,7 @@
 import { isAuth, isSeller } from "@e-com/libs";
 import { Router } from "express";
 import {
-  deleteShop,
+  deleteShopAndSeller,
   editShop,
   followShop,
   getSellerEvents,
@@ -10,7 +10,7 @@ import {
   getSellerProducts,
   isFollowing,
   markNotificationAsRead,
-  restoreShop,
+  restoreShopAndSeller,
   unfollowShop,
   updateProfilePicture,
   uploadImage,
@@ -18,8 +18,8 @@ import {
 
 const router: Router = Router();
 
-router.delete("/delete-shop", isAuth, deleteShop);
-router.patch("/restore-shop", isAuth, restoreShop);
+router.delete("/delete-shop-seller", isAuth, deleteShopAndSeller);
+router.patch("/restore-shop-seller", isAuth, restoreShopAndSeller);
 router.post("/upload-image", isAuth, uploadImage);
 router.put("/update-profile-picture", isAuth, updateProfilePicture);
 router.put("/edit-shop", isAuth, editShop);

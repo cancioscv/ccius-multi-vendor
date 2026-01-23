@@ -18,8 +18,9 @@ import {
   searchProducts,
   getTopShops,
   getAllOffers,
+  getStripeAccount,
 } from "../controller/product.controller.js";
-import { isAuth } from "@e-com/libs";
+import { isAuth, isSeller } from "@e-com/libs";
 
 const router: Router = Router();
 
@@ -37,6 +38,7 @@ router.post("/create-product", isAuth, createProduct);
 router.get("/shop-products", isAuth, getShopProducts);
 router.delete("/delete-product/:productId", isAuth, deleteProduct);
 router.put("/restore-product/:productId", isAuth, restoreProduct);
+router.get("/get-stripe-account", isAuth, isSeller, getStripeAccount);
 router.get("/all-products/", getAllProducts);
 router.get("/product/:slug", getProductById);
 router.get("/filtered-products", getFilteredProducts);

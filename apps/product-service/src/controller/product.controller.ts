@@ -1,6 +1,7 @@
 import { AuthError, imageKitClient, NotFoundError, ValidationError } from "@e-com/libs";
 import { Prisma, prisma } from "@e-com/db";
 import { NextFunction, Request, Response } from "express";
+import stripe from "../utils/stripe.js";
 
 // Get categories
 export async function getCategories(req: Request, res: Response, next: NextFunction) {
@@ -307,8 +308,42 @@ export async function restoreProduct(req: any, res: Response, next: NextFunction
 }
 
 // Get seller stripe information
-export async function getStripeAccount(req: Request, res: Response, next: NextFunction) {
-  //missing function
+export async function getStripeAccount(req: any, res: Response, next: NextFunction) {
+  try {
+    const sellerData = await prisma.seller.findUnique({
+      where: { id: req.seller?.id },
+      select: { stripeId: true },
+    });
+
+    if (!sellerData?.stripeId) {
+      return next(new ValidationError("No Stripe account linked!"));
+    }
+
+    // Fetch Stripe account details
+    const stripeAccount = await stripe.accounts.retrieve(sellerData.stripeId);
+
+    // Fetch last payout if available
+    const payouts = await stripe.payouts.list({ limit: 1 }, { stripeAccount: stripeAccount.id });
+
+    const lastPayouts = payouts?.data.length ? new Date(payouts.data[0].created * 1000).toLocaleDateString() : null;
+
+    return res.status(200).json({
+      success: true,
+      stripeAccount: {
+        id: stripeAccount.id,
+        email: stripeAccount.email || "Not available",
+        business_name:
+          stripeAccount.business_profile?.name || stripeAccount.individual?.first_name + " " + stripeAccount.individual?.last_name || "N/A",
+        country: stripeAccount.country || "Unknown",
+        payouts_enabled: stripeAccount.payouts_enabled,
+        charges_enabled: stripeAccount.charges_enabled,
+        last_payouts: lastPayouts || "No payouts yet.",
+        dashbord_url: `https://connect.stripe.com/app/express_dashboard/${stripeAccount.id}`,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
 }
 
 // Get all products
