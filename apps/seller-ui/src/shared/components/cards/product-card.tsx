@@ -22,15 +22,7 @@ export default function ProductCard({ product }: Props) {
       {/* Product Image */}
       <Link href={`${process.env.NEXT_PUBLIC_USER_UI_LINK}/product/${product?.slug}`} className="block">
         <div className="relative w-full h-[200px] rounded-md overflow-hidden">
-          <Image
-            src={images}
-            width={450}
-            height={420}
-            layout="intrinsic"
-            alt={product?.title}
-            objectFit="cover"
-            className="hover:scale-105 transition duration-300 bg-black"
-          />
+          <Image src={images} layout="fill" objectFit="cover" alt={product?.title} className="hover:scale-105 transition duration-300 bg-black" />
         </div>
       </Link>
 

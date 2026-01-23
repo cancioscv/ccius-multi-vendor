@@ -113,7 +113,7 @@ export async function uploadImage(req: Request, res: Response, next: NextFunctio
     return res.status(201).json({
       success: true,
       fileId: uploadResponse.fileId,
-      url: uploadResponse.url, // Watch: This might be fileUrl
+      url: uploadResponse.url,
     });
   } catch (error) {
     console.error("Image upload failed:", error);
@@ -125,8 +125,8 @@ export async function uploadImage(req: Request, res: Response, next: NextFunctio
 export async function updateProfilePicture(req: any, res: Response, next: NextFunction) {
   const { editType, imageUrl } = req.body;
   try {
-    if (!editType || imageUrl) {
-      return next(new ValidationError("Missing required fields"));
+    if (!editType || !imageUrl) {
+      return next(new ValidationError("Missing required fields."));
     }
 
     // Ensure the seller is authenticated
@@ -160,7 +160,7 @@ export async function updateProfilePicture(req: any, res: Response, next: NextFu
 }
 
 // Edit seller profil/shop profile?
-export async function editShop(req: any, res: Response, next: NextFunction) {
+export async function editSellerShop(req: any, res: Response, next: NextFunction) {
   try {
     const { name, bio, address, openingHours, website, socialLinks } = req.body;
 

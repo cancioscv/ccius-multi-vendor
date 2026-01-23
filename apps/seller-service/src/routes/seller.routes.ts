@@ -2,7 +2,7 @@ import { isAuth, isSeller } from "@e-com/libs";
 import { Router } from "express";
 import {
   deleteShopAndSeller,
-  editShop,
+  editSellerShop,
   followShop,
   getSellerEvents,
   getSellerInfo,
@@ -22,7 +22,7 @@ router.delete("/delete-shop-seller", isAuth, deleteShopAndSeller);
 router.patch("/restore-shop-seller", isAuth, restoreShopAndSeller);
 router.post("/upload-image", isAuth, uploadImage);
 router.put("/update-profile-picture", isAuth, updateProfilePicture);
-router.put("/edit-shop", isAuth, editShop);
+router.put("/edit-seller-shop", isAuth, editSellerShop);
 router.get("/seller-info/:id", isAuth, getSellerInfo);
 router.get("/seller-products/:id", isAuth, getSellerProducts);
 router.get("/seller-events/:id", isAuth, getSellerEvents);

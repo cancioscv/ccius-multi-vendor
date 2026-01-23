@@ -7,7 +7,7 @@ import ProductCard from "@/shared/components/cards/product-card";
 import EditImage from "@/shared/components/modals/edit-image";
 import axiosInstance from "@/utils/axiosInstance";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Calendar, Clock, Globe, Heart, MapPin, Pencil, Star, Users } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Facebook, Globe, Heart, MapPin, Pencil, Star, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -169,6 +169,7 @@ export default function Page() {
                       <a key={index} href={link.url} target="_blank" rel="noopener noreferrer" className="opacity-[.9]">
                         {link.type === "youtube" && <YoutubeIcon />}
                         {link.type === "x" && <XIcon />}
+                        {link.type === "facebook" && <Facebook className="text-white" />}
                       </a>
                     ))}
                   </div>
