@@ -24,7 +24,7 @@ router.post("/upload-image", isAuth, uploadImage);
 router.put("/update-profile-picture", isAuth, updateProfilePicture);
 router.put("/edit-seller-shop", isAuth, editSellerShop);
 router.get("/seller-info/:id", isAuth, getSellerInfo);
-router.get("/seller-products/:id", isAuth, getSellerProducts);
+router.get("/seller-products/:id", getSellerProducts);
 router.get("/seller-events/:id", isAuth, getSellerEvents);
 router.post("/follow-shop", isAuth, followShop);
 router.post("/unfollow-shop", isAuth, unfollowShop); // Watch: Should not be this delete request?

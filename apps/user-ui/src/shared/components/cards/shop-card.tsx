@@ -21,24 +21,13 @@ export default function ShopCard({ shop }: ShopCardProps) {
     <div className="w-full rounded-md cursor-pointer bg-white border border-gray-200 shadow-sm overflow-hidden transition">
       {/* Cover */}
       <div className="h-[120px] w-full relative">
-        <Image
-          src={shop?.coverBanner || "https://ik.imagekit.io/shahriarbecodemy/cover/3_vC8riiU8W.png"}
-          alt="Cover"
-          fill
-          className="object-cover w-full h-full"
-        />
+        <Image src={shop?.coverBanner || "/placeholder.png"} alt="Cover" fill className="object-cover w-full h-full" />
       </div>
 
       {/* Avatar */}
       <div className="relative flex justify-center -mt-8">
         <div className="w-16 h-16 rounded-full border-4 border-white overflow-hidden shadow bg-white">
-          <Image
-            src={shop?.avatar || "https://ik.imagekit.io/fz0xzwtey/avatar/6_N7eMmuAvl.png?updatedAt=1742269698784"}
-            alt={shop.name}
-            width={64}
-            height={64}
-            className="object-cover"
-          />
+          <Image src={shop?.avatar || "/placeholder.png"} alt={shop.name} width={64} height={64} className="object-cover" />
         </div>
       </div>
 

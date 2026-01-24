@@ -208,6 +208,7 @@ export async function editSellerShop(req: any, res: Response, next: NextFunction
 
 // Get seller info (public preview)
 export async function getSellerInfo(req: Request, res: Response, next: NextFunction) {
+  console.log("DO I EVER COME HERE???");
   const shopId = req.params.id;
   try {
     const shop = await prisma.shop.findUnique({
@@ -395,7 +396,7 @@ export async function unfollowShop(req: any, res: Response, next: NextFunction) 
 
 // Check if shop is being followed
 export async function isFollowing(req: any, res: Response, next: NextFunction) {
-  const { shopId } = req.body;
+  const shopId = req.params.id;
   const userId = req.user?.id;
   try {
     if (!shopId) {

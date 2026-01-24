@@ -9,14 +9,6 @@ import productRouter from "./routes/product.routes.js";
 
 const app = express();
 
-app.use(
-  cors({
-    origin: ["http://localhost:3000"],
-    allowedHeaders: ["Authorization", "Content-Type"],
-    credentials: true,
-  })
-);
-
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 

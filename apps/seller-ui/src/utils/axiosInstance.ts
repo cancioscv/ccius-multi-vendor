@@ -1,4 +1,5 @@
 import axios from "axios";
+import { runRedirectToLogin } from "./redirect";
 
 const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_SERVER_URL,
@@ -10,8 +11,11 @@ let refreshSubscribers: (() => void)[] = [];
 
 // Handle logout and prevent infinite loops
 function handleLogout() {
-  if (window.location.pathname !== "/login") {
-    window.location.href = "/login";
+  const publicPaths = ["/login", "/signup", "/forgot-password"];
+  const currentPath = window.location.pathname;
+
+  if (!publicPaths.includes(currentPath)) {
+    runRedirectToLogin();
   }
 }
 
@@ -38,8 +42,12 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    const is401 = error?.response?.status === 401;
+    const isRetry = originalRequest?._retry;
+    const isAuthRequired = originalRequest?.requireAuth === true;
+
     // Prevent infinite retry loop
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (is401 && !isRetry && isAuthRequired) {
       if (isRefreshing) {
         return new Promise((resolve) => {
           subscribeTokensRefresh(() => resolve(axiosInstance(originalRequest)));
@@ -51,6 +59,7 @@ axiosInstance.interceptors.response.use(
 
       try {
         await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/refresh-token`, {}, { withCredentials: true });
+        // await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL}/auth/api/refresh-token`, {}, { withCredentials: true });
         isRefreshing = false;
         onRefreshSuccess();
 

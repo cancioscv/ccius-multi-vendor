@@ -176,9 +176,9 @@ export default function EditProfile() {
                   }}
                   render={({ field }) => (
                     <div className="flex flex-col w-full">
-                      {/* ✅ Ensure full width */}
+                      {/* Ensure full width */}
                       <Input {...field} className="w-full" placeholder={`Enter ${socialLinks[index]?.type} URL`} />
-                      {/* ✅ Show Validation Error */}
+                      {/* Show Validation Error */}
                       {errors.socialLinks?.[index]?.url && <p className="text-red-500 text-xs mt-1">{errors.socialLinks[index]?.url?.message}</p>}
                     </div>
                   )}
