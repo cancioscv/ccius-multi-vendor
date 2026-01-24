@@ -6,13 +6,15 @@ import { NextFunction, Response } from "express";
 export async function isAuth(req: any, res: Response, next: NextFunction) {
   // Get token from Authorization header or cookies
   const token = req.cookies["access_token"] || req.cookies["seller_access_token"] || req.headers.authorization?.split(" ")[1];
+
+  console.log("THIS IS MY TOKEN", token);
   if (!token) {
     return res.status(401).json({ message: "Unauthorized: No token provided" });
   }
 
   try {
     // Verify token
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!) as { id: string; role: "user" | "seller" };
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!) as { id: string; role: "user" | "seller" | "admin" };
 
     if (!decoded) {
       return res.status(401).json({ message: "Unauthorized!. Invalid token." });
@@ -20,7 +22,7 @@ export async function isAuth(req: any, res: Response, next: NextFunction) {
 
     let account;
 
-    if (decoded.role === "user") {
+    if (decoded.role === "user" || decoded.role === "admin") {
       account = await prisma.user.findUnique({
         where: { id: decoded.id },
       });
@@ -44,6 +46,7 @@ export async function isAuth(req: any, res: Response, next: NextFunction) {
     req.role = decoded.role;
     return next();
   } catch (error) {
-    return res.status(401).json({ message: "Unauthorized: Invalid token" });
+    console.log(error);
+    return res.status(401).json({ message: "Unauthorized! Token expired or invalid." });
   }
 }

@@ -100,7 +100,7 @@ export async function login(req: Request, res: Response, next: NextFunction) {
     res.clearCookie("seller_refresh_token");
 
     // Generate access and refresh token
-    const accessToken = jwt.sign({ id: user.id, role: "user" }, process.env.ACCESS_TOKEN_SECRET!, { expiresIn: "15m" });
+    const accessToken = jwt.sign({ id: user.id, role: "user" }, process.env.ACCESS_TOKEN_SECRET!, { expiresIn: "7d" }); //TODO: chang this to 15m
     const refreshToken = jwt.sign({ id: user.id, role: "user" }, process.env.REFRESH_TOKEN_SECRET!, { expiresIn: "7d" });
 
     // Store the access and refresh token in an httpOnly cookie
