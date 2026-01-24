@@ -38,13 +38,7 @@ export default function Header() {
       <div className="w-[80%] py-5 m-auto flex items-center justify-between">
         <div>
           <Link href="/">
-            <Image
-              src={layout?.logo || "https://ik.imagekit.io/sjbr5usgh/logo/Blue%20Waves%20Surfing%20Club%20Logo.png?updatedAt=1744371251216"}
-              alt=""
-              width={300}
-              height={100}
-              className="h-[70px] ml-[-50px] mb-[-30px] object-cover"
-            />
+            <Image src={layout?.logo || "/placeholder.png"} alt="" width={300} height={100} className="h-[70px] ml-[-50px] mb-[-30px] object-cover" />
           </Link>
         </div>
         {/* Search input */}

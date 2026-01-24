@@ -130,7 +130,7 @@ export default function ProfilePage() {
               <div className="space-y-4 text-sm text-gray-700">
                 <div className="flex items-center gap-3">
                   <Image
-                    src={user?.avatar || "https://ik.imagekit.io/fz0xzwtey/avatar/6_N7eMmuAvl.png?updatedAt=1742269698784"}
+                    src={user?.avatar || "/placeholder.png"}
                     alt="profile"
                     width={60}
                     height={60}
