@@ -50,7 +50,7 @@ const server = app.listen(port, () => {
   console.log(`Api Gateway running at http://localhost:${port}/api`);
   try {
     initializeSiteConfig();
-    console.log("Site config initialized successfully.");
+    console.log("Site Config initialized successfully!");
   } catch (error) {
     console.error("❌ Failed to initialize site config", error);
   }

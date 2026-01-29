@@ -3,7 +3,7 @@ import { isAuth, isSeller } from "@e-com/libs";
 
 import {
   forgotPassword,
-  login,
+  loginUser,
   refreshToken,
   createUser,
   resetPassword,
@@ -21,6 +21,7 @@ import {
   addUserAddress,
   getShippingAddresses,
   deleteUserAddress,
+  logoutUser,
 } from "../controller/auth.controller.js";
 
 const router: Router = Router();
@@ -28,7 +29,8 @@ const router: Router = Router();
 // User
 router.post("/create-user", createUser);
 router.post("/verify-user", verifyUser);
-router.post("/login", login);
+router.post("/login", loginUser);
+router.get("/logout-user", isAuth, logoutUser);
 router.post("/refresh-token", refreshToken);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);

@@ -53,10 +53,10 @@ export default function ProfilePage() {
   const totalOrders = orders.length;
 
   const processingOrders = orders.filter((order: any) => order?.deliveryStatus !== "DELIVERED" && order?.deliveryStatus !== "CANCELLED").length;
-  const completedOrders = orders.filter((order: any) => order?.deliveryStatus === "Delivered").length;
+  const completedOrders = orders.filter((order: any) => order?.deliveryStatus === "DELIVERED").length;
 
   async function logout() {
-    await axiosInstance.get("/auth/api/logout-user").then((res) => {
+    await axiosInstance.get("/api/logout-user").then((res) => {
       queryClient.invalidateQueries({ queryKey: ["user"] });
 
       router.push("/login");
@@ -179,7 +179,7 @@ export default function ProfilePage() {
                             <span className="text-white font-medium">{notification.title}</span>
                             <span className="text-gray-300 text-sm">{notification.message}</span>
                             <span className="text-gray-500 text-xs mt-1">
-                              {new Date(notification.cratedAt).toLocaleString("en-UK", {
+                              {new Date(notification.createdAt).toLocaleString("en-UK", {
                                 dateStyle: "medium",
                                 timeStyle: "short",
                               })}

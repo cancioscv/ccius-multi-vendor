@@ -7,13 +7,15 @@ async function initializeSiteConfig() {
     if (!existingConfig) {
       await prisma.siteConfig.create({
         data: {
-          categories: ["Electronics", "Fashion", "Home & Kitchen", "Sport & Fitness"],
+          categories: ["Electronics", "Fashion", "Home & Kitchen", "Sports & Fitness"],
           subCategories: {
             Electronics: ["Mobile", "Laptops", "Accessories", "Gaming"],
             Fashion: ["Men", "Women", "Kids", "Footwear"],
             "Home & Kitchen": ["Furniture", "Appliances", "Decor"],
-            "Sport & Fitness": ["Gym Equipment", "Outdoor Sports", "Wearables"],
+            "Sports & Fitness": ["Gym Equipment", "Outdoor Sports", "Wearables"],
           },
+          logo: "/e-shop-logo.jpg",
+          banner: "https://ik.imagekit.io/fz0xzwtey/products/slider-img-1.png?updatedAt=1744358118885",
         },
       });
     }

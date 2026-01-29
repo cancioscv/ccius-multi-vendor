@@ -208,7 +208,6 @@ export async function editSellerShop(req: any, res: Response, next: NextFunction
 
 // Get seller info (public preview)
 export async function getSellerInfo(req: Request, res: Response, next: NextFunction) {
-  console.log("DO I EVER COME HERE???");
   const shopId = req.params.id;
   try {
     const shop = await prisma.shop.findUnique({

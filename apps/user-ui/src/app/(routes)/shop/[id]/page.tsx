@@ -15,6 +15,7 @@ async function getSellerDetails(id: string) {
 export async function generateMetadata({ params }: ParamsProps): Promise<Metadata> {
   const { id } = await params;
   const data = await getSellerDetails(id);
+  console.log("FOLLOWES", data);
 
   return {
     title: `${data?.shop?.name} | Ccius Marketplace`,

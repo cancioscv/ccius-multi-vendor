@@ -45,7 +45,6 @@ export default function SellerProfile({ shop, followersCount }: SellerProfile) {
     if (!shop?.id) return;
     try {
       const res = await axiosInstance.get(`/seller/api/is-following/${shop?.id}`);
-      console.log("IS FOLLOWING", res.data.isFollowing);
       setIsFollowing(res.data.isFollowing !== null);
     } catch (error) {
       console.error("Failed to fetch follow status", error);

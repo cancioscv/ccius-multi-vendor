@@ -12,7 +12,6 @@ export default function HeaderBottom() {
   const [isSticky, setIsSticky] = useState(false);
 
   const { user, isLoading } = useUser();
-  console.log(user);
 
   const { cart, wishList } = useCartStore();
 

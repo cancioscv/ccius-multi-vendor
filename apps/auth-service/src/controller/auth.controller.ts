@@ -76,7 +76,7 @@ export async function verifyUser(req: Request, res: Response, next: NextFunction
 }
 
 // Login
-export async function login(req: Request, res: Response, next: NextFunction) {
+export async function loginUser(req: Request, res: Response, next: NextFunction) {
   try {
     const { email, password } = req.body;
 
@@ -111,6 +111,14 @@ export async function login(req: Request, res: Response, next: NextFunction) {
   } catch (err) {
     return next(err);
   }
+}
+
+// Logout
+export async function logoutUser(req: Request, res: Response, next: NextFunction) {
+  res.clearCookie("access_token");
+  res.clearCookie("refresh_token");
+
+  res.status(201).json({ success: true });
 }
 
 // Refresh token
@@ -288,6 +296,9 @@ export async function createShop(req: Request, res: Response, next: NextFunction
 
     const shop = await prisma.shop.create({
       data: shopData,
+      include: {
+        followers: true,
+      },
     });
     res.status(201).json({ success: true, shop });
   } catch (error) {

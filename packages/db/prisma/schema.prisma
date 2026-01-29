@@ -118,7 +118,7 @@ model Shop {
   openingHours String?
   website      String?
   socialLinks  Json[]
-  ratings      Float        @default(2)
+  ratings      Float        @default(0)
   reviews      ShopReview[]
   createdAt    DateTime     @default(now())
   updateAt     DateTime     @updatedAt

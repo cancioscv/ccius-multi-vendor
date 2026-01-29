@@ -7,7 +7,7 @@ export async function isAuth(req: any, res: Response, next: NextFunction) {
   // Get token from Authorization header or cookies
   const token = req.cookies["access_token"] || req.cookies["seller_access_token"] || req.headers.authorization?.split(" ")[1];
 
-  console.log("THIS IS MY TOKEN", token);
+  // console.log("THIS IS MY TOKEN", token);
   if (!token) {
     return res.status(401).json({ message: "Unauthorized: No token provided" });
   }

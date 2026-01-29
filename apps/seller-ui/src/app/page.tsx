@@ -108,7 +108,7 @@ export default function Page() {
                       <Star fill="#facc15" size={18} /> <span>{seller?.shop?.ratings || "N/A"}</span>
                     </div>
                     <div className="flex items-center text-gray-300 gap-1">
-                      <Users size={18} /> <span>{seller?.followers || 0} Followers</span>
+                      <Users size={18} /> <span>{seller?.shop.followers || 0} Followers</span>
                     </div>
                   </div>
 
