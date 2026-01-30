@@ -19,6 +19,8 @@ import {
   getTopShops,
   getAllOffers,
   getStripeAccount,
+  slugValidator,
+  getProductAnalytics,
 } from "../controller/product.controller.js";
 import { isAuth, isSeller } from "@e-com/libs";
 
@@ -47,5 +49,7 @@ router.get("/filtered-shops", getFilteredShops);
 router.get("/search-products", searchProducts);
 router.get("/top-shops", getTopShops);
 router.get("/all-offers", getAllOffers);
+router.post("/slug-validator", isAuth, isSeller, slugValidator);
+router.get("/product-analytics/:productId", getProductAnalytics);
 
 export default router;

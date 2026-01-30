@@ -698,6 +698,7 @@ export async function getTopShops(req: Request, res: Response, next: NextFunctio
   }
 }
 
+// Get all Events/Offers
 export async function getAllOffers(req: Request, res: Response, next: NextFunction) {
   try {
     const page = parseInt(req.query.page as string) || 1;
@@ -741,5 +742,55 @@ export async function getAllOffers(req: Request, res: Response, next: NextFuncti
   } catch (error) {
     return res.status(500).json({ message: "Failed to fetch offers/events" });
     // return next(error);
+  }
+}
+
+// Slug Validator
+export async function slugValidator(req: Request, res: Response, next: NextFunction) {
+  let { slug } = req.body;
+  try {
+    if (!slug || typeof slug !== "string") {
+      return next(new ValidationError("Slug is required and must be a string."));
+    }
+
+    // Slugify manually (no slugify lib)
+    slug = slug
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .substring(0, 50); // cap to 50 chars
+
+    let uniqueSlug = slug;
+    let counter = 1;
+
+    const findUniqueSlug = await prisma.product.findUnique({
+      where: { slug: uniqueSlug },
+    });
+
+    while (findUniqueSlug) {
+      uniqueSlug = `${slug}-${counter}`;
+      counter++;
+    }
+
+    return res.status(200).json({
+      available: uniqueSlug === slug,
+      slug: uniqueSlug,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Get product analytics
+export async function getProductAnalytics(req: Request, res: Response, next: NextFunction) {
+  const productId = req.params.productId;
+  try {
+    const analytics = await prisma.productAnalytics.findUnique({
+      where: { productId },
+    });
+
+    return res.status(200).json({ success: true, analytics });
+  } catch (error) {
+    return next(error);
   }
 }

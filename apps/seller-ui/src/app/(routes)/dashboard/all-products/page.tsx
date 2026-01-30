@@ -1,6 +1,7 @@
 "use client";
 
 import DeleteProductModal from "@/shared/components/modals/delete-product";
+import ProductAnalyticsModal from "@/shared/components/modals/product-analytics";
 import axiosInstance from "@/utils/axiosInstance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useReactTable, getCoreRowModel, getFilteredRowModel, flexRender } from "@tanstack/react-table";
@@ -25,7 +26,7 @@ async function restoreProduct(productId: string) {
 
 export default function SellerProductsPage() {
   const [globalFilter, setGlobalFilter] = useState("");
-  const [analitycsData, setAnalyticsData] = useState(null);
+  const [analyticsData, setAnalyticsData] = useState(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>();
@@ -147,7 +148,10 @@ export default function SellerProductsPage() {
     onGlobalFilterChange: setGlobalFilter,
   });
 
-  function openAnalytics(product: any) {}
+  function openAnalytics(product: any) {
+    setAnalyticsData(product);
+    setShowAnalytics(true);
+  }
 
   function openDeleteModal(product: any) {
     setShowDeleteModal(true);
@@ -218,6 +222,11 @@ export default function SellerProductsPage() {
             </tbody>
           </table>
         )}
+
+        {!isLoading && products?.length === 0 && <p className="text-center py-3 text-white">No products found!</p>}
+
+        {/* Analytics Modal */}
+        {showAnalytics && <ProductAnalyticsModal product={analyticsData} onClose={() => setShowAnalytics(false)} />}
 
         {showDeleteModal && (
           <DeleteProductModal

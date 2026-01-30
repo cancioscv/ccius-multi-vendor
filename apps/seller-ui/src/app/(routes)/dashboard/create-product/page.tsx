@@ -1,8 +1,8 @@
 "use client";
 
 import ImagePlaceholder from "@/shared/components/image-placeholder";
-import { ChevronRight, Wand, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { ChevronRight, Wand, Wand2, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 import { ColorSelector, Input, CustomSpecifications, CustomProperties, RichTextEditor, SizeSelector } from "@e-com/ui";
@@ -12,6 +12,7 @@ import Image from "next/image";
 import { ehancements } from "@/utils/aiEnhancements";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import { isProtected } from "@/utils/protected";
 
 interface UploadedImage {
   fileId: string;
@@ -35,16 +36,45 @@ export default function CreateProductPage() {
   const [selectedImage, setSelectedImage] = useState("");
   const [imageUploading, setImageUploading] = useState(false);
 
+  const [slugValue, setSlugValue] = useState("");
+  const [isSlugChecking, setIsSlugChecking] = useState(false);
+
   const [activeEffect, setActiveEffect] = useState<string | null>(null); // AI effects
   const [processing, setProcessing] = useState(false);
 
   const router = useRouter();
 
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      if (slugValue) {
+        setIsSlugChecking(true);
+        axiosInstance
+          .post("/product/api/slug-validator", { slug: slugValue }, isProtected)
+          .then((res) => {
+            if (res.data.available) {
+              toast.success("Slug is available and applied!");
+            } else {
+              setValue("slug", res.data.slug);
+              toast.info("Slug was taken. Suggested new one applied.");
+            }
+          })
+          .catch(() => {
+            toast.error("Error checking slug!");
+          })
+          .finally(() => {
+            setIsSlugChecking(false);
+          });
+      }
+    }, 3000);
+
+    return () => clearTimeout(delayDebounce);
+  }, [slugValue]);
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
       try {
-        const res = await axiosInstance.get("/product/api/categories");
+        const res = await axiosInstance.get("/product/api/categories", isProtected);
         return res.data;
       } catch (error) {
         console.error(error);
@@ -57,7 +87,7 @@ export default function CreateProductPage() {
   const { data: discountCodeData = [], isLoading: isLoadingDiscountCode } = useQuery({
     queryKey: ["discounts"],
     queryFn: async () => {
-      const res = await axiosInstance.get("/product/api/get-discount-code");
+      const res = await axiosInstance.get("/product/api/get-discount-code", isProtected);
       return res?.data?.discountCodes || [];
     },
   });
@@ -66,7 +96,7 @@ export default function CreateProductPage() {
   const subCategoriesData = data?.subCategories || {};
 
   const selectedCategory = watch("category");
-  const regularPrice = watch("regular_price");
+  const regularPrice = watch("regularPrice");
 
   const subCategories = useMemo(() => {
     return selectedCategory ? subCategoriesData[selectedCategory] || [] : [];
@@ -169,6 +199,23 @@ export default function CreateProductPage() {
       setProcessing(false);
     }
   }
+
+  const { onChange: formOnChange, ...restSlugProps } = register("slug", {
+    required: "Slug is required!",
+    pattern: {
+      value: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      message: "Invalid slug format! Use only lowercase letters, numbers, and dashes (e.g., product-slug).",
+    },
+    minLength: {
+      value: 3,
+      message: "Slug must be at least 3 characters long.",
+    },
+    maxLength: {
+      value: 50,
+      message: "Slug cannot be longer than 50 characters.",
+    },
+  });
+
   return (
     <form className="w-full mx-auto p-8 shadow-md rounded-lg text-white" onSubmit={handleSubmit(onSubmit)}>
       <h2 className="text-2xl py-2 font-semibold font-Poppins">Create Product</h2>
@@ -259,25 +306,59 @@ export default function CreateProductPage() {
               </div>
 
               <div className="mt-2">
-                <Input
-                  label="Slug *"
-                  placeholder="product_slug"
-                  {...register("slug", {
-                    required: "Slug is required",
-                    pattern: {
-                      value: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-                      message: "Invalid slug format. Use only lowercase letters, numbers",
-                    },
-                    minLength: {
-                      value: 3,
-                      message: "Slug must be at least 3 characters long.",
-                    },
-                    maxLength: {
-                      value: 50,
-                      message: "Slug cannot be longer than 50 characters.",
-                    },
-                  })}
-                />
+                <div className="relative">
+                  <Input
+                    label="Slug *"
+                    placeholder="product_slug"
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      setSlugValue(e.target.value);
+                      setValue("slug", e.target.value);
+                      formOnChange(e);
+                    }}
+                    value={watch("slug")}
+                    className="pr-10"
+                    {...restSlugProps}
+                  />
+                  <div className="absolute w-7 h-7 flex items-center justify-center bg-blue-600 !rounded shadow top-[70%] right-3 transform -translate-y-1/2 text-white cursor-pointer hover:bg-blue-700">
+                    <Wand2
+                      size={16}
+                      onClick={async () => {
+                        const title = getValues("title");
+                        if (!title) {
+                          toast.error("Please enter a product title to generate a slug!");
+                          return;
+                        }
+
+                        // Generate slug from title
+                        const rawSlug = title
+                          .toLowerCase()
+                          .trim()
+                          .replace(/[^a-z0-9\s-]/g, "")
+                          .replace(/\s+/g, "-")
+                          .replace(/-+/g, "-");
+
+                        try {
+                          // Check slug validity via API
+                          const res = await axiosInstance.post("/product/api/slug-validator", { slug: rawSlug });
+                          const { available, suggestedSlug } = res.data;
+
+                          if (available) {
+                            setValue("slug", rawSlug);
+                            toast.success("Slug is available!");
+                          } else if (suggestedSlug) {
+                            setValue("slug", suggestedSlug);
+                            toast.info("Slug not available, suggested new one!");
+                          } else {
+                            toast.error("Slug is already taken, try editing it.");
+                          }
+                        } catch (err) {
+                          toast.error("Failed to validate slug. Try again.");
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+
                 {errors.slug && <p className="text-red-500 text-xs mt-1">{errors.slug.message as string}</p>}
               </div>
 
@@ -507,6 +588,7 @@ export default function CreateProductPage() {
                     ))}
                   </div>
                 )}
+                {discountCodeData?.length === 0 && !isLoadingDiscountCode && <p className="text-gray-400">No Discount codes available to add!</p>}
               </div>
             </div>
           </div>
