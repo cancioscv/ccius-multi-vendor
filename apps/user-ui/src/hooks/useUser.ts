@@ -4,8 +4,10 @@ import { useAuthStore } from "@/store/authStore";
 import { isProtected } from "@/utils/protected";
 import { useEffect } from "react";
 
-async function fetchUser() {
-  const response = await axiosInstance.get("/api/logged-user", isProtected);
+// TODO: fix this loggin issue
+async function fetchUser(isLoggedIn: boolean) {
+  const config = isLoggedIn ? isProtected : {};
+  const response = await axiosInstance.get("/api/logged-user", config);
   return response?.data?.user;
 }
 
@@ -18,7 +20,7 @@ export default function useUser() {
     // refetch,
   } = useQuery({
     queryKey: ["user"],
-    queryFn: fetchUser,
+    queryFn: () => fetchUser(isLoggedIn),
     staleTime: 1000 * 60 * 5, // Date is fresh for 5 mins
     retry: false,
     enabled: isLoggedIn,

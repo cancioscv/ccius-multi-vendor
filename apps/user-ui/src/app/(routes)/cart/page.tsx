@@ -43,7 +43,7 @@ export default function CartPage() {
 
   const subTotal = cart.reduce((total: number, item: any) => total + item.quantity * item.salePrice, 0);
 
-  async function couponCodeApplyHandler() {
+  async function applyCouponCode() {
     setError("");
 
     if (!couponCode.trim()) {
@@ -242,7 +242,7 @@ export default function CartPage() {
                   />
                   <button
                     className="bg-blue-500 cursor-pointer text-white px-4 rounded-r-md hover:bg-blue-600 transition-all"
-                    onClick={() => couponCodeApplyHandler()}
+                    onClick={() => applyCouponCode()}
                   >
                     Apply
                   </button>

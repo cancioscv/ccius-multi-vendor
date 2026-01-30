@@ -31,7 +31,7 @@ export async function createDiscountCode(req: any, res: Response, next: NextFunc
     const discount_code = await prisma.discountCode.create({
       data: {
         publicName,
-        discountType,
+        discountType: discountType.toUpperCase(),
         discountCode,
         discountValue: parseFloat(discountValue),
         sellerId: req.seller.id,

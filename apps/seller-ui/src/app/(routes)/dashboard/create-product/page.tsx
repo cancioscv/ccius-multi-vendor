@@ -502,7 +502,7 @@ export default function CreateProductPage() {
                           setValue("discountCodeData", updatedSelection);
                         }}
                       >
-                        {code?.publicName} ({code.discountValue} {code.discountType === "percentage" ? "%" : "$"})
+                        {code?.publicName} ({code.discountValue} {code.discountType === "PERCENTAGE" ? "%" : "$"})
                       </button>
                     ))}
                   </div>

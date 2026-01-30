@@ -27,7 +27,7 @@ export default function DiscountCodesPage() {
   } = useForm({
     defaultValues: {
       publicName: "",
-      discountType: "percentage",
+      discountType: "PERCENTAGE",
       discountValue: "",
       discountCode: "",
     },
@@ -113,8 +113,8 @@ export default function DiscountCodesPage() {
               {discountCodeData?.map((discount: any) => (
                 <tr key={discount?.id} className="border-b border-gray-800 hover:bg-gray-800 transition">
                   <td className="p-3">{discount?.publicName}</td>
-                  <td className="p-3 capitalize">{discount.discountType === "percentage" ? "Percentage (%)" : "Flat ($)"}</td>
-                  <td className="p-3">{discount.discountType === "percentage" ? `${discount.discountValue}%` : `$${discount.discountValue}`}</td>
+                  <td className="p-3 capitalize">{discount.discountType === "PERCENTAGE" ? "Percentage (%)" : "Flat ($)"}</td>
+                  <td className="p-3">{discount.discountType === "PERCENTAGE" ? `${discount.discountValue}%` : `$${discount.discountValue}`}</td>
                   <td className="p-3">{discount.discountCode}</td>
                   <td className="p-3">
                     <button className="text-red-400 hover:text-red-300 transition" onClick={() => handleDeleteDiscount(discount)}>

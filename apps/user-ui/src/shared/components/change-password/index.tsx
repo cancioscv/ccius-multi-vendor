@@ -43,7 +43,7 @@ export default function ChangePassword() {
                 message: "Minimum 6 characters required",
               },
             })}
-            className="form-input"
+            className="w-full p-2 border border-gray-300 rounded-[4px] mb-1 outline-none"
             placeholder="Enter current password"
           />
           {errors.currentPassword?.message && <p className="text-red-500 text-xs mt-1">{String(errors.currentPassword.message)}</p>}
@@ -66,7 +66,7 @@ export default function ChangePassword() {
                 hasNumber: (value) => /\d/.test(value) || "Must include a number",
               },
             })}
-            className="form-input"
+            className="w-full p-2 border border-gray-300 rounded-[4px] mb-1 outline-none"
             placeholder="Enter new password"
           />
           {errors.newPassword?.message && <p className="text-red-500 text-xs mt-1">{String(errors.newPassword.message)}</p>}
@@ -81,7 +81,7 @@ export default function ChangePassword() {
               required: "Confirm your password",
               validate: (value) => value === watch("newPassword") || "Passwords do not match",
             })}
-            className="form-input"
+            className="w-full p-2 border border-gray-300 rounded-[4px] mb-1 outline-none"
             placeholder="Re-enter new password"
           />
           {errors.confirmPassword?.message && <p className="text-red-500 text-xs mt-1">{String(errors.confirmPassword.message)}</p>}
