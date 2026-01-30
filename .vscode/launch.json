@@ -75,6 +75,21 @@
       "skipFiles": ["<node_internals>/**"],
       "sourceMaps": true,
       "outFiles": ["${workspaceFolder}/apps/seller-service/dist/**/*.(m|c|)js", "!**/node_modules/**"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug @e-com/admin-service with Nx",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["nx", "serve", "@e-com/admin-service"],
+      "env": {
+        "NODE_OPTIONS": "--inspect=9234"
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "sourceMaps": true,
+      "outFiles": ["${workspaceFolder}/apps/admin-service/dist/**/*.(m|c|)js", "!**/node_modules/**"]
     }
   ]
 }

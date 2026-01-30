@@ -101,6 +101,14 @@
         "vitest": "^4.0.16",
       },
     },
+    "apps/admin-service": {
+      "name": "@e-com/admin-service",
+      "version": "0.0.1",
+      "dependencies": {
+        "@e-com/libs": "workspace:*",
+        "express": "^4.21.2",
+      },
+    },
     "apps/api-gateway": {
       "name": "@e-com/api-gateway",
       "version": "0.0.1",
@@ -504,6 +512,8 @@
     "@borewit/text-codec": ["@borewit/text-codec@0.2.1", "", {}, "sha512-k7vvKPbf7J2fZ5klGRD9AeKfUvojuZIQ3BT5u7Jfv+puwXkUBUT5PVyMDfJZpy30CBDXGMgw7fguK/lpOMBvgw=="],
 
     "@bufbuild/protobuf": ["@bufbuild/protobuf@2.10.2", "", {}, "sha512-uFsRXwIGyu+r6AMdz+XijIIZJYpoWeYzILt5yZ2d3mCjQrWUTVpVD9WL/jZAbvp+Ed04rOhrsk7FiTcEDseB5A=="],
+
+    "@e-com/admin-service": ["@e-com/admin-service@workspace:apps/admin-service"],
 
     "@e-com/analytics": ["@e-com/analytics@workspace:packages/analytics"],
 
