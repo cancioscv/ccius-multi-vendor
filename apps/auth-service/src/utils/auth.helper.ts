@@ -3,14 +3,14 @@ import redis, { ValidationError } from "@e-com/libs";
 
 import crypto from "crypto";
 import { sendEmail } from "./sendMail/index.js";
-import { prisma } from "@e-com/db";
+import { prisma, UserRole } from "@e-com/db";
 
-export function validateRegistrationData(data: any, userType: "user" | "seller") {
+export function validateRegistrationData(data: any, userType: "USER" | "SELLER") {
   const { name, email, password, phoneNumber, country } = data;
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-  if (!name || !email || !password || (userType === "seller" && (!phoneNumber || !country))) {
+  if (!name || !email || !password || (userType === UserRole.SELLER && (!phoneNumber || !country))) {
     throw new ValidationError("Missing required fields");
   }
 
@@ -83,14 +83,15 @@ export async function verifyOtp(email: string, otp: string, next: NextFunction) 
   await redis.del(`otp:${email}`, attemptsKey);
 }
 
-export async function handleForgotPassword(req: Request, res: Response, next: NextFunction, userType: "user" | "seller") {
+export async function handleForgotPassword(req: Request, res: Response, next: NextFunction, userType: "USER" | "SELLER") {
   try {
     const { email } = req.body;
     if (!email) throw new ValidationError("Email is required");
 
     // Find either user or seller in DB
 
-    const user = userType === "user" ? await prisma.user.findUnique({ where: { email } }) : await prisma.seller.findUnique({ where: { email } });
+    const user =
+      userType === UserRole.USER ? await prisma.user.findUnique({ where: { email } }) : await prisma.seller.findUnique({ where: { email } });
     if (!user) throw new ValidationError(`${userType} not found`);
 
     // Check otp restrictions
@@ -98,7 +99,7 @@ export async function handleForgotPassword(req: Request, res: Response, next: Ne
     await trackOtpRequests(email, next);
 
     // Generate OTP and send Email
-    const template = userType === "user" ? "forgot-password-user-email" : "forgot-password-seller-email";
+    const template = userType === UserRole.USER ? "forgot-password-user-email" : "forgot-password-seller-email";
     await sendOtp(user.name, user.email, template);
 
     res.status(200).json({ message: "OTP sent to email. Please verify your account." });

@@ -1,4 +1,4 @@
-import { prisma } from "@e-com/db";
+import { prisma, UserRole } from "@e-com/db";
 import jwt from "jsonwebtoken";
 import { NextFunction, Response } from "express";
 // import { CustomRequest } from "../types/user.js";
@@ -14,7 +14,7 @@ export async function isAuth(req: any, res: Response, next: NextFunction) {
 
   try {
     // Verify token
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!) as { id: string; role: "user" | "seller" | "admin" };
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!) as { id: string; role: "USER" | "SELLER" | "ADMIN" };
 
     if (!decoded) {
       return res.status(401).json({ message: "Unauthorized!. Invalid token." });
@@ -22,14 +22,14 @@ export async function isAuth(req: any, res: Response, next: NextFunction) {
 
     let account;
 
-    if (decoded.role === "user" || decoded.role === "admin") {
+    if (decoded.role === UserRole.USER || decoded.role === UserRole.ADMIN) {
       account = await prisma.user.findUnique({
         where: { id: decoded.id },
       });
 
       // Attach user to request
       req.user = account;
-    } else if (decoded.role === "seller") {
+    } else if (decoded.role === UserRole.SELLER) {
       account = await prisma.seller.findUnique({
         where: { id: decoded.id },
         include: { shop: true },

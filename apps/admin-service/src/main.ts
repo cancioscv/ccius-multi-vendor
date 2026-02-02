@@ -3,6 +3,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 
 import { errorMiddleware } from "@e-com/libs";
+import adminRouter from "./routes/admin.routes.js";
 
 const app = express();
 
@@ -20,6 +21,9 @@ app.use(cookieParser());
 app.get("/", (req, res) => {
   res.send({ message: "Welcome to admin-service!" });
 });
+
+// Routes
+app.use("/api", adminRouter);
 
 app.use(errorMiddleware);
 

@@ -2,7 +2,7 @@
 module.exports = {
   content: [
     "./{src,pages,components,app}/**/*.{ts,tsx,js,jsx,html}",
-    "../seller-ui/src/**/*.{js,ts,tsx,jsx}",
+    "../seller-ui/src/**/*.{js,ts,tsx,jsx}", // TODO: perhaps this should be removed
     "../../packages/ui/src/**/*.{js,tx,tsx,jsx}",
     "!./{src,pages,components,app}/**/*.{stories,spec}.{ts,tsx,js,jsx,html}",
     //     ...createGlobPatternsForDependencies(__dirname)

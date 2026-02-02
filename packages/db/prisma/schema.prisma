@@ -30,6 +30,13 @@ model User {
   followings  Follower[] // watch this
   orders      Order[]
   imageId     String?      @db.ObjectId
+  role        UserRole     @default(USER)
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  SELLER
 }
 
 enum OrderStatus {
