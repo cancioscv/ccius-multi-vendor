@@ -24,6 +24,8 @@ import {
   logoutUser,
   getAdmin,
   logoutSeller,
+  loginAdmin,
+  logoutAdmin,
 } from "../controller/auth.controller.js";
 
 const router: Router = Router();
@@ -58,5 +60,7 @@ router.post("/create-stripe-link", createStripeConnectLink);
 router.get("/get-layouts", getLayoutData);
 
 // Admin
+router.post("/login-admin", loginAdmin);
+router.get("/logout-admin", logoutAdmin);
 
 export default router;

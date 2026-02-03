@@ -29,6 +29,7 @@ export default function SidebarItem({ icon, title, isActive, href }: Props) {
       logout();
     }
   }
+
   return (
     <div>
       <Link href={href} onClick={handleClick} className="my-2 block">

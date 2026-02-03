@@ -571,23 +571,9 @@ export async function loginAdmin(req: Request, res: Response, next: NextFunction
     res.clearCookie("seller_refresh_token");
 
     // Generate access and refresh token
-    const accessToken = jwt.sign(
-      {
-        id: user.id,
-        role: UserRole.ADMIN,
-      },
-      process.env.ACCESS_TOKEN_SECRET!,
-      { expiresIn: "15m" }
-    );
+    const accessToken = jwt.sign({ id: user.id, role: UserRole.ADMIN }, process.env.ACCESS_TOKEN_SECRET!, { expiresIn: "15m" });
 
-    const refreshToken = jwt.sign(
-      {
-        id: user.id,
-        role: UserRole.ADMIN,
-      },
-      process.env.REFRESH_TOKEN_SECRET!,
-      { expiresIn: "7d" }
-    );
+    const refreshToken = jwt.sign({ id: user.id, role: UserRole.ADMIN }, process.env.REFRESH_TOKEN_SECRET!, { expiresIn: "7d" });
 
     //Store the refresh and access token in an httpOnly secure cookie
     setCookie(res, "access_token", accessToken);
@@ -604,4 +590,12 @@ export async function loginAdmin(req: Request, res: Response, next: NextFunction
   } catch (error) {
     return next(error);
   }
+}
+
+// Logout admin
+export async function logoutAdmin(req: Request, res: Response, next: NextFunction) {
+  res.clearCookie("access_token");
+  res.clearCookie("refresh_token");
+
+  return res.status(201).json({ success: true });
 }
