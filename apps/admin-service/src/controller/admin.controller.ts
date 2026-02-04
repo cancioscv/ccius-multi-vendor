@@ -225,7 +225,6 @@ export async function getAllSellers(req: Request, res: Response, next: NextFunct
   const skip = (page - 1) * limit;
 
   try {
-  } catch (error) {
     const [sellers, totalSellers] = await Promise.all([
       prisma.seller.findMany({
         skip,
@@ -238,6 +237,7 @@ export async function getAllSellers(req: Request, res: Response, next: NextFunct
           createdAt: true,
           shop: {
             select: {
+              id: true,
               name: true,
               avatar: true,
               address: true,
@@ -259,6 +259,7 @@ export async function getAllSellers(req: Request, res: Response, next: NextFunct
         totalPages,
       },
     });
+  } catch (error) {
     return next(error);
   }
 }

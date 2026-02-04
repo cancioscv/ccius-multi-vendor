@@ -1,6 +1,6 @@
 "use client";
 
-import BreadCrumbs from "@/shared/components/breadcrumbs";
+import Breadcrumbs from "@/shared/components/breadcrumbs";
 import axiosInstance from "@/utils/axiosInstance";
 import { useQuery } from "@tanstack/react-query";
 import { flexRender, getCoreRowModel, getFilteredRowModel, useReactTable } from "@tanstack/react-table";
@@ -90,7 +90,7 @@ export default function Orders() {
       <h2 className="text-2xl text-white font-semibold mb-2">All Orders</h2>
 
       {/* Breadcrumbs */}
-      <BreadCrumbs title="All Orders" />
+      <Breadcrumbs title="All Orders" />
 
       {/* Search Bar */}
       <div className="my-4 flex items-center bg-gray-900 p-2 rounded-md flex-1">

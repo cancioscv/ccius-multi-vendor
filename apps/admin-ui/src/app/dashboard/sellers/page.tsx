@@ -2,110 +2,122 @@
 
 import axiosInstance from "@/utils/axiosInstance";
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { flexRender, getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
-import { Download, Eye, Search } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useDeferredValue, useMemo, useState } from "react";
+import { flexRender, getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
 import { saveAs } from "file-saver";
+import { Download, Search } from "lucide-react";
 import Breadcrumbs from "@/shared/components/breadcrumbs";
 
-export default function Products() {
+interface Seller {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: string;
+  shop: {
+    name: string;
+    avatar: string;
+    address: string;
+  };
+}
+
+interface SellersResponse {
+  data: Seller[];
+  meta: {
+    totalSellers: number;
+    currentPage: number;
+    totalPages: number;
+  };
+}
+export default function Sellers() {
   const [globalFilter, setGlobalFilter] = useState("");
-  const deferredFilter = useDeferredValue(globalFilter);
   const [page, setPage] = useState(1);
+  const deferredGlobalFilter = useDeferredValue(globalFilter);
   const limit = 10;
 
-  const { data: products, isLoading }: UseQueryResult<any> = useQuery({
-    queryKey: ["all-products", page],
+  const { data, isLoading }: UseQueryResult<SellersResponse, Error> = useQuery({
+    queryKey: ["all-sellers", page],
     queryFn: async () => {
-      const res = await axiosInstance.get(`/admin/api/all-products?page=${page}&limit=${limit}`);
+      const res = await axiosInstance.get(`/admin/api/all-sellers?page=${page}&limit=${limit}`);
       return res.data;
     },
     placeholderData: (prev) => prev,
     staleTime: 1000 * 60 * 5,
   });
 
-  const allProducts = products?.data || [];
+  const allSellers = data?.data || [];
+  const filteredSellers = useMemo(() => {
+    return allSellers.filter((seller) =>
+      deferredGlobalFilter
+        ? Object.values(seller)
+            .map((v) => (typeof v === "string" ? v : JSON.stringify(v)))
+            .join(" ")
+            .toLowerCase()
+            .includes(deferredGlobalFilter.toLowerCase())
+        : true
+    );
+  }, [allSellers, deferredGlobalFilter]);
 
-  const filteredProducts = useMemo(() => {
-    return allProducts.filter((product: any) => Object.values(product).join(" ").toLowerCase().includes(deferredFilter.toLowerCase()));
-  }, [allProducts, deferredFilter]);
-
-  const totalPages = Math.ceil((products?.meta?.totalProducts ?? 0) / limit);
+  const totalPages = Math.ceil((data?.meta?.totalSellers ?? 0) / limit);
 
   const columns = useMemo(
     () => [
       {
-        accessorKey: "image",
-        header: "Image",
+        accessorKey: "shop.avatar",
+        header: "Avatar",
+        cell: ({ row }: any) => (
+          <Image
+            src={row.original.shop?.avatar || "/placeholder.png"}
+            alt={row.original.name}
+            width={40}
+            height={40}
+            className="rounded-full w-10 h-10 object-cover"
+          />
+        ),
+      },
+      {
+        accessorKey: "name",
+        header: "Name",
+      },
+      {
+        accessorKey: "email",
+        header: "Email",
+      },
+      {
+        accessorKey: "shop.name",
+        header: "Shop Name",
         cell: ({ row }: any) => {
-          return (
-            <Image
-              src={row.original.images[0]?.url || "/placeholder.png"}
-              alt={row.original.title}
-              width={40}
-              height={40}
-              className="w-10 h-10 rounded object-cover"
-            />
+          console.log("SHOP ID", row);
+          const shopName = row.original.shop?.name;
+          return shopName ? (
+            <a
+              href={`${process.env.NEXT_PUBLIC_USER_UI_LINK}/shop/${row.original.shop.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:underline"
+            >
+              {shopName}
+            </a>
+          ) : (
+            <span className="text-gray-400 italic">No Shop</span>
           );
         },
       },
       {
-        accessorKey: "title",
-        header: "Title",
-        cell: ({ row }: any) => (
-          <Link
-            href={`${process.env.NEXT_PUBLIC_USER_UI_LINK}/product/${row.original.slug}`}
-            target="_blank"
-            className="text-blue-400 hover:underline"
-          >
-            {row.original.title}
-          </Link>
-        ),
-      },
-      {
-        accessorKey: "salePrice",
-        header: "Price",
-        cell: ({ row }: any) => `$${row.original.salePrice}`,
-      },
-      {
-        accessorKey: "stock",
-        header: "Stock",
-        cell: ({ row }: any) => <span className={row.original.stock < 10 ? "text-red-400" : "text-white"}>{row.original.stock} left</span>,
-      },
-      {
-        accessorKey: "category",
-        header: "Category",
-      },
-      {
-        accessorKey: "ratings",
-        header: "Rating",
-      },
-      {
-        accessorKey: "Shop.name",
-        header: "Shop",
-        cell: ({ row }: any) => <span className="text-purple-400">{row.original.shop.name}</span>,
+        accessorKey: "shop.address",
+        header: "Address",
       },
       {
         accessorKey: "createdAt",
-        header: "Created",
-        cell: ({ row }: any) => new Date(row.original.createdAt).toLocaleDateString(),
-      },
-      {
-        header: "Actions",
-        cell: ({ row }: any) => (
-          <Link href={`${process.env.NEXT_PUBLIC_USER_UI_LINK}/product/${row.original.slug}`} className="text-blue-400 hover:underline">
-            <Eye size={16} />
-          </Link>
-        ),
+        header: "Joined",
+        cell: ({ row }: any) => <span className="text-gray-400">{new Date(row.original.createdAt).toLocaleDateString()}</span>,
       },
     ],
     []
   );
 
   const table = useReactTable({
-    data: filteredProducts,
+    data: filteredSellers,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -114,30 +126,30 @@ export default function Products() {
     onGlobalFilterChange: setGlobalFilter,
   });
 
-  function exportCSV() {
-    const csvData = filteredProducts.map(
-      (product: any) => `${product.title},${product.salePrice},${product.stock},${product.category},${product.ratings},${product.shop.name}`
-    );
-    const blob = new Blob([`Title,Price,Stock,Category,Rating,Shop\n${csvData.join("\n")}`], { type: "text/csv;charset=utf-8" });
-    saveAs(blob, `products-page-${page}.csv`);
-  }
+  const exportToCSV = () => {
+    const csvData = filteredSellers.map((seller) => `${seller.name},${seller.email},${seller.shop.name},${seller.shop.address},${seller.createdAt}`);
+    const blob = new Blob([`Name,Email,Shop Name,Address,Joined\n${csvData.join("\n")}`], { type: "text/csv;charset=utf-8" });
+    saveAs(blob, `sellers-page-${page}.csv`);
+  };
 
   return (
     <div className="w-full min-h-screen p-8 bg-black text-white text-sm">
       <div className="flex justify-between items-center mb-3">
-        <h2 className="text-xl font-bold tracking-wide">All Products</h2>
-        <button onClick={exportCSV} className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm flex items-center gap-2">
+        <h2 className="text-xl font-bold tracking-wide">All Sellers</h2>
+        <button onClick={exportToCSV} className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm flex items-center gap-2">
           <Download size={16} /> Export CSV
         </button>
       </div>
 
-      <Breadcrumbs title="All Products" />
+      <div className="mb-4">
+        <Breadcrumbs title="All Sellers" />
+      </div>
 
-      <div className="my-4 flex items-center bg-gray-900 p-2 rounded-md flex-1">
+      <div className="mb-4 flex items-center bg-gray-900 p-2 rounded-md flex-1">
         <Search size={18} className="text-gray-400 mr-2" />
         <input
           type="text"
-          placeholder="Search products..."
+          placeholder="Search sellers..."
           className="w-full bg-transparent text-white outline-none"
           value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
@@ -146,7 +158,7 @@ export default function Products() {
 
       <div className="overflow-x-auto bg-gray-900 rounded-lg p-4">
         {isLoading ? (
-          <p className="text-center text-white">Loading products...</p>
+          <p className="text-center text-white">Loading sellers...</p>
         ) : (
           <table className="w-full text-white">
             <thead>
@@ -174,6 +186,7 @@ export default function Products() {
           </table>
         )}
 
+        {/* Pagination Controls */}
         <div className="flex justify-between items-center mt-4">
           <button
             className="px-4 py-2 bg-blue-600 rounded text-white hover:bg-blue-700 disabled:opacity-50"

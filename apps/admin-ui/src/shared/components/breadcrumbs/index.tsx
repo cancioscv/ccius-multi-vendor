@@ -2,7 +2,7 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
-const BreadCrumbs = ({ title }: { title: string }) => {
+export default function Breadcrumbs({ title }: { title: string }) {
   return (
     <div className="w-full text-white flex items-center">
       <Link href="/dashboard" className="text-blue-400 cursor-pointer">
@@ -12,6 +12,4 @@ const BreadCrumbs = ({ title }: { title: string }) => {
       <span>{title}</span>
     </div>
   );
-};
-
-export default BreadCrumbs;
+}
