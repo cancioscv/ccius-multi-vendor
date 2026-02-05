@@ -177,6 +177,13 @@
         "express": "^4.21.2",
       },
     },
+    "apps/recommendation-service": {
+      "name": "@e-com/recommendation-service",
+      "version": "0.0.1",
+      "dependencies": {
+        "express": "^4.21.2",
+      },
+    },
     "apps/seller-service": {
       "name": "@e-com/seller-service",
       "version": "0.0.1",
@@ -505,6 +512,8 @@
     "@e-com/order-service": ["@e-com/order-service@workspace:apps/order-service"],
 
     "@e-com/product-service": ["@e-com/product-service@workspace:apps/product-service"],
+
+    "@e-com/recommendation-service": ["@e-com/recommendation-service@workspace:apps/recommendation-service"],
 
     "@e-com/seller-service": ["@e-com/seller-service@workspace:apps/seller-service"],
 
