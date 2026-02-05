@@ -152,7 +152,7 @@ export async function addNewAdmin(req: Request, res: Response, next: NextFunctio
 
     const updateRole = await prisma.user.update({
       where: { email },
-      data: { role },
+      data: { role: role.toUpperCase() },
     });
 
     return res.status(201).json({
