@@ -151,6 +151,13 @@
         "express": "^4.21.2",
       },
     },
+    "apps/logger-service": {
+      "name": "@e-com/logger-service",
+      "version": "0.0.1",
+      "dependencies": {
+        "express": "^4.21.2",
+      },
+    },
     "apps/order-service": {
       "name": "@e-com/order-service",
       "version": "0.0.1",
@@ -492,6 +499,8 @@
     "@e-com/kafka": ["@e-com/kafka@workspace:packages/kafka"],
 
     "@e-com/libs": ["@e-com/libs@workspace:packages/libs"],
+
+    "@e-com/logger-service": ["@e-com/logger-service@workspace:apps/logger-service"],
 
     "@e-com/order-service": ["@e-com/order-service@workspace:apps/order-service"],
 
