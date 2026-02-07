@@ -94,9 +94,9 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug @e-com/chatting-service with Nx",
+      "name": "Debug @e-com/chat-service with Nx",
       "runtimeExecutable": "bun",
-      "runtimeArgs": ["nx", "serve", "@e-com/chatting-service"],
+      "runtimeArgs": ["nx", "serve", "@e-com/chat-service"],
       "env": {
         "NODE_OPTIONS": "--inspect=9235"
       },
@@ -104,7 +104,7 @@
       "internalConsoleOptions": "neverOpen",
       "skipFiles": ["<node_internals>/**"],
       "sourceMaps": true,
-      "outFiles": ["${workspaceFolder}/apps/chatting-service/dist/**/*.(m|c|)js", "!**/node_modules/**"]
+      "outFiles": ["${workspaceFolder}/apps/chat-service/dist/**/*.(m|c|)js", "!**/node_modules/**"]
     },
     {
       "type": "node",

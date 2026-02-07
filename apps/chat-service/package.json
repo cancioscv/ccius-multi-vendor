@@ -1,5 +1,5 @@
 {
-  "name": "@e-com/chatting-service",
+  "name": "@e-com/chat-service",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -13,7 +13,7 @@
         "defaultConfiguration": "production",
         "options": {
           "platform": "node",
-          "outputPath": "apps/chatting-service/dist",
+          "outputPath": "apps/chat-service/dist",
           "format": [
             "esm"
           ],
@@ -24,10 +24,10 @@
             "fs"
           ],
           "bundle": true,
-          "main": "apps/chatting-service/src/main.ts",
-          "tsConfig": "apps/chatting-service/tsconfig.app.json",
+          "main": "apps/chat-service/src/main.ts",
+          "tsConfig": "apps/chat-service/tsconfig.app.json",
           "assets": [
-            "apps/chatting-service/src/assets"
+            "apps/chat-service/src/assets"
           ],
           "esbuildOptions": {
             "sourcemap": true,
@@ -55,8 +55,8 @@
         "cache": true,
         "executor": "@nx/js:prune-lockfile",
         "outputs": [
-          "{workspaceRoot}/apps/chatting-service/dist/package.json",
-          "{workspaceRoot}/apps/chatting-service/dist/bun.lock"
+          "{workspaceRoot}/apps/chat-service/dist/package.json",
+          "{workspaceRoot}/apps/chat-service/dist/bun.lock"
         ],
         "options": {
           "buildTarget": "build"
@@ -68,7 +68,7 @@
         ],
         "cache": true,
         "outputs": [
-          "{workspaceRoot}/apps/chatting-service/dist/workspace_modules"
+          "{workspaceRoot}/apps/chat-service/dist/workspace_modules"
         ],
         "executor": "@nx/js:copy-workspace-modules",
         "options": {
@@ -90,15 +90,15 @@
           "build"
         ],
         "options": {
-          "buildTarget": "@e-com/chatting-service:build",
+          "buildTarget": "@e-com/chat-service:build",
           "runBuildTargetDependencies": false
         },
         "configurations": {
           "development": {
-            "buildTarget": "@e-com/chatting-service:build:development"
+            "buildTarget": "@e-com/chat-service:build:development"
           },
           "production": {
-            "buildTarget": "@e-com/chatting-service:build:production"
+            "buildTarget": "@e-com/chat-service:build:production"
           }
         }
       }

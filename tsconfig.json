@@ -46,7 +46,7 @@
       "path": "./apps/admin-ui"
     },
     {
-      "path": "./apps/chatting-service"
+      "path": "./apps/chat-service"
     },
     {
       "path": "./apps/logger-service"

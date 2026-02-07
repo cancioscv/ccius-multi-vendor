@@ -55,7 +55,7 @@ export default function ProductDetails({ product }: any) {
     setIsChatLoading(true);
 
     try {
-      const response = await axiosInstance.post("/chatting/api/create-user-conversationGroup", {
+      const response = await axiosInstance.post("/chat/api/create-user-conversationGroup", {
         selledId: product?.shop.sellerId,
       });
 
