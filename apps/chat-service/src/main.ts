@@ -3,6 +3,7 @@ import cookieParser from "cookie-parser";
 import express from "express";
 import { createWebSocketServer } from "./websocket.js";
 import { startConsumer } from "./chatMessageConsumer.js";
+import chatRouter from "./routes/chat.routes.js";
 
 const app = express();
 
@@ -12,6 +13,9 @@ app.get("/", (req, res) => {
 
 app.use(express.json());
 app.use(cookieParser());
+
+// Routes
+app.use("/api", chatRouter);
 
 const port = process.env.PORT || 6006;
 const server = app.listen(port, () => {

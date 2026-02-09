@@ -310,15 +310,15 @@ model Message {
 }
 
 model Participant {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  conversationId String   @db.ObjectId
-  userId         String   @db.ObjectId
-  sellerId       String   @db.ObjectId
-  lastSeenAt     DateTime
-  isOnline       Boolean  @default(false)
-  unreadCount    Int      @default(0)
-  muted          Boolean  @default(false)
-  joinedAt       DateTime @default(now())
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId String    @db.ObjectId
+  userId         String?   @db.ObjectId
+  sellerId       String?   @db.ObjectId
+  lastSeenAt     DateTime?
+  isOnline       Boolean   @default(false)
+  unreadCount    Int       @default(0)
+  muted          Boolean   @default(false)
+  joinedAt       DateTime  @default(now())
 }
 
 model ConversationGroup {

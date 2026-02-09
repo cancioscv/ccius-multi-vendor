@@ -8,6 +8,8 @@ import { useCartStore } from "@/store";
 import useUser from "@/hooks/useUser";
 import useLocationTracking from "@/hooks/useLocationTracking";
 import useDeviceTracking from "@/hooks/useDeviceTracking";
+import axiosInstance from "@/utils/axiosInstance";
+import { isProtected } from "@/utils/protected";
 
 interface Props {
   product: any;
@@ -18,6 +20,7 @@ export default function ProductDetailsCard({ product, setOpen }: Props) {
   const [isColorSelected, setIsColorSelected] = useState(product?.colors?.[0] || "");
   const [isSizeSelected, setIsSizeSelected] = useState(product?.sizes?.[0] || "");
   const [quantity, setQuantity] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { cart, wishList, addToCart, removeFromCart, addToWishlist, removeFromWishlist } = useCartStore();
   const isInCart = cart.some((item) => item.id === product.id);
@@ -32,7 +35,21 @@ export default function ProductDetailsCard({ product, setOpen }: Props) {
   const estimatedDelivery = new Date(); // This depends on DHL or so.
   estimatedDelivery.setDate(estimatedDelivery.getDate() + 5);
 
-  function handleChat() {}
+  async function handleChat() {
+    if (isLoading) {
+      return;
+    }
+    setIsLoading(true);
+
+    try {
+      const res = await axiosInstance.post("/chat/api/create-user-conversation-group", { sellerId: product?.shop?.sellerId }, isProtected);
+      router.push(`/inbox?conversationId=${res.data.conversation.id}`);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   function handleAddToCart() {
     addToCart(
@@ -126,7 +143,7 @@ export default function ProductDetailsCard({ product, setOpen }: Props) {
               {/* Chat with Seller Button */}
               <button
                 className="flex cursor-pointer items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all duration-200 ease-in-out transform hover:scale-105 hover:shadow-md"
-                onClick={() => router.push(`/inbox?shopId=${product?.shop?.id}`)}
+                onClick={() => handleChat()}
               >
                 <MessageCircleMore size={18} /> Chat with Seller
               </button>
