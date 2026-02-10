@@ -9,7 +9,7 @@ interface Props {
 
 const WebSocketContext = createContext<any>(null);
 
-export function WebSocketProdiver({ children, user }: Props) {
+export function WebSocketProvider({ children, user }: Props) {
   const [wsReady, setWsReady] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});

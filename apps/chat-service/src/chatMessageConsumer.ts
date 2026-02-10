@@ -24,6 +24,7 @@ export async function startConsumer() {
   const consumer = kafka.consumer({ groupId: GROUP_ID });
   await consumer.connect();
   await consumer.subscribe({ topic: TOPIC, fromBeginning: false });
+  console.log(`Kafka consumer connected and subscribed to "${TOPIC}".`);
 
   // Start consuming
   await consumer.run({
@@ -65,6 +66,8 @@ async function flushBuffereToDb() {
       createdAt: new Date(msg.createdAt),
     }));
 
+    console.log("THIS IS MY PAYLOAD FROM CONSUMER", prismaPayload);
+
     await prisma.message.createMany({
       data: prismaPayload,
     });
@@ -76,7 +79,7 @@ async function flushBuffereToDb() {
     }
     console.log(`Flushed ${prismaPayload.length} messages to DB and Redis.`);
   } catch (error) {
-    console.error("Error inserting mssages to DB:", error);
+    console.error("Error inserting messages to DB:", error);
     buffer.unshift(...toInsert);
 
     if (!flushTimer) {

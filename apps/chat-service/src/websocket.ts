@@ -1,7 +1,11 @@
 import redis from "@e-com/libs";
 import { WebSocketServer, WebSocket } from "ws";
 import { Server as HttpServer } from "http";
-import { producer } from "./utils/kafka.js";
+// import { producer } from "./utils/kafka.js";
+
+import { kafka } from "@e-com/kafka";
+
+const producer = kafka.producer();
 
 const connectedUsers: Map<string, WebSocket> = new Map();
 const unseenCounts: Map<string, number> = new Map();
@@ -19,6 +23,7 @@ export async function createWebSocketServer(server: HttpServer) {
   const webSocketServer = new WebSocketServer({ server });
 
   await producer.connect();
+  console.log("Kafka producer connected!");
 
   webSocketServer.on("connection", (ws: WebSocket) => {
     console.log("New Websocket connection!");
@@ -29,7 +34,7 @@ export async function createWebSocketServer(server: HttpServer) {
       try {
         const stringMsg = rawMessage.toString();
 
-        // Register eht user on first plain message (non-JSON)
+        // Register the user on first plain message (non-JSON)
         if (!registeredUseId && !stringMsg.startsWith("{")) {
           registeredUseId = stringMsg;
           connectedUsers.set(registeredUseId, ws);
@@ -69,6 +74,8 @@ export async function createWebSocketServer(server: HttpServer) {
           content: messageBody,
           createdAt: now,
         };
+
+        console.log("THIS IS MY MESSAGE PAYLOAD FROM WEBSOCKET", messagePayload);
 
         const messageEvent = JSON.stringify({
           type: "NEW_MESSAGE",
@@ -111,11 +118,20 @@ export async function createWebSocketServer(server: HttpServer) {
         }
 
         // Push to kafka consumer
-        await producer.send("new.message", {
-          value: {
-            key: conversationId,
-            value: JSON.stringify(messagePayload),
-          },
+        // await producer.send("new.message", {
+        //   value: {
+        //     key: conversationId,
+        //     value: JSON.stringify(messagePayload),
+        //   },
+        // });
+        await producer.send({
+          topic: "new.message",
+          messages: [
+            {
+              key: conversationId,
+              value: JSON.stringify(messagePayload),
+            },
+          ],
         });
         console.log(`Message queued to kafka: ${conversationId}`);
       } catch (error) {

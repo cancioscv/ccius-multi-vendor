@@ -22,7 +22,7 @@ export default function Page() {
   const [chats, setChats] = useState<any[]>([]);
   const [selectedChat, setSelectedChat] = useState<any | null>(null);
   const [message, setMessage] = useState("");
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false);
 
@@ -232,8 +232,8 @@ export default function Page() {
                       </button>
                     </div>
                   )}
-                  {messages.map((msg: any, idx: number) => (
-                    <div key={idx} className={`flex flex-col ${msg.senderType === "user" ? "items-end ml-auto" : "items-start"} max-w-[80%]`}>
+                  {messages.map((msg: any, index: number) => (
+                    <div key={index} className={`flex flex-col ${msg.senderType === "user" ? "items-end ml-auto" : "items-start"} max-w-[80%]`}>
                       <div
                         className={`${
                           msg.senderType === "user" ? "bg-blue-600 text-white" : "bg-white text-gray-800"
