@@ -33,7 +33,7 @@ export default function Page() {
     queryFn: async () => {
       if (!conversationId || hasFetchedOnce) return [];
 
-      const res = await axiosInstance.get(`/chat/api/messages/${conversationId}?page=1`, isProtected);
+      const res = await axiosInstance.get(`/chat/api/user-messages/${conversationId}?page=1`, isProtected);
       setPage(1);
       setHasMore(res.data.hasMore);
       setHasFetchedOnce(true);
@@ -46,7 +46,7 @@ export default function Page() {
 
   async function loadMoreMessages() {
     const nextPage = page + 1;
-    const res = await axiosInstance.get(`/chat/api/messages/${conversationId}?page=${nextPage}`, isProtected);
+    const res = await axiosInstance.get(`/chat/api/user-messages/${conversationId}?page=${nextPage}`, isProtected);
 
     queryClient.setQueryData(["messages", conversationId], (old: any = []) => [...res.data.messages.reverse(), ...old]);
 
@@ -54,39 +54,39 @@ export default function Page() {
     setHasMore(res.data.hasMore);
   }
 
-  useEffect(() => {
-    if (!ws) return;
+  // useEffect(() => {
+  //   if (!ws) return;
 
-    ws.onmessage = (event: any) => {
-      const data = JSON.parse(event.data);
+  //   ws.onmessage = (event: any) => {
+  //     const data = JSON.parse(event.data);
 
-      if (data.type === "NEW_MESSAGE") {
-        const newMsg = data?.payload;
+  //     if (data.type === "NEW_MESSAGE") {
+  //       const newMsg = data?.payload;
 
-        if (newMsg.conversationId === conversationId) {
-          queryClient.setQueryData(["messages", conversationId], (old: any = []) => [
-            ...old,
-            {
-              content: newMsg.messageBody || newMsg.content || "",
-              senderType: newMsg.senderType,
-              seen: false,
-              createdAt: newMsg.createdAt || new Date().toISOString(),
-            },
-          ]);
-          scrollToBottom();
-        }
+  //       if (newMsg.conversationId === conversationId) {
+  //         queryClient.setQueryData(["messages", conversationId], (old: any = []) => [
+  //           ...old,
+  //           {
+  //             content: newMsg.messageBody || newMsg.content || "",
+  //             senderType: newMsg.senderType,
+  //             seen: false,
+  //             createdAt: newMsg.createdAt || new Date().toISOString(),
+  //           },
+  //         ]);
+  //         scrollToBottom();
+  //       }
 
-        setChats((prevChats) =>
-          prevChats.map((chat) => (chat.conversationId === newMsg.conversationId ? { ...chat, lastMessage: newMsg.content } : chat))
-        );
-      }
+  //       setChats((prevChats) =>
+  //         prevChats.map((chat) => (chat.conversationId === newMsg.conversationId ? { ...chat, lastMessage: newMsg.content } : chat))
+  //       );
+  //     }
 
-      if (data.type === "UNSEEN_COUNT_UPDATE") {
-        const { conversationId, count } = data.payload;
-        setChats((prevChats) => prevChats.map((chat) => (chat.conversationId === conversationId ? { ...chat, unreadCount: count } : chat)));
-      }
-    };
-  }, [ws, conversationId]);
+  //     if (data.type === "UNSEEN_COUNT_UPDATE") {
+  //       const { conversationId, count } = data.payload;
+  //       setChats((prevChats) => prevChats.map((chat) => (chat.conversationId === conversationId ? { ...chat, unreadCount: count } : chat)));
+  //     }
+  //   };
+  // }, [ws, conversationId]);
 
   function scrollToBottom() {
     requestAnimationFrame(() => {
@@ -150,12 +150,24 @@ export default function Page() {
 
     ws?.send(JSON.stringify(payload));
 
+    queryClient.setQueryData(["messages", selectedChat.conversationId], (old: any = []) => [
+      ...old,
+      {
+        content: payload.messageBody,
+        senderType: "user",
+        seen: false,
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+
+    setChats((prevChats) => prevChats.map((chat) => (chat.conversationId ? { ...chat, lastMessage: payload.messageBody } : chat)));
+
     setMessage("");
     scrollToBottom();
   }
 
   function getLastMessage(chat: any) {
-    return chat.lastMessage || "";
+    return chat?.lastMessage || "";
   }
 
   return (
