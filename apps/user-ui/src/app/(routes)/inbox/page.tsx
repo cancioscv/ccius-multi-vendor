@@ -192,7 +192,7 @@ export default function Page() {
                     >
                       <div className="flex items-center gap-3">
                         <Image
-                          src={chat.seller?.avatar || "https://ik.imagekit.io/shahriarbecodemy/avatar/6_t8b5y8t3U.png"}
+                          src={chat.seller?.avatar || "/placeholder.png"}
                           alt={chat.seller?.name}
                           width={36}
                           height={36}
@@ -224,7 +224,7 @@ export default function Page() {
               <>
                 <div className="p-4 border-b border-b-gray-200 bg-white flex items-center gap-3">
                   <Image
-                    src={selectedChat.seller?.avatar || "https://ik.imagekit.io/shahriarbecodemy/avatar/6_t8b5y8t3U.png"}
+                    src={selectedChat.seller?.avatar || "/placeholder.png"}
                     alt={selectedChat.seller?.name}
                     width={40}
                     height={40}
