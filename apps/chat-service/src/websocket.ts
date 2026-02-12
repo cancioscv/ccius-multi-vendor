@@ -72,10 +72,9 @@ export async function createWebSocketServer(server: HttpServer) {
           senderId: fromUserId,
           senderType,
           content: messageBody,
+          //image: ImageAttachment, // TODO:  enhance sending image
           createdAt: now,
         };
-
-        console.log("THIS IS MY MESSAGE PAYLOAD FROM WEBSOCKET", messagePayload);
 
         const messageEvent = JSON.stringify({
           type: "NEW_MESSAGE",

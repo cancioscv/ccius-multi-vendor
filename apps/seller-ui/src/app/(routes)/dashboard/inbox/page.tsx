@@ -137,6 +137,18 @@ export default function ChatPage() {
 
     ws.send(JSON.stringify(payload));
 
+    // queryClient.setQueryData(["messages", selectedChat.conversationId], (old: any = []) => [
+    //   ...old,
+    //   {
+    //     content: payload.messageBody,
+    //     senderType: "seller",
+    //     seen: false,
+    //     createdAt: new Date().toISOString(),
+    //   },
+    // ]);
+
+    setChats((prevChats) => prevChats.map((chat) => (chat.conversationId ? { ...chat, lastMessage: payload.messageBody } : chat)));
+
     setMessage("");
     scrollToBottom();
   }

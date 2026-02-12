@@ -54,39 +54,39 @@ export default function Page() {
     setHasMore(res.data.hasMore);
   }
 
-  // useEffect(() => {
-  //   if (!ws) return;
+  useEffect(() => {
+    if (!ws) return;
 
-  //   ws.onmessage = (event: any) => {
-  //     const data = JSON.parse(event.data);
+    ws.onmessage = (event: any) => {
+      const data = JSON.parse(event.data);
 
-  //     if (data.type === "NEW_MESSAGE") {
-  //       const newMsg = data?.payload;
+      if (data.type === "NEW_MESSAGE") {
+        const newMsg = data?.payload;
 
-  //       if (newMsg.conversationId === conversationId) {
-  //         queryClient.setQueryData(["messages", conversationId], (old: any = []) => [
-  //           ...old,
-  //           {
-  //             content: newMsg.messageBody || newMsg.content || "",
-  //             senderType: newMsg.senderType,
-  //             seen: false,
-  //             createdAt: newMsg.createdAt || new Date().toISOString(),
-  //           },
-  //         ]);
-  //         scrollToBottom();
-  //       }
+        if (newMsg.conversationId === conversationId) {
+          queryClient.setQueryData(["messages", conversationId], (old: any = []) => [
+            ...old,
+            {
+              content: newMsg.messageBody || newMsg.content || "",
+              senderType: newMsg.senderType,
+              seen: false,
+              createdAt: newMsg.createdAt || new Date().toISOString(),
+            },
+          ]);
+          scrollToBottom();
+        }
 
-  //       setChats((prevChats) =>
-  //         prevChats.map((chat) => (chat.conversationId === newMsg.conversationId ? { ...chat, lastMessage: newMsg.content } : chat))
-  //       );
-  //     }
+        setChats((prevChats) =>
+          prevChats.map((chat) => (chat.conversationId === newMsg.conversationId ? { ...chat, lastMessage: newMsg.content } : chat))
+        );
+      }
 
-  //     if (data.type === "UNSEEN_COUNT_UPDATE") {
-  //       const { conversationId, count } = data.payload;
-  //       setChats((prevChats) => prevChats.map((chat) => (chat.conversationId === conversationId ? { ...chat, unreadCount: count } : chat)));
-  //     }
-  //   };
-  // }, [ws, conversationId]);
+      if (data.type === "UNSEEN_COUNT_UPDATE") {
+        const { conversationId, count } = data.payload;
+        setChats((prevChats) => prevChats.map((chat) => (chat.conversationId === conversationId ? { ...chat, unreadCount: count } : chat)));
+      }
+    };
+  }, [ws, conversationId]);
 
   function scrollToBottom() {
     requestAnimationFrame(() => {
@@ -150,15 +150,15 @@ export default function Page() {
 
     ws?.send(JSON.stringify(payload));
 
-    queryClient.setQueryData(["messages", selectedChat.conversationId], (old: any = []) => [
-      ...old,
-      {
-        content: payload.messageBody,
-        senderType: "user",
-        seen: false,
-        createdAt: new Date().toISOString(),
-      },
-    ]);
+    // queryClient.setQueryData(["messages", selectedChat.conversationId], (old: any = []) => [
+    //   ...old,
+    //   {
+    //     content: payload.messageBody,
+    //     senderType: "user",
+    //     seen: false,
+    //     createdAt: new Date().toISOString(),
+    //   },
+    // ]);
 
     setChats((prevChats) => prevChats.map((chat) => (chat.conversationId ? { ...chat, lastMessage: payload.messageBody } : chat)));
 
