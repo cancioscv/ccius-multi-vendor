@@ -1,8 +1,8 @@
 "use client";
 
 import axiosInstance from "@/utils/axiosInstance";
-import { Loader2 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 enum DiscountType {
@@ -15,7 +15,8 @@ const deliveryStatuses = ["ORDERED", "PACKED", "SHIPPED", "OUT_FOR_DELIVERY", "D
 
 export default function OrderDetails() {
   const params = useParams();
-  const orderId = params.id as string;
+  const router = useRouter();
+  const orderId = params.orderId as string;
 
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -52,14 +53,20 @@ export default function OrderDetails() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
-      <h1 className="text-2xl font-bold text-gray-200 mb-4">Order #{order.id.slice(-6)}</h1>
+      <div className="my-4">
+        <span className="text-gray-800 flex items-center gap-2 font-semibold cursor-pointer" onClick={() => router.push(`/profile`)}>
+          <ArrowLeft />
+          Go Back to Profile
+        </span>
+      </div>
+      <h1 className="text-2xl font-bold text-gray-800 mb-4">Order #{order.id.slice(-6)}</h1>
 
       {/* Delivery Progress */}
       <div className="my-4">
         <div className="flex items-center justify-between text-xs font-medium text-gray-500 mb-2">
           {deliveryStatuses.map((step, idx) => {
-            const current = step.toLowerCase() === (order.deliveryStatus || "processing").toLowerCase();
-            const passed = idx <= deliveryStatuses.findIndex((s) => s.toLowerCase() === (order.deliveryStatus || "processing").toLowerCase());
+            const current = step.toLowerCase() === order.deliveryStatus.toLowerCase();
+            const passed = idx <= deliveryStatuses.findIndex((s) => s.toLowerCase() === order.deliveryStatus.toLowerCase());
             return (
               <div key={step} className={`flex-1 text-left ${current ? "text-blue-600" : passed ? "text-green-600" : "text-gray-400"}`}>
                 {step}
@@ -69,7 +76,7 @@ export default function OrderDetails() {
         </div>
         <div className="flex items-center">
           {deliveryStatuses.map((step, idx) => {
-            const isReached = idx <= deliveryStatuses.findIndex((s) => s.toLowerCase() === (order.deliveryStatus || "processing").toLowerCase());
+            const isReached = idx <= deliveryStatuses.findIndex((s) => s.toLowerCase() === order.deliveryStatus.toLowerCase());
             return (
               <div key={step} className="flex-1 flex items-center">
                 <div className={`w-4 h-4 rounded-full ${isReached ? "bg-blue-600" : "bg-gray-300"}`} />
@@ -81,9 +88,9 @@ export default function OrderDetails() {
       </div>
 
       {/* Summary Info */}
-      <div className="mb-6 space-y-1 text-sm text-gray-200">
+      <div className="mb-6 space-y-1 text-sm text-gray-700">
         <p>
-          <span className="font-semibold">Payment Status:</span> <span className="text-green-600 font-medium">{order.paymentStatus}</span>
+          <span className="font-semibold">Payment Status:</span> <span className="text-green-600 font-bold">{order.paymentStatus}</span>
         </p>
         <p>
           <span className="font-semibold">Total Paid:</span> <span className="font-medium">${order.total.toFixed(2)}</span>
@@ -92,7 +99,7 @@ export default function OrderDetails() {
         {order.discountAmount > 0 && (
           <p>
             <span className="font-semibold">Discount Applied:</span>{" "}
-            <span className="text-green-400">
+            <span className="text-green-700">
               -${order.discountAmount.toFixed(2)} (
               {order.couponCode?.discountType === DiscountType.PERCENTAGE
                 ? `${order.couponCode.discountValue}%`
@@ -104,7 +111,7 @@ export default function OrderDetails() {
 
         {order.couponCode && (
           <p>
-            <span className="font-semibold">Coupon:</span> <span className="text-blue-400">{order.couponCode.publicName}</span>
+            <span className="font-semibold">Coupon:</span> <span className="text-blue-700">{order.couponCode.publicName}</span>
           </p>
         )}
 
@@ -115,7 +122,7 @@ export default function OrderDetails() {
 
       {/* Shipping Address */}
       {order.shippingAddress && (
-        <div className="mb-6 text-sm text-gray-300">
+        <div className="mb-6 text-sm text-gray-700">
           <h2 className="text-md font-semibold mb-2">Shipping Address</h2>
           <p>{order.shippingAddress.name}</p>
           <p>
@@ -127,7 +134,7 @@ export default function OrderDetails() {
 
       {/* Order Items */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-300 mb-4">Order Items</h2>
+        <h2 className="text-lg font-semibold text-gray-700 mb-4">Order Items</h2>
         <div className="space-y-4">
           {order.items.map((item: any) => (
             <div key={item.productId} className="border border-gray-200 rounded-md p-4 flex items-center gap-4">
@@ -137,10 +144,10 @@ export default function OrderDetails() {
                 className="w-16 h-16 object-cover rounded-md border border-gray-200"
               />
               <div className="flex-1">
-                <p className="font-medium text-gray-200">{item.product?.title || "Unnamed Product"}</p>
-                <p className="text-sm text-gray-300">Quantity: {item.quantity}</p>
+                <p className="font-medium text-gray-800">{item.product?.title || "Unnamed Product"}</p>
+                <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
                 {item.selectedOptions && Object.keys(item.selectedOptions).length > 0 && (
-                  <div className="text-xs text-gray-400 mt-1">
+                  <div className="text-xs text-gray-500 mt-1">
                     {Object.entries(item.selectedOptions).map(
                       ([key, value]: [string, any]) =>
                         value && (
@@ -152,7 +159,7 @@ export default function OrderDetails() {
                   </div>
                 )}
               </div>
-              <p className="text-sm font-semibold text-gray-200">${item.price.toFixed(2)}</p>
+              <p className="text-sm font-semibold text-gray-800">${item.price.toFixed(2)}</p>
             </div>
           ))}
         </div>

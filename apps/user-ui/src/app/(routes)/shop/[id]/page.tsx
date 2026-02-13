@@ -2,7 +2,7 @@ import SellerProfile from "@/shared/modules/seller/seller-profile";
 import axiosInstance from "@/utils/axiosInstance";
 import { Metadata } from "next";
 
-interface ParamsProps {
+interface MetadataProps {
   params: Promise<{ id: string }>;
 }
 
@@ -12,10 +12,9 @@ async function getSellerDetails(id: string) {
 }
 
 // Dynamic metadata generator
-export async function generateMetadata({ params }: ParamsProps): Promise<Metadata> {
+export async function generateMetadata({ params }: MetadataProps): Promise<Metadata> {
   const { id } = await params;
   const data = await getSellerDetails(id);
-  console.log("FOLLOWES", data);
 
   return {
     title: `${data?.shop?.name} | Ccius Marketplace`,
@@ -42,7 +41,7 @@ export async function generateMetadata({ params }: ParamsProps): Promise<Metadat
   };
 }
 
-export default async function ShopPage({ params }: ParamsProps) {
+export default async function ShopPage({ params }: MetadataProps) {
   const { id } = await params;
   const data = await getSellerDetails(id);
   return (
