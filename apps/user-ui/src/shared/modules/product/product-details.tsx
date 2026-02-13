@@ -7,6 +7,7 @@ import ProductCard from "@/shared/components/cards/product-card";
 import Ratings from "@/shared/components/ratings";
 import { useCartStore } from "@/store";
 import axiosInstance from "@/utils/axiosInstance";
+import { isProtected } from "@/utils/protected";
 import { ChevronLeft, ChevronRight, Heart, MapPin, MessageSquareText, Package, ShoppingBasket, WalletMinimal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -55,13 +56,19 @@ export default function ProductDetails({ product }: any) {
     setIsChatLoading(true);
 
     try {
-      const response = await axiosInstance.post("/chat/api/create-user-conversationGroup", {
-        selledId: product?.shop.sellerId,
-      });
+      const response = await axiosInstance.post(
+        "/chat/api/create-user-conversation-group",
+        {
+          sellerId: product?.shop?.sellerId,
+        },
+        isProtected
+      );
 
       router.push(`/inbox?conversationId=${response.data.conversation.id}`);
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsChatLoading(false);
     }
   }
 

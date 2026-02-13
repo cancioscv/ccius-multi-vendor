@@ -150,15 +150,15 @@ export default function Page() {
 
     ws?.send(JSON.stringify(payload));
 
-    // queryClient.setQueryData(["messages", selectedChat.conversationId], (old: any = []) => [
-    //   ...old,
-    //   {
-    //     content: payload.messageBody,
-    //     senderType: "user",
-    //     seen: false,
-    //     createdAt: new Date().toISOString(),
-    //   },
-    // ]);
+    queryClient.setQueryData(["messages", selectedChat.conversationId], (old: any = []) => [
+      ...old,
+      {
+        content: payload.messageBody,
+        senderType: "user",
+        seen: false,
+        createdAt: new Date().toISOString(),
+      },
+    ]);
 
     setChats((prevChats) => prevChats.map((chat) => (chat.conversationId ? { ...chat, lastMessage: payload.messageBody } : chat)));
 
