@@ -432,6 +432,9 @@ export async function getSellerNotifications(req: any, res: Response, next: Next
       where: {
         receiverId: sellerId,
       },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
 
     return res.status(200).json({

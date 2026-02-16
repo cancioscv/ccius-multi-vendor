@@ -1,13 +1,15 @@
 "use client";
 
 import axiosInstance from "@/utils/axiosInstance";
-import { Loader2 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const orderStatus = ["ORDERED", "PACKED", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED"];
 export default function OrderPage() {
   const params = useParams();
+  const router = useRouter();
+
   const orderId = params.id as string;
 
   const [order, setOrder] = useState<any>(null);
@@ -44,6 +46,13 @@ export default function OrderPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
+      <div className="my-4">
+        <span className="text-white flex items-center gap-2 font-semibold cursor-pointer" onClick={() => router.push(`/dashboard`)}>
+          <ArrowLeft />
+          Go Back to Dashboard
+        </span>
+      </div>
+
       <h1 className="text-2xl font-bold text-gray-200 mb-4">Order #{order.id.slice(-6)}</h1>
 
       {/* Delivery Progress Bar */}

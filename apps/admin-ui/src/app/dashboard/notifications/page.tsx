@@ -19,6 +19,7 @@ export default function Notifications() {
       notificationId,
     });
   }
+
   return (
     <div className="w-full min-h-screen p-8">
       <h2 className="text-2xl text-white font-semibold mb-2">Notifications</h2>

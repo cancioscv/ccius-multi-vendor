@@ -1,4 +1,4 @@
-import { prisma, OrderStatus, PaymentStatus, DiscountType } from "@e-com/db";
+import { prisma, OrderStatus, PaymentStatus, DiscountType, UserRole } from "@e-com/db";
 import Stripe from "stripe";
 import { NextFunction, Response } from "express";
 import redis, { NotFoundError, sendLog, ValidationError } from "@e-com/libs";
@@ -334,7 +334,7 @@ export async function createOrder(req: any, res: Response, next: NextFunction) {
               message: `A customer just ordered ${productTitle} from your shop.`,
               buyerId: userId,
               receiverId: shop.sellerId,
-              redirectLink: `https://ccius.com/order/${sessionId}`,
+              redirectLink: `/order/${order.id}`, // TODO: After deploying change this to the correct domain
             },
           });
         }
@@ -345,8 +345,8 @@ export async function createOrder(req: any, res: Response, next: NextFunction) {
             title: "📦 Platform Order Alert",
             message: `A new order was placed by ${name}.`,
             buyerId: userId,
-            receiverId: "admin",
-            redirectLink: `https://eshop.com/order/${sessionId}`,
+            receiverId: UserRole.ADMIN,
+            redirectLink: `/order/${order.id}`, // TODO: After deploying change this to the correct domain
           },
         });
 
