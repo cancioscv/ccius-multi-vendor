@@ -157,6 +157,9 @@
       "name": "@e-com/logger-service",
       "version": "0.0.1",
       "dependencies": {
+        "@e-com/db": "workspace:*",
+        "@e-com/kafka": "workspace:*",
+        "@e-com/libs": "workspace:*",
         "express": "^4.21.2",
       },
     },
@@ -239,6 +242,7 @@
       "version": "0.0.1",
       "dependencies": {
         "@e-com/db": "workspace:*",
+        "@e-com/kafka": "workspace:*",
       },
     },
     "packages/ui": {

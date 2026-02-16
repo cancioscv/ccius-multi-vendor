@@ -8,7 +8,7 @@ import {
   verifyForgotPasswordOtp,
   verifyOtp,
 } from "../utils/auth.helper.js";
-import { AuthError, CustomRequest, NotFoundError, ValidationError } from "@e-com/libs";
+import { AuthError, CustomRequest, NotFoundError, sendLog, ValidationError } from "@e-com/libs";
 import { prisma, UserRole } from "@e-com/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -33,7 +33,7 @@ export async function createUser(req: Request, res: Response, next: NextFunction
   await trackOtpRequests(email, next);
   await sendOtp(name, email, "user-activation-mail");
 
-  res.status(200).json({ message: "Sent OTP to Email. Please verify your account." });
+  return res.status(200).json({ message: "Sent OTP to Email. Please verify your account." });
 }
 
 // Verify user with otp
@@ -71,7 +71,7 @@ export async function verifyUser(req: Request, res: Response, next: NextFunction
     //   },
     // });
 
-    res.status(201).json({ succeed: true, message: "User registered successfully." });
+    return res.status(201).json({ succeed: true, message: "User registered successfully." });
   } catch (err) {
     return next(err);
   }
@@ -109,7 +109,7 @@ export async function loginUser(req: Request, res: Response, next: NextFunction)
     setCookie(res, "access_token", accessToken);
     setCookie(res, "refresh_token", refreshToken);
 
-    res.status(200).json({ message: "Login successfull", user: { id: user.id, email: user.email, name: user.name } });
+    return res.status(200).json({ message: "Login successfull", user: { id: user.id, email: user.email, name: user.name } });
   } catch (err) {
     return next(err);
   }
@@ -120,7 +120,7 @@ export async function logoutUser(req: Request, res: Response, next: NextFunction
   res.clearCookie("access_token");
   res.clearCookie("refresh_token");
 
-  res.status(201).json({ success: true });
+  return res.status(201).json({ success: true });
 }
 
 // Refresh token
@@ -196,9 +196,9 @@ export async function resetUserPassword(req: Request, res: Response, next: NextF
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     await prisma.user.update({ where: { email }, data: { password: hashedPassword } });
-    res.status(200).json({ message: "Password reset successfully." });
+    return res.status(200).json({ message: "Password reset successfully." });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 }
 
@@ -211,9 +211,16 @@ export async function verifyForgotPassword(req: Request, res: Response, next: Ne
 export async function getUser(req: CustomRequest, res: Response, next: NextFunction) {
   try {
     const user = req.user;
-    res.status(201).json({ success: true, user });
+
+    await sendLog({
+      type: "success",
+      message: `User data retrieved ${user?.email}`,
+      source: "auth-service",
+    });
+
+    return res.status(201).json({ success: true, user });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 }
 
@@ -221,9 +228,16 @@ export async function getUser(req: CustomRequest, res: Response, next: NextFunct
 export async function getAdmin(req: any, res: Response, next: NextFunction) {
   try {
     const user = req.user;
-    res.status(201).json({ success: true, user });
+
+    await sendLog({
+      type: "success",
+      message: `Admin data retrieved ${user?.email}`,
+      source: "auth-service",
+    });
+
+    return res.status(201).json({ success: true, user });
   } catch (error) {
-    next(error);
+    return next(error);
   }
 }
 

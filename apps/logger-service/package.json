@@ -105,6 +105,9 @@
     }
   },
   "dependencies": {
+    "@e-com/kafka": "workspace:*",
+    "@e-com/libs": "workspace:*",
+    "@e-com/db": "workspace:*",
     "express": "^4.21.2"
   }
 }

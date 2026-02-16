@@ -464,8 +464,6 @@ export async function getFilteredProducts(req: Request, res: Response, next: Nex
       prisma.product.count({ where: filters }),
     ]);
 
-    console.log("FILTERRS", filters);
-
     const totalPages = Math.ceil(total / parsedLimit);
 
     return res.status(200).json({
@@ -584,8 +582,6 @@ export async function getFilteredShops(req: Request, res: Response, next: NextFu
       }),
       prisma.shop.count({ where: filters }),
     ]);
-
-    console.log("FILTERS", filters);
 
     const totalPages = Math.ceil(total / parsedLimit);
 

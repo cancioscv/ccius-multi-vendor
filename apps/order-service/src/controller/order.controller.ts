@@ -1,7 +1,7 @@
 import { prisma, OrderStatus, PaymentStatus, DiscountType } from "@e-com/db";
 import Stripe from "stripe";
 import { NextFunction, Response } from "express";
-import redis, { NotFoundError, ValidationError } from "@e-com/libs";
+import redis, { NotFoundError, sendLog, ValidationError } from "@e-com/libs";
 import stripe from "../utils/stripe.js";
 import { sendEmail } from "../utils/send-email/index.js";
 
@@ -364,6 +364,12 @@ export async function createOrder(req: any, res: Response, next: NextFunction) {
 export async function getUserOrders(req: any, res: Response, next: NextFunction) {
   const user = req.user;
   try {
+    await sendLog({
+      type: "success",
+      message: `User orders retrieved ${req.user?.email}`,
+      source: "order-service",
+    });
+
     const orders = await prisma.order.findMany({
       where: {
         userId: user.id,

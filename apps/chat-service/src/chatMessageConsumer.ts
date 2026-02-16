@@ -66,8 +66,6 @@ async function flushBuffereToDb() {
       createdAt: new Date(msg.createdAt),
     }));
 
-    console.log("THIS IS MY PAYLOAD FROM CONSUMER", prismaPayload);
-
     await prisma.message.createMany({
       data: prismaPayload,
     });
