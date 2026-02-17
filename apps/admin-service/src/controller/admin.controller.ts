@@ -287,10 +287,11 @@ export async function getAllNotifications(req: Request, res: Response, next: Nex
 
 // Get all users notifications
 export async function getUserNotifications(req: any, res: Response, next: NextFunction) {
+  const userId = req.user?.id;
   try {
     const notifications = await prisma.notification.findMany({
       where: {
-        receiverId: req.user.id,
+        receiverId: userId, // TODO: Define who is the receiver
       },
       orderBy: {
         createdAt: "desc",

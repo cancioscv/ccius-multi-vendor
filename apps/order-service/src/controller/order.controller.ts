@@ -333,7 +333,7 @@ export async function createOrder(req: any, res: Response, next: NextFunction) {
               title: "🛒 New Order Received",
               message: `A customer just ordered ${productTitle} from your shop.`,
               buyerId: userId,
-              receiverId: shop.sellerId,
+              receiverId: shop.sellerId, // TODO: Define who is the receiver
               redirectLink: `/order/${order.id}`, // TODO: After deploying change this to the correct domain
             },
           });
