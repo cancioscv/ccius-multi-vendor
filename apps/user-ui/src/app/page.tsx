@@ -28,6 +28,11 @@ async function getTopOffers() {
   const res = await axiosInstance.get("/product/api/all-offers?page=1&limit=10");
   return res.data.offers;
 }
+
+async function getRecommendedProducts() {
+  const res = await axiosInstance.get("/recommendation/api/recommended-products");
+  return res.data.recommendations.products;
+}
 export default function Page() {
   const { isLoggedIn } = useAuthStore();
   const {
@@ -61,6 +66,16 @@ export default function Page() {
     queryFn: getTopOffers,
     staleTime: 1000 * 60 * 2,
   });
+
+  // const {
+  //   data: products,
+  //   isLoading,
+  //   isError,
+  // } = useQuery({
+  //   queryKey: ["products"],
+  //   queryFn: getRecommendedProducts,
+  //   staleTime: 1000 * 60 * 2,
+  // });
 
   return (
     <div>

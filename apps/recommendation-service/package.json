@@ -105,6 +105,8 @@
     }
   },
   "dependencies": {
+    "@e-com/db": "workspace:*",
+    "@e-com/libs": "workspace:*",
     "express": "^4.21.2"
   }
 }

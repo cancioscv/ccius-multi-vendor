@@ -1,5 +1,7 @@
 "use client";
 
+import { Shop } from "@e-com/db";
+
 import XIcon from "@/assets/icons/x-icon";
 import YoutubeIcon from "@/assets/icons/youtube-icon";
 import useDeviceTracking from "@/hooks/useDeviceTracking";
@@ -16,7 +18,7 @@ import { useEffect, useState } from "react";
 const TABS = ["Products", "Offers", "Reviews"];
 
 interface SellerProfile {
-  shop: any; // TODO: Get Type from generated prisma
+  shop: Shop; // TODO: Get Type from generated prisma. Done. Get similar in various parts
   followersCount: number;
 }
 
