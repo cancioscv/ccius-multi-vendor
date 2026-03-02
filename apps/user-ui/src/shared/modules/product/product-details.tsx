@@ -15,6 +15,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import ReactImageMagnify from "react-image-magnify";
 
+import DOMPurify from "dompurify";
+
 export default function ProductDetails({ product }: any) {
   const { user } = useUser();
   const { location } = useLocationTracking();
@@ -91,6 +93,8 @@ export default function ProductDetails({ product }: any) {
     fetchFilteredProducts();
   }, [priceRange]);
 
+  const cleanDescription = DOMPurify.sanitize(product?.detailedDescription);
+
   return (
     <div className="w-full py-5">
       <div className="w-[90%] bg-white lg:w-[80%] mx-auto pt-6 grid grid-cols-1 lg:grid-cols-[28%_44%_28%] gap-6 overflow-hidden">
@@ -124,7 +128,7 @@ export default function ProductDetails({ product }: any) {
           </div>
 
           {/* Thumbnail images array */}
-          <div className="relative flex items-center gap-2 mt04 overflow-hidden">
+          <div className="relative flex items-center gap-2 mt-4 overflow-hidden">
             {product?.images?.length > 4 && (
               <button className="absolute left-0 bg-white p-2 rounded-full shadow-md z-10" onClick={prevImage} disabled={currentIndex === 0}>
                 <ChevronLeft size={24} />
@@ -141,7 +145,7 @@ export default function ProductDetails({ product }: any) {
                   className={`cursor-pointer border rounded-lg p-1 ${currentImage === img ? "border-blue-500" : "border-gray-300"}`}
                   onClick={() => {
                     setCurrentIndex(index);
-                    setCurrentImage(img);
+                    setCurrentImage(img?.url);
                   }}
                 />
               ))}
@@ -376,9 +380,9 @@ export default function ProductDetails({ product }: any) {
         <div className="bg-white min-h-[60vh] h-full p-5">
           <h3 className="text-lg font-semibold">Product details of {product?.title}</h3>
           <div
-            className="prose prose-sm text-slate-200 max-w-none"
+            className="prose prose-sm max-w-none"
             dangerouslySetInnerHTML={{
-              __html: product?.detailedDescription,
+              __html: cleanDescription,
             }}
           />
         </div>

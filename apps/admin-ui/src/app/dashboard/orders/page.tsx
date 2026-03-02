@@ -44,7 +44,7 @@ export default function Orders() {
         cell: ({ row }: any) => <span className="text-white">${row.original.total.toFixed(2)}</span>,
       },
       {
-        accessorKey: "status",
+        accessorKey: "paymentStatus",
         header: "Status",
         cell: ({ row }: any) => (
           <span

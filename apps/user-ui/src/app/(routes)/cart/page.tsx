@@ -117,6 +117,8 @@ export default function CartPage() {
       const defaultAddr = addresses.find((addr) => addr.isDefault);
       if (defaultAddr) {
         setSelectedAddressId(defaultAddr.id);
+      } else {
+        setSelectedAddressId(addresses[0].id);
       }
     }
   }, [addresses, selectedAddressId]);
@@ -172,6 +174,7 @@ export default function CartPage() {
                                     height: "12px",
                                     borderRadius: "100%",
                                     display: "inline-block",
+                                    border: "1px solid #a6a6a6",
                                   }}
                                 />
                               </span>
@@ -260,7 +263,7 @@ export default function CartPage() {
                     >
                       {addresses?.map((address: any) => (
                         <option key={address.id} value={address.id}>
-                          {address.label} — {address.city}, {address.country}
+                          {address.street}, {address.zip} — {address.city}, {address.country}
                         </option>
                       ))}
                     </select>

@@ -26,6 +26,7 @@ export default function SignupPage() {
   const [sellerData, setSellerData] = useState<FormData | null>(null);
   const [sellerId, setSellerId] = useState("");
 
+  const [loading, setLoading] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -111,12 +112,15 @@ export default function SignupPage() {
 
   async function connectStripe() {
     try {
+      setLoading(true);
       const response = await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL}/api/create-stripe-link`, { sellerId });
       if (response.data.url) {
         window.location.href = response.data.url;
       }
     } catch (error) {
       console.error("Stripe connection error:", error);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -318,6 +322,7 @@ export default function SignupPage() {
             <button
               className="w-full m-autoflex items-center justify-center gap-3 text-lg bg-[#334155] text-white py-2 rounded-lg"
               onClick={connectStripe}
+              disabled={loading}
             >
               Connect Stripe
             </button>

@@ -1,7 +1,7 @@
 import { prisma, OrderStatus, PaymentStatus, DiscountType, UserRole } from "@e-com/db";
 import Stripe from "stripe";
 import { NextFunction, Response } from "express";
-import redis, { NotFoundError, sendLog, ValidationError } from "@e-com/libs";
+import redis, { NotFoundError, ValidationError } from "@e-com/libs";
 import stripe from "../utils/stripe.js";
 import { sendEmail } from "../utils/send-email/index.js";
 
@@ -189,7 +189,7 @@ export async function createOrder(req: any, res: Response, next: NextFunction) {
       const sessionData = await redis.get(sessionKey);
 
       if (!sessionData) {
-        console.warn("Session data expired or missin for", sessionId);
+        console.warn("Session data expired or missing for", sessionId);
         return res.status(200).send("No session found.");
       }
 
@@ -364,11 +364,11 @@ export async function createOrder(req: any, res: Response, next: NextFunction) {
 export async function getUserOrders(req: any, res: Response, next: NextFunction) {
   const user = req.user;
   try {
-    await sendLog({
-      type: "success",
-      message: `User orders retrieved ${req.user?.email}`,
-      source: "order-service",
-    });
+    // await sendLog({
+    //   type: "success",
+    //   message: `User orders retrieved ${req.user?.email}`,
+    //   source: "order-service",
+    // });
 
     const orders = await prisma.order.findMany({
       where: {

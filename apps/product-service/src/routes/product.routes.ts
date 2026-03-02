@@ -21,6 +21,7 @@ import {
   getStripeAccount,
   slugValidator,
   getProductAnalytics,
+  createReview,
 } from "../controller/product.controller.js";
 import { isAuth, isSeller } from "@e-com/libs";
 
@@ -51,5 +52,7 @@ router.get("/top-shops", getTopShops);
 router.get("/all-offers", getAllOffers);
 router.post("/slug-validator", isAuth, isSeller, slugValidator);
 router.get("/product-analytics/:productId", getProductAnalytics);
+
+router.post("/create-review", isAuth, createReview);
 
 export default router;

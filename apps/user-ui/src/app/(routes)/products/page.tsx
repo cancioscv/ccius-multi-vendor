@@ -24,7 +24,8 @@ export default function ProductsPage() {
   const router = useRouter();
 
   const colors = [
-    { name: "Black", code: "#000" },
+    { name: "Black", code: "#000000" },
+    { name: "White", code: "#ffffff" },
     { name: "Red", code: "#ff0000" },
     { name: "Green", code: "#00ff00" },
     { name: "Blue", code: "#0000ff" },

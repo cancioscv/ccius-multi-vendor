@@ -18,7 +18,7 @@ interface ShopCardProps {
 
 export default function ShopCard({ shop }: ShopCardProps) {
   return (
-    <div className="w-full rounded-md cursor-pointer bg-white border border-gray-200 shadow-sm overflow-hidden transition">
+    <div className="w-full rounded-md bg-white border border-gray-200 shadow-sm overflow-hidden transition">
       {/* Cover */}
       <div className="h-[120px] w-full relative">
         <Image src={shop?.coverBanner || "/placeholder.png"} alt="Cover" fill className="object-cover w-full h-full" />

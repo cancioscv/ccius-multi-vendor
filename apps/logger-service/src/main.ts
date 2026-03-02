@@ -1,31 +1,31 @@
-import { WebSocket, WebSocketServer } from "ws";
+// import { WebSocket, WebSocketServer } from "ws";
 import express from "express";
 import http from "http";
-import { consumeKafkaMessages } from "./loggerConsumer.js";
+// import { consumeKafkaMessages } from "./loggerConsumer.js";
 
 const app = express();
 
-const wsServer = new WebSocketServer({ noServer: true });
+// const wsServer = new WebSocketServer({ noServer: true });
 
-export const clients = new Set<WebSocket>();
+// export const clients = new Set<WebSocket>();
 
-wsServer.on("connection", (ws) => {
-  console.log("New logger client connected!");
-  clients.add(ws);
+// wsServer.on("connection", (ws) => {
+//   console.log("New logger client connected!");
+//   clients.add(ws);
 
-  ws.on("close", () => {
-    console.log("Logger client disconnected!");
-    clients.delete(ws);
-  });
-});
+//   ws.on("close", () => {
+//     console.log("Logger client disconnected!");
+//     clients.delete(ws);
+//   });
+// });
 
 const server = http.createServer(app);
 
-server.on("upgrade", (request, socket, head) => {
-  wsServer.handleUpgrade(request, socket, head, (ws) => {
-    wsServer.emit("connection", ws, request);
-  });
-});
+// server.on("upgrade", (request, socket, head) => {
+//   wsServer.handleUpgrade(request, socket, head, (ws) => {
+//     wsServer.emit("connection", ws, request);
+//   });
+// });
 
 const port = process.env.PORT || 6007;
 
@@ -35,4 +35,4 @@ server.listen(port, () => {
 server.on("error", console.error);
 
 // Start Kafka consumer
-consumeKafkaMessages();
+// consumeKafkaMessages();

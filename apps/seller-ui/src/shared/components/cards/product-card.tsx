@@ -59,7 +59,7 @@ export default function ProductCard({ product }: Props) {
         )}
 
         {/* Sold Count */}
-        <div className="text-sm text-green-400 mt-1">{product?.sold > 0 ? `${product?.sold} Sold` : "Not Sold Yet"}</div>
+        <div className="text-sm text-green-400 mt-1">{product?.totalSales > 0 ? `${product?.totalSales} Sold` : "Not Sold Yet"}</div>
 
         {/* View Details Button */}
         <Link

@@ -75,9 +75,9 @@ export default function OrderDetails({ path }: { path: string | undefined }) {
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
       <div className="my-4">
-        <span className="text-white flex items-center gap-2 font-semibold cursor-pointer" onClick={() => router.push(`/dashboard/${path}`)}>
+        <span className="text-white flex items-center gap-2 font-semibold cursor-pointer" onClick={() => router.push("/dashboard/orders")}>
           <ArrowLeft />
-          Go Back to Dashboard
+          Go Back to Orders
         </span>
       </div>
 
@@ -191,19 +191,22 @@ export default function OrderDetails({ path }: { path: string | undefined }) {
                 <p className="font-medium text-gray-200">{item.product?.title || "Unnamed Product"}</p>
                 <p className="text-sm text-gray-300">Quantity: {item.quantity}</p>
                 {item.selectedOptions && Object.keys(item.selectedOptions).length > 0 && (
-                  <div className="text-xs text-gray-400 mt-1">
-                    {Object.entries(item.selectedOptions).map(
-                      ([key, value]: [string, any]) =>
+                  <div className="text-xs text-gray-400 mt-1 flex">
+                    {Object.entries(item.selectedOptions).map(([key, value]: [string, any]) => {
+                      const hasHash = value?.includes("#");
+                      return (
                         value && (
-                          <span key={key} className="mr-3">
-                            <span className="font-medium capitalize">{key}:</span> {value}
+                          <span key={key} className="mr-3 flex items-center gap-1">
+                            <span className="font-medium capitalize">{key}:</span>
+                            {hasHash ? <span className="w-3 h-3 rounded-full block" style={{ backgroundColor: value }} /> : <span>{value}</span>}
                           </span>
                         )
-                    )}
+                      );
+                    })}
                   </div>
                 )}
               </div>
-              <p className="text-sm font-semibold text-gray-200">${item.price.toFixed(2)}</p>
+              <p className="text-sm font-semibold text-gray-200">${(item.price * item.quantity).toFixed(2)}</p>
             </div>
           ))}
         </div>

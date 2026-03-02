@@ -9,6 +9,7 @@ import { useCartStore } from "@/store";
 import useLocationTracking from "@/hooks/useLocationTracking";
 import useDeviceTracking from "@/hooks/useDeviceTracking";
 import useUser from "@/hooks/useUser";
+import Image from "next/image";
 
 interface Props {
   product: any;
@@ -24,8 +25,8 @@ export default function ProductCard({ product, isEvent }: Props) {
   const isWishlisted = wishList.some((item) => item.id === product.id);
   // const isInCart = cart.some((item) => item.id === product.id);
 
-  const isColorSelected =product?.colors?.[0] || "";
-  const isSizeSelected =product?.sizes?.[0] || "";
+  const isColorSelected = product?.colors?.[0] || "";
+  const isSizeSelected = product?.sizes?.[0] || "";
 
   const { location } = useLocationTracking();
   const { deviceInfo } = useDeviceTracking();
@@ -73,7 +74,7 @@ export default function ProductCard({ product, isEvent }: Props) {
       )}
 
       <Link href={`/product/${product?.slug}`}>
-        <img
+        <Image
           src={product?.images[0]?.url || "/placeholder.png"}
           alt={product?.title}
           width={300}

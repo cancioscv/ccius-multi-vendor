@@ -39,7 +39,7 @@ const columns = [
     header: "Amount",
   },
   {
-    accessorKey: "status",
+    accessorKey: "paymentStatus",
     header: "Status",
     cell: ({ getValue }: any) => {
       const value = getValue();

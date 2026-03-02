@@ -14,6 +14,7 @@ import { Calendar, Clock, Facebook, Globe, Heart, MapPin, Star, Users } from "lu
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 
 const TABS = ["Products", "Offers", "Reviews"];
 
@@ -22,8 +23,13 @@ interface SellerProfile {
   followersCount: number;
 }
 
-async function getSellerProducts(shop: any) {
-  const res = await axiosInstance.get(`/seller/api/seller-products/${shop?.id}?page=1&limit=10`);
+async function fetchSellerProducts(id: any) {
+  const res = await axiosInstance.get(`/seller/api/seller-products/${id}?page=1&limit=10`);
+  return res.data.products;
+}
+
+async function fetchSellerOffers(id: string) {
+  const res = await axiosInstance.get(`/seller/api/seller-offers/${id}?page=1&limit=10`);
   return res.data.products;
 }
 
@@ -32,14 +38,15 @@ export default function SellerProfile({ shop, followersCount }: SellerProfile) {
   const [followers, setFollowers] = useState(followersCount);
   const [isFollowing, setIsFollowing] = useState(false);
 
+  const params = useParams();
   const { user } = useUser();
   const { location } = useLocationTracking();
   const { deviceInfo } = useDeviceTracking();
   const queryClient = useQueryClient();
 
   const { data: products, isLoading } = useQuery({
-    queryKey: ["seller-products"],
-    queryFn: () => getSellerProducts(shop),
+    queryKey: ["seller-products", params],
+    queryFn: () => fetchSellerProducts(params.id),
     staleTime: 1000 * 60 * 5,
   });
 
@@ -58,12 +65,9 @@ export default function SellerProfile({ shop, followersCount }: SellerProfile) {
   }, [shop?.id]);
 
   const { data: events, isLoading: isEventsLoading } = useQuery({
-    queryKey: ["seller-events"],
-    queryFn: async () => {
-      const res = await axiosInstance.get(`/seller/api/seller-events/${shop?.id}?page=1&limit=10`);
-      return res.data.products;
-    },
-    staleTime: 1000 * 60 * 5,
+    queryKey: ["seller-offers", activeTab],
+    queryFn: () => fetchSellerOffers(shop?.id),
+    staleTime: 0,
   });
 
   const toggleFollowMutation = useMutation({
@@ -237,7 +241,7 @@ export default function SellerProfile({ shop, followersCount }: SellerProfile) {
               {events?.map((product: any) => (
                 <ProductCard isEvent={true} key={product.id} product={product} />
               ))}
-              {products?.length === 0 && <p className="py-2">No offers available yet!</p>}
+              {events?.length === 0 && <p className="py-2">No offers available yet!</p>}
             </div>
           )}
           {activeTab === "Reviews" && (

@@ -224,7 +224,7 @@ export async function getSellerInfo(req: Request, res: Response, next: NextFunct
 
 // Get seller's products (public preview)
 export async function getSellerProducts(req: any, res: Response, next: NextFunction) {
-  const shopId = req.query.id!;
+  const shopId = req.params.id!;
 
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
@@ -270,12 +270,12 @@ export async function getSellerProducts(req: any, res: Response, next: NextFunct
 }
 
 // Get seller events (public preview)
-export async function getSellerEvents(req: any, res: Response, next: NextFunction) {
+export async function getSellerOffers(req: any, res: Response, next: NextFunction) {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
   const skip = (page - 1) * limit;
 
-  const shopId = req.query.id!;
+  const shopId = req.params.id!;
   try {
     const [products, total] = await Promise.all([
       prisma.product.findMany({

@@ -81,9 +81,9 @@ export default function Events() {
         cell: ({ row }) => new Date(row.original.endingDate).toLocaleDateString(),
       },
       {
-        accessorKey: "Shop.name",
+        accessorKey: "shop.name",
         header: "Shop Name",
-        cell: ({ row }) => row.original.Shop?.name || "-",
+        cell: ({ row }) => row.original.shop?.name || "-",
       },
     ],
     []

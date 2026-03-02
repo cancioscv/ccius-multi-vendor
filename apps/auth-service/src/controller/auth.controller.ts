@@ -8,7 +8,7 @@ import {
   verifyForgotPasswordOtp,
   verifyOtp,
 } from "../utils/auth.helper.js";
-import { AuthError, CustomRequest, NotFoundError, sendLog, ValidationError } from "@e-com/libs";
+import { AuthError, CustomRequest, NotFoundError, ValidationError } from "@e-com/libs";
 import { prisma, UserRole } from "@e-com/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -94,7 +94,7 @@ export async function loginUser(req: Request, res: Response, next: NextFunction)
     if (user.password) {
       const passwordMatch = await bcrypt.compare(password, user.password);
       if (!passwordMatch) {
-        return next(new AuthError("Invalid password"));
+        return next(new AuthError("Invalid email or password"));
       }
     }
 
@@ -109,7 +109,14 @@ export async function loginUser(req: Request, res: Response, next: NextFunction)
     setCookie(res, "access_token", accessToken);
     setCookie(res, "refresh_token", refreshToken);
 
-    return res.status(200).json({ message: "Login successfull", user: { id: user.id, email: user.email, name: user.name } });
+    return res.status(200).json({
+      message: "Login successfull",
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
+    });
   } catch (err) {
     return next(err);
   }
@@ -211,12 +218,13 @@ export async function verifyForgotPassword(req: Request, res: Response, next: Ne
 export async function getUser(req: CustomRequest, res: Response, next: NextFunction) {
   try {
     const user = req.user;
+    console.log("USER", user);
 
-    await sendLog({
-      type: "success",
-      message: `User data retrieved ${user?.email}`,
-      source: "auth-service",
-    });
+    // await sendLog({
+    //   type: "success",
+    //   message: `User data retrieved ${user?.email}`,
+    //   source: "auth-service",
+    // });
 
     return res.status(201).json({ success: true, user });
   } catch (error) {
@@ -228,12 +236,13 @@ export async function getUser(req: CustomRequest, res: Response, next: NextFunct
 export async function getAdmin(req: any, res: Response, next: NextFunction) {
   try {
     const user = req.user;
+    console.log("ADMIN", user);
 
-    await sendLog({
-      type: "success",
-      message: `Admin data retrieved ${user?.email}`,
-      source: "auth-service",
-    });
+    // await sendLog({
+    //   type: "success",
+    //   message: `Admin data retrieved ${user?.email}`,
+    //   source: "auth-service",
+    // });
 
     return res.status(201).json({ success: true, user });
   } catch (error) {
@@ -364,7 +373,7 @@ export async function createStripeConnectLink(req: Request, res: Response, next:
     const accountLink = await stripe.accountLinks.create({
       account: account.id,
       refresh_url: `http://localhost:3000/success`,
-      return_url: `http://localhost:3000/success`,
+      return_url: `http://localhost:3000/login`,
       type: "account_onboarding",
     });
 
@@ -384,12 +393,12 @@ export async function loginSeller(req: Request, res: Response, next: NextFunctio
 
     const seller = await prisma.seller.findUnique({ where: { email } });
     if (!seller) {
-      return next(new ValidationError("Invalid email or password."));
+      return next(new AuthError("Seller does not exist."));
     }
 
     const isMatch = await bcrypt.compare(password, seller.password);
     if (!isMatch) {
-      return next(new ValidationError("Invalid password."));
+      return next(new ValidationError("Invalid email or password."));
     }
 
     res.clearCookie("access_token");
@@ -403,7 +412,14 @@ export async function loginSeller(req: Request, res: Response, next: NextFunctio
     setCookie(res, "seller_access_token", accessToken);
     setCookie(res, "seller_refresh_token", refreshToken);
 
-    res.status(200).json({ message: "Login succesful", seller: { id: seller.id, email: seller.email, name: seller.name } });
+    return res.status(200).json({
+      message: "Login succesful",
+      seller: {
+        id: seller.id,
+        email: seller.email,
+        name: seller.name,
+      },
+    });
   } catch (error) {
     return next(error);
   }
@@ -586,10 +602,9 @@ export async function loginAdmin(req: Request, res: Response, next: NextFunction
 
     // Generate access and refresh token
     const accessToken = jwt.sign({ id: user.id, role: UserRole.ADMIN }, process.env.ACCESS_TOKEN_SECRET!, { expiresIn: "15m" });
-
     const refreshToken = jwt.sign({ id: user.id, role: UserRole.ADMIN }, process.env.REFRESH_TOKEN_SECRET!, { expiresIn: "7d" });
 
-    //Store the refresh and access token in an httpOnly secure cookie
+    // Store the refresh and access token in an httpOnly secure cookie
     setCookie(res, "access_token", accessToken);
     setCookie(res, "reresh_token", refreshToken);
 

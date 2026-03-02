@@ -36,7 +36,7 @@ export default function Page() {
   const { seller, isLoading } = useSeller();
 
   const { data: products = [] } = useQuery({
-    queryKey: ["shop-products"],
+    queryKey: ["shop-products", router],
     queryFn: fetchProducts,
     staleTime: 1000 * 60 * 5,
   });

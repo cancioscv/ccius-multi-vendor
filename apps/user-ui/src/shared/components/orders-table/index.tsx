@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { ColumnDef, useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
 import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 
 export default function OrdersTable() {
   const router = useRouter();
@@ -23,8 +24,32 @@ export default function OrdersTable() {
       cell: (info: any) => info.getValue()?.slice(-6),
     },
     {
-      accessorKey: "status",
+      accessorKey: "shop",
+      header: "Product",
+      cell: ({ row }: any) => {
+        console.log("row.ORIGINAL", row.original);
+        return <Link href={`/review/${row.original.items[0].productId}`}>{row.original.items[0].productId.slice(-8)}</Link>;
+        // return (
+        // <img
+        //   src={item.product?.images[0]?.url || "/placeholder.png"}
+        //   alt={item.product?.title || "Product image"}
+        //   className="w-16 h-16 object-cover rounded-md border border-gray-200"
+        // />
+        // );
+      },
+    },
+    {
+      accessorKey: "paymentStatus",
       header: "Status",
+      cell: ({ row }: any) => (
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-medium ${
+            row.original.paymentStatus === "PAID" ? "bg-green-600 text-white" : "bg-yellow-500 text-white"
+          }`}
+        >
+          {row.original.paymentStatus}
+        </span>
+      ),
     },
     {
       accessorKey: "total",

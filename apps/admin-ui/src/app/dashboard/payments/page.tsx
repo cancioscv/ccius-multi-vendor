@@ -53,7 +53,7 @@ export default function Payments() {
         },
       },
       {
-        accessorKey: "status",
+        accessorKey: "paymentStatus",
         header: "Payment Status",
         cell: ({ row }: any) => (
           <span

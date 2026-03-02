@@ -1,47 +1,47 @@
-"use client";
+// "use client";
 
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+// import { createContext, useContext, useEffect, useRef, useState } from "react";
 
-interface Props {
-  children: React.ReactNode;
-  seller: any;
-}
+// interface Props {
+//   children: React.ReactNode;
+//   seller: any;
+// }
 
-const WebSocketContext = createContext<any>(null);
+// const WebSocketContext = createContext<any>(null);
 
-export function WebSocketProvider({ children, seller }: Props) {
-  const [wsReady, setWsReady] = useState(false);
-  const wsRef = useRef<WebSocket | null>(null);
-  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+// export function WebSocketProvider({ children, seller }: Props) {
+//   const [wsReady, setWsReady] = useState(false);
+//   const wsRef = useRef<WebSocket | null>(null);
+//   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
-  useEffect(() => {
-    if (!seller?.id) return;
+//   useEffect(() => {
+//     if (!seller?.id) return;
 
-    const ws = new WebSocket(process.env.NEXT_PUBLIC_CHAT_WEBSOCKET_URL!);
-    wsRef.current = ws;
+//     const ws = new WebSocket(process.env.NEXT_PUBLIC_CHAT_WEBSOCKET_URL!);
+//     wsRef.current = ws;
 
-    ws.onopen = () => {
-      ws.send(`seller_${seller.id}`);
-      setWsReady(true);
-    };
+//     ws.onopen = () => {
+//       ws.send(`seller_${seller.id}`);
+//       setWsReady(true);
+//     };
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+//     ws.onmessage = (event) => {
+//       const data = JSON.parse(event.data);
 
-      if (data.type === "UNSEEN_COUNT_UPDATE") {
-        const { conversationId, count } = data.payload;
-        setUnreadCounts((prev) => ({ ...prev, [conversationId]: count }));
-      }
-    };
+//       if (data.type === "UNSEEN_COUNT_UPDATE") {
+//         const { conversationId, count } = data.payload;
+//         setUnreadCounts((prev) => ({ ...prev, [conversationId]: count }));
+//       }
+//     };
 
-    return () => {
-      ws.close();
-    };
-  }, [seller?.id]);
+//     return () => {
+//       ws.close();
+//     };
+//   }, [seller?.id]);
 
-  if (!wsReady) return null;
+//   if (!wsReady) return null;
 
-  return <WebSocketContext.Provider value={{ ws: wsRef.current, unreadCounts }}>{children}</WebSocketContext.Provider>;
-}
+//   return <WebSocketContext.Provider value={{ ws: wsRef.current, unreadCounts }}>{children}</WebSocketContext.Provider>;
+// }
 
-export const useWebSocket = () => useContext(WebSocketContext);
+// export const useWebSocket = () => useContext(WebSocketContext);

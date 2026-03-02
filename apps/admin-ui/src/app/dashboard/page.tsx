@@ -24,12 +24,12 @@ const COLORS = ["#4ade80", "#facc15", "#60a5fa"];
 
 // Orders data
 const orders = [
-  { id: "ORD-001", customer: "John Doe", amount: "$250", status: "PAID" },
-  { id: "ORD-002", customer: "Jane Smith", amount: "$180", status: "PENDING" },
-  { id: "ORD-003", customer: "Alice Johnson", amount: "$340", status: "PAID" },
-  { id: "ORD-004", customer: "Bob Lee", amount: "$90", status: "FAILED" },
-  { id: "ORD-005", customer: "Bob Lee", amount: "$90", status: "FAILED" },
-  { id: "ORD-006", customer: "Bob Lee", amount: "$90", status: "FAILED" },
+  { id: "ORD-001", customer: "John Doe", amount: "$250", paymentStatus: "PAID" },
+  { id: "ORD-002", customer: "Jane Smith", amount: "$180", paymentStatus: "PENDING" },
+  { id: "ORD-003", customer: "Alice Johnson", amount: "$340", paymentStatus: "PAID" },
+  { id: "ORD-004", customer: "Bob Lee", amount: "$90", paymentStatus: "FAILED" },
+  { id: "ORD-005", customer: "Bob Lee", amount: "$90", paymentStatus: "FAILED" },
+  { id: "ORD-006", customer: "Bob Lee", amount: "$90", paymentStatus: "FAILED" },
 ];
 
 // Orders table columns
@@ -47,7 +47,7 @@ const columns = [
     header: "Amount",
   },
   {
-    accessorKey: "status",
+    accessorKey: "paymentStatus",
     header: "Status",
     cell: ({ getValue }: any) => {
       const value = getValue();

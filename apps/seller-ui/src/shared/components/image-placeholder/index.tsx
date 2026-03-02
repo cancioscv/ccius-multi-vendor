@@ -9,8 +9,8 @@ interface Props {
   onRemove?: (index: number) => void;
   defaultImage?: string | null;
   index?: any;
-  setOpenImageModal: (openImageModal: boolean) => void;
-  setSelectedImage: (e: string) => void;
+  setOpenImageModal?: (openImageModal: boolean) => void;
+  setSelectedImage?: (e: string) => void;
   images: any;
   imageUploading: boolean;
 }

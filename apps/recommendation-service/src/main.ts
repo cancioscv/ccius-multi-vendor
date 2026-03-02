@@ -1,7 +1,7 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 
-import recommendationRouter from "./routes/recommendation.routes.js";
+// import recommendationRouter from "./routes/recommendation.routes.js";
 
 const app = express();
 
@@ -14,7 +14,7 @@ app.get("/", (req, res) => {
 });
 
 // Routes
-app.use("/api", recommendationRouter);
+// app.use("/api", recommendationRouter);
 
 const port = process.env.PORT || 6008;
 const server = app.listen(port, () => {

@@ -1,9 +1,9 @@
-import { isAuth } from "@e-com/libs";
-import { Router } from "express";
-import { getRecommendedProducts } from "../controller/recommendation.controller.js";
+// import { isAuth } from "@e-com/libs";
+// import { Router } from "express";
+// import { getRecommendedProducts } from "../controller/recommendation.controller.js";
 
-const router: Router = Router();
+// const router: Router = Router();
 
-router.get("/recommended-products", isAuth, getRecommendedProducts);
+// router.get("/recommended-products", isAuth, getRecommendedProducts);
 
-export default router;
+// export default router;

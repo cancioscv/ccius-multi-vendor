@@ -16,6 +16,7 @@ export default function WithdrawMethod() {
     queryFn: fetchStripeAccount,
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
+
   return (
     <div className="max-w-2xl space-y-6">
       {/* Withdraw Method Header */}
@@ -74,7 +75,7 @@ export default function WithdrawMethod() {
                 href={stripeAccount.dashboard_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 flex items-center gap-2"
+                className="text-blue-400 hover:text-blue-300 flex items-center gap-2 cursor-pointer"
               >
                 <Globe size={18} /> Open Stripe Dashboard
               </a>

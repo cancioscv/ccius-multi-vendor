@@ -149,9 +149,6 @@ export default function ProfilePage() {
                 <p>
                   <span className="font-semibold">Joined:</span> {new Date(user.createdAt).toLocaleDateString()}
                 </p>
-                <p>
-                  <span className="font-semibold">Earned Points:</span> {user.points || 0}
-                </p>
               </div>
             ) : activeTab === "Shipping Address" ? (
               <ShippingAddress />

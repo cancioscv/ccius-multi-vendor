@@ -265,6 +265,27 @@ export async function deleteProduct(req: any, res: Response, next: NextFunction)
   }
 }
 
+// Create product review
+export async function createReview(req: any, res: Response, next: NextFunction) {
+  const userId = req.user?.id;
+  const { rating, comment, productId } = req.body;
+
+  try {
+    const review = await prisma.review.create({
+      data: {
+        rating,
+        comment,
+        productId,
+        userId,
+      },
+    });
+
+    return res.status(201).json({ success: true, data: review });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 // Restore product
 
 export async function restoreProduct(req: any, res: Response, next: NextFunction) {
@@ -338,7 +359,7 @@ export async function getStripeAccount(req: any, res: Response, next: NextFuncti
         payouts_enabled: stripeAccount.payouts_enabled,
         charges_enabled: stripeAccount.charges_enabled,
         last_payouts: lastPayouts || "No payouts yet.",
-        dashbord_url: `https://connect.stripe.com/app/express_dashboard/${stripeAccount.id}`,
+        dashboard_url: `https://connect.stripe.com/app/express_dashboard/${stripeAccount.id}`,
       },
     });
   } catch (error) {
@@ -441,13 +462,13 @@ export async function getFilteredProducts(req: Request, res: Response, next: Nex
     }
     if (colors && (colors as string[]).length > 0) {
       filters.colors = {
-        hasSome: Array.isArray(colors) ? colors : [colors],
+        hasSome: Array.isArray(colors) ? colors : String(colors).split(","),
       };
     }
 
     if (sizes && (sizes as string[]).length > 0) {
       filters.sizes = {
-        hasSome: Array.isArray(sizes) ? sizes : [sizes],
+        hasSome: Array.isArray(sizes) ? sizes : String(sizes).split(","),
       };
     }
 

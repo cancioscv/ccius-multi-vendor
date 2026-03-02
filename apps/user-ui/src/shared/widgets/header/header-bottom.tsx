@@ -122,29 +122,24 @@ export default function HeaderBottom() {
 
         <div>
           {isSticky && (
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-8 pb-2">
               <div className="flex items-center gap-2">
-                {user && !isLoading ? (
-                  <>
-                    <Link href="/profile" className="border-2 w-[50px] h-[50px] flex items-center justify-center rounded-full border-[#010f1c1a]">
-                      <User />
-                    </Link>
-                    <Link href="/profile">
-                      <span className="block font-medium">Hello, </span>
-                      <span className="font-semibold">{user.name.split(" ")[0]}</span>
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <Link href="/login" className="border-2 w-[50px] h-[50px] flex items-center justify-center rounded-full border-[#010f1c1a]">
+                {!isLoading && user ? (
+                  <div className="relative flex items-center gap-2">
+                    <Link href={"/"} className="border-2 w-[50px] relative h-[50px] flex items-center justify-center rounded-full border-[#010f1c1a]">
                       <User />
                     </Link>
 
-                    <Link href="/login">
-                      <span className="block font-medium">Hello, </span>
-                      <span className="font-semibold">{isLoading ? "..." : "Sign In"}</span>
+                    <Link href={"/profile"}>
+                      <span className="block font-medium">Hello,</span>
+                      <span className="font-semibold">{user?.name?.split(" ")[0]}</span>
                     </Link>
-                  </>
+                  </div>
+                ) : (
+                  <Link href={"/login"}>
+                    <span className="block font-[500] opacity-[.6]">Hello,</span>
+                    <span className="font-[600]">{isLoading ? "..." : "Sign In"}</span>
+                  </Link>
                 )}
               </div>
               <div className="flex items-center gap-5">
