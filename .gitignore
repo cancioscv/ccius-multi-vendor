@@ -48,4 +48,4 @@ vite.config.*.timestamp*
 out
 
 # env variable
-.env
+# .env
