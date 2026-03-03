@@ -8,7 +8,8 @@
     "product-docs": "node apps/product-service/src/swagger/swagger.ts",
     "user-ui": "bunx nx run-many --target=dev --all --projects=user-ui",
     "seller-ui": "bunx nx run-many --target=dev --all --projects=seller-ui",
-    "admin-ui": "bunx nx run-many --target=dev --all --projects=admin-ui"
+    "admin-ui": "bunx nx run-many --target=dev --all --projects=admin-ui",
+    "add-shadcn": "cd packages/ui && bunx shadcn@latest add"
   },
   "private": true,
   "type": "module",
@@ -24,6 +25,8 @@
     "bcryptjs": "^3.0.3",
     "body-parser": "^2.2.2",
     "canvas-confetti": "^1.9.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
@@ -61,6 +64,7 @@
     "styled-components": "^6.1.19",
     "swagger-autogen": "^2.23.7",
     "swagger-ui-express": "^5.0.1",
+    "tailwind-merge": "^3.5.0",
     "ua-parser-js": "^2.0.7",
     "ws": "^8.19.0",
     "zustand": "^5.0.9"
@@ -111,6 +115,7 @@
     "prettier": "^2.6.2",
     "react-refresh": "^0.10.0",
     "tailwindcss": "3.4.3",
+    "tailwindcss-animate": "^1.0.7",
     "tslib": "^2.3.0",
     "typescript": "~5.9.2",
     "vite": "^7.3.0",

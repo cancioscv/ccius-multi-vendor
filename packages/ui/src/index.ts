@@ -4,3 +4,13 @@ export * from "./components/custom-specifications";
 export * from "./components/custom-properties";
 export * from "./components/rich-text-editor";
 export * from "./components/size-selector";
+
+// Export shadcn util
+export { cn } from "./lib/utils";
+
+// Export shadcn components
+export * from "./components/ui/button";
+export * from "./components/ui/card";
+export * from "./components/ui/dialog";
+export { Input as InputShadcn } from "./components/ui/input";
+export * from "./components/ui/label";
