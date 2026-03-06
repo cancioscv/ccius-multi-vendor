@@ -11,7 +11,7 @@ import {
   deleteProduct,
   restoreProduct,
   getAllProducts,
-  getProductById,
+  getProductBySlug,
   getFilteredProducts,
   getFilteredOffers,
   getFilteredShops,
@@ -22,6 +22,8 @@ import {
   slugValidator,
   getProductAnalytics,
   createReview,
+  getReview,
+  updateReview,
 } from "../controller/product.controller.js";
 import { isAuth, isSeller } from "@e-com/libs";
 
@@ -43,7 +45,7 @@ router.delete("/delete-product/:productId", isAuth, deleteProduct);
 router.put("/restore-product/:productId", isAuth, restoreProduct);
 router.get("/get-stripe-account", isAuth, isSeller, getStripeAccount);
 router.get("/all-products/", getAllProducts);
-router.get("/product/:slug", getProductById);
+router.get("/product/:slug", getProductBySlug);
 router.get("/filtered-products", getFilteredProducts);
 router.get("/filtered-offers", getFilteredOffers);
 router.get("/filtered-shops", getFilteredShops);
@@ -54,5 +56,7 @@ router.post("/slug-validator", isAuth, isSeller, slugValidator);
 router.get("/product-analytics/:productId", getProductAnalytics);
 
 router.post("/create-review", isAuth, createReview);
+router.put("/update-review", isAuth, updateReview); // Check if is productId or viewId
+router.get("/review/:productId", isAuth, getReview);
 
 export default router;

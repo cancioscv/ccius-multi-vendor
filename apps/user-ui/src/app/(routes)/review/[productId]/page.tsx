@@ -1,39 +1,62 @@
 "use client";
 
-import axiosInstance from "@/utils/axiosInstance";
+import { Suspense } from "react";
 import { useParams } from "next/navigation";
+
+import { Button, Textarea } from "@e-com/ui";
+import StarPicker from "@/shared/components/ratings/star-picker";
+import ReviewForm from "@/shared/components/ratings/review-form";
+import Link from "next/link";
+import { ArrowLeftIcon } from "lucide-react";
 
 export default function ProductReview() {
   const params = useParams();
 
   const productId = params.productId as string;
 
-  async function createReview(formData: FormData) {
-    const rating = Number(formData.get("rating"));
-    const comment = formData.get("comment") as string;
-
-    try {
-      const res = await axiosInstance.post("/product/api/create-review", { rating, comment, productId });
-      return res.data;
-    } catch (error) {
-      console.error(error);
-    }
-  }
   return (
-    <form action={createReview} className="space-y-4">
-      <select name="rating" className="border p-2">
-        {[1, 2, 3, 4, 5].map((num) => (
-          <option key={num} value={num}>
-            {num} Stars
-          </option>
-        ))}
-      </select>
+    <div className="min-h-screen bg-white">
+      <nav className="p-4 bg-[#F4F4F0] w-full border-b">
+        <Link prefetch href="/profile?active=My+Orders" className="flex items-center gap-2">
+          <ArrowLeftIcon className="size-4" />
+          <span className="text font-medium">Back to Orders</span>
+        </Link>
+      </nav>
+      <section className="max-w-(--breakpoint-xl) mx-auto px-4 lg:px-12 py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 lg:gap-16">
+          <div className="lg:col-span-2">
+            <div className="p-4 bg-white rounded-md border gap-4">
+              <Suspense fallback={<ReviewFormSkeleton />}>
+                <ReviewForm productId={productId} />
+              </Suspense>
+            </div>
+          </div>
+          <div className="lg:col-span-5">
+            <Textarea placeholder="Want to leave a written review?" />
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
 
-      <textarea name="comment" placeholder="Write your review..." className="w-full border p-2" required />
+export function ReviewFormSkeleton() {
+  return (
+    <div className="flex flex-col gap-y-4">
+      <p className="font-medium">Like it? Give it a rating</p>
+      <StarPicker disabled />
 
-      <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
-        Submit Review
-      </button>
-    </form>
+      <Textarea placeholder="Want to leave a written review?" disabled />
+
+      <Button
+        variant="outline"
+        disabled
+        type="button"
+        size="lg"
+        className="bg-black text-white hover:bg-pink-400 hover:text-primary w-fit cursor-pointer"
+      >
+        Post review
+      </Button>
+    </div>
   );
 }

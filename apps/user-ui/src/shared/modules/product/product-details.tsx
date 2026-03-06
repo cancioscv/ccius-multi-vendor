@@ -4,7 +4,6 @@ import useDeviceTracking from "@/hooks/useDeviceTracking";
 import useLocationTracking from "@/hooks/useLocationTracking";
 import useUser from "@/hooks/useUser";
 import ProductCard from "@/shared/components/cards/product-card";
-import Ratings from "@/shared/components/ratings";
 import { useCartStore } from "@/store";
 import axiosInstance from "@/utils/axiosInstance";
 import { isProtected } from "@/utils/protected";
@@ -16,6 +15,7 @@ import { useEffect, useState } from "react";
 import ReactImageMagnify from "react-image-magnify";
 
 import DOMPurify from "dompurify";
+import StarRating from "@/shared/components/ratings/star-rating";
 
 export default function ProductDetails({ product }: any) {
   const { user } = useUser();
@@ -166,10 +166,11 @@ export default function ProductDetails({ product }: any) {
         <div className="p-4">
           <h1 className="text-xl mb-2 font-medium">{product?.title}</h1>
           <div className="w-full flex items-center justify-between">
-            <div className="flex gap-2 mt-2 text-yellow-500">
-              <Ratings ratings={product?.ratings} />
+            <div className="flex gap-2 mt-2">
+              <StarRating rating={product?.reviewRating} iconClassName="size-4" />
+
               <Link href={"#reviews"} className="text-blue-500 hover:underline">
-                (0 Reviews)
+                {product.reviewCount} Reviews
               </Link>
             </div>
 
@@ -391,7 +392,19 @@ export default function ProductDetails({ product }: any) {
       <div className="w-[90%] lg:w-[80%] mx-auto">
         <div className="bg-white min-h-[50vh] h-full mt-5 p-5">
           <h3 className="text-lg font-semibold">Ratings & Reviews of {product?.title}</h3>
-          <p className="text-center pt-14">No Reviews available yet!</p>
+          {product.reviews.length > 0 ? (
+            product.reviews?.map((review: any) => (
+              <div key={review.id} className="border-b py-4">
+                {/* <p className="font-semibold">
+                    {review.userId} - {review.rating}/5
+                  </p> */}
+                <StarRating rating={review.rating} iconClassName="size-4" />
+                <p>{review.comment}</p>
+              </div>
+            ))
+          ) : (
+            <p className="text-center pt-14">No Reviews available yet!</p>
+          )}
         </div>
       </div>
 

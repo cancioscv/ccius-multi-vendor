@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import Ratings from "../ratings";
 import { Heart, MapPin, MessageCircleMore, Minus, Plus, ShoppingCart, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store";
@@ -10,6 +9,7 @@ import useLocationTracking from "@/hooks/useLocationTracking";
 import useDeviceTracking from "@/hooks/useDeviceTracking";
 import axiosInstance from "@/utils/axiosInstance";
 import { isProtected } from "@/utils/protected";
+import StarRating from "../ratings/star-rating";
 
 interface Props {
   product: any;
@@ -130,7 +130,7 @@ export default function ProductDetailsCard({ product, setOpen }: Props) {
 
                   {/* Shop Ratings */}
                   <span className="block mt-1">
-                    <Ratings ratings={product?.ratings} />
+                    <StarRating rating={product?.reviewRating} iconClassName="size-4" />
                   </span>
 
                   {/* Shop Location */}

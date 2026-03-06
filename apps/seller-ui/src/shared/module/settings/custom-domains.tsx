@@ -48,7 +48,7 @@ export default function CustomDomains() {
       reset();
     },
     onError: (error: any) => {
-      alert(error.response?.data?.message || "Failed to add domain.");
+      toast.error(error.response?.data?.message || "Failed to add domain.");
     },
   });
 
@@ -77,7 +77,7 @@ export default function CustomDomains() {
       queryClient.invalidateQueries({ queryKey: ["seller-domain"] });
     },
     onError: () => {
-      alert("Domain verification failed! Check your DNS settings.");
+      toast.error("Domain verification failed! Check your DNS settings.");
     },
   });
   return (

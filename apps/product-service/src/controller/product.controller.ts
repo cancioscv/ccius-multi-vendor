@@ -270,6 +270,9 @@ export async function createReview(req: any, res: Response, next: NextFunction) 
   const userId = req.user?.id;
   const { rating, comment, productId } = req.body;
 
+  // TODO: - find Product to create review?
+  // TODO: - find existing review for that product. Below already implemented
+
   try {
     const review = await prisma.review.create({
       data: {
@@ -281,6 +284,65 @@ export async function createReview(req: any, res: Response, next: NextFunction) 
     });
 
     return res.status(201).json({ success: true, data: review });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Update product review
+export async function updateReview(req: any, res: Response, next: NextFunction) {
+  const userId = req.user?.id;
+  const { productId, rating, comment } = req.body;
+
+  try {
+    // Find existing product's review
+    const existingReview = await prisma.review.findFirst({
+      where: {
+        userId,
+        productId,
+      },
+    });
+
+    if (!existingReview) {
+      return next(new ValidationError("Review not found"));
+    }
+
+    if (existingReview.userId !== userId) {
+      return next(new AuthError("You are not allowed to update this review"));
+    }
+
+    const updatedReview = await prisma.review.update({
+      data: {
+        rating,
+        comment,
+      },
+      where: {
+        id: existingReview?.id,
+      },
+    });
+
+    return res.status(201).json({ success: true, data: updatedReview });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// Gt product review
+export async function getReview(req: any, res: Response, next: NextFunction) {
+  const userId = req.user?.id;
+  const { productId } = req.params;
+
+  try {
+    if (!productId || !userId) return;
+
+    const review = await prisma.review.findFirst({
+      where: {
+        userId,
+        productId,
+      },
+    });
+
+    return res.status(200).json({ success: true, review });
   } catch (error) {
     return next(error);
   }
@@ -389,6 +451,7 @@ export async function getAllProducts(req: Request, res: Response, next: NextFunc
         include: {
           images: true,
           shop: true,
+          reviews: true,
         },
         where: baseFilter,
         orderBy: {
@@ -404,8 +467,30 @@ export async function getAllProducts(req: Request, res: Response, next: NextFunc
       }),
     ]);
 
+    // const dataWithSummarizedReviews = await Promise.all(
+    //   products?.map(async (product: any) => {
+    //     const reviewsData = await prisma.review.findMany({
+    //       where: {
+    //         productId: product.id,
+    //       },
+    //     });
+
+    //     return {
+    //       ...product,
+    //       reviewCount: reviewsData.length,
+    //       reviewRating: reviewsData.length === 0 ? 0 : reviewsData.reduce((acc, review) => acc + review.rating, 0) / reviewsData.length,
+    //     };
+    //   })
+    // );
+
+    const dataWithSummarizedReviews = products.map((product) => ({
+      ...product,
+      reviewCount: product.reviews.length,
+      reviewRating: product.reviews.length === 0 ? 0 : product.reviews.reduce((acc, review) => acc + review.rating, 0) / product.reviews.length,
+    }));
+
     return res.status(200).json({
-      products,
+      products: dataWithSummarizedReviews.map((product) => ({ ...product })),
       top10By: type === "latest" ? "latest" : "topSales",
       top10Products,
       total,
@@ -418,7 +503,7 @@ export async function getAllProducts(req: Request, res: Response, next: NextFunc
 }
 
 // Get product
-export async function getProductById(req: Request, res: Response, next: NextFunction) {
+export async function getProductBySlug(req: Request, res: Response, next: NextFunction) {
   try {
     const product = await prisma.product.findUnique({
       where: {
@@ -427,10 +512,21 @@ export async function getProductById(req: Request, res: Response, next: NextFunc
       include: {
         images: true,
         shop: true,
+        reviews: true,
       },
     });
 
-    return res.status(201).json({ success: true, product });
+    if (!product) {
+      return next(new NotFoundError("Product was not found"));
+    }
+
+    const dataWithSummarizedReviews = {
+      ...product,
+      reviewCount: product?.reviews.length,
+      reviewRating: product?.reviews.length === 0 ? 0 : product?.reviews.reduce((acc, review) => acc + review.rating, 0) / product?.reviews?.length,
+    };
+
+    return res.status(201).json({ success: true, product: dataWithSummarizedReviews });
   } catch (error) {
     return next(error);
   }
@@ -480,6 +576,7 @@ export async function getFilteredProducts(req: Request, res: Response, next: Nex
         include: {
           images: true,
           shop: true,
+          reviews: true,
         },
       }),
       prisma.product.count({ where: filters }),
@@ -487,8 +584,14 @@ export async function getFilteredProducts(req: Request, res: Response, next: Nex
 
     const totalPages = Math.ceil(total / parsedLimit);
 
+    const dataWithSummarizedReviews = products.map((product) => ({
+      ...product,
+      reviewCount: product.reviews.length,
+      reviewRating: product.reviews.length === 0 ? 0 : product.reviews.reduce((acc, review) => acc + review.rating, 0) / product.reviews.length,
+    }));
+
     return res.status(200).json({
-      products,
+      products: dataWithSummarizedReviews,
       pagination: {
         total,
         page: parsedPage,
@@ -546,6 +649,7 @@ export async function getFilteredOffers(req: Request, res: Response, next: NextF
         include: {
           images: true,
           shop: true,
+          reviews: true,
         },
       }),
       prisma.product.count({ where: filters }),
@@ -553,8 +657,14 @@ export async function getFilteredOffers(req: Request, res: Response, next: NextF
 
     const totalPages = Math.ceil(total / parsedLimit);
 
+    const dataWithSummarizedReviews = products.map((product) => ({
+      ...product,
+      reviewCount: product.reviews.length,
+      reviewRating: product.reviews.length === 0 ? 0 : product.reviews.reduce((acc, review) => acc + review.rating, 0) / product.reviews.length,
+    }));
+
     return res.status(200).json({
-      products,
+      products: dataWithSummarizedReviews,
       pagination: {
         total,
         page: parsedPage,

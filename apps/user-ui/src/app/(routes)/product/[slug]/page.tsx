@@ -35,7 +35,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 // Important for SEO
 export default async function Page({ params }: Props) {
-  console.log("paramis", await params);
   const { slug } = await params;
   const product = await fetchProductDetails(slug);
   return <ProductDetails product={product} />;

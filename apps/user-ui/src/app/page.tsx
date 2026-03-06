@@ -9,7 +9,7 @@ import axiosInstance from "@/utils/axiosInstance";
 import { useQuery } from "@tanstack/react-query";
 
 async function getAllProducts() {
-  const res = await axiosInstance.get("/product/api/all-products?page=1&limit=10");
+  const res = await axiosInstance.get("/product/api/all-products?page=1&limit=20");
   if (res?.data) {
     return res.data.products;
   }

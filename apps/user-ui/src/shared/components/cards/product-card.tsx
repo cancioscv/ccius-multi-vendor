@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { toast } from "react-toastify";
 
-import Ratings from "../ratings";
 import { useEffect, useState } from "react";
 import { Eye, Heart, ShoppingBag } from "lucide-react";
 import ProductDetailsCard from "./product-details-card";
@@ -10,6 +9,7 @@ import useLocationTracking from "@/hooks/useLocationTracking";
 import useDeviceTracking from "@/hooks/useDeviceTracking";
 import useUser from "@/hooks/useUser";
 import Image from "next/image";
+import StarRating from "../ratings/star-rating";
 
 interface Props {
   product: any;
@@ -90,8 +90,9 @@ export default function ProductCard({ product, isEvent }: Props) {
         <h3 className="text-base font-semibold px-2 text-gray-800 line-clamp-2">{product?.title}</h3>
       </Link>
 
+      {/* <div className="mt-2 px-2">{product?.reviewRating > 0 && <StarRating rating={product?.reviewRating} iconClassName="size-4" />}</div> */}
       <div className="mt-2 px-2">
-        <Ratings ratings={product?.ratings} />
+        <StarRating rating={product?.reviewRating} iconClassName="size-4" />
       </div>
 
       <div className="mt-3 flex justify-between items-center px-2">
