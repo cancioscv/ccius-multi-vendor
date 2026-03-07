@@ -208,6 +208,7 @@ model Product {
 model Review {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   rating    Int
+  title     String
   comment   String
   createdAt DateTime @default(now())
 

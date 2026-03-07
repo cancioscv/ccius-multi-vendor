@@ -2,7 +2,8 @@ const { createGlobPatternsForDependencies } = require("@nx/react/tailwind");
 const { join } = require("path");
 
 module.exports = {
-  content: [join(__dirname, "src/**/*!(*.stories|*.spec).{ts,tsx,html}"), ...createGlobPatternsForDependencies(__dirname)],
+  // content: [join(__dirname, "src/**/*!(*.stories|*.spec).{ts,tsx,html}"), ...createGlobPatternsForDependencies(__dirname)],
+  content: ["./src/**/*.{ts,tsx,js,jsx}", "./components/ui/**/*.{ts,tsx}", , ...createGlobPatternsForDependencies(__dirname)],
   theme: {
     extend: {
       // shadcn/ui CSS variable tokens

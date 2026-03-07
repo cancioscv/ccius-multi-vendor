@@ -7,17 +7,23 @@ import ProductCard from "@/shared/components/cards/product-card";
 import { useCartStore } from "@/store";
 import axiosInstance from "@/utils/axiosInstance";
 import { isProtected } from "@/utils/protected";
-import { ChevronLeft, ChevronRight, Heart, MapPin, MessageSquareText, Package, ShoppingBasket, WalletMinimal } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart, MapPin, MessageSquareText, Package, ShoppingBasket, StarIcon, WalletMinimal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import ReactImageMagnify from "react-image-magnify";
 
 import DOMPurify from "dompurify";
 import StarRating from "@/shared/components/ratings/star-rating";
+import { roundToDecimalPlace } from "@/utils/roundToDecimalPlace";
+// import { Progress, InputShadcn } from "@e-com/ui";
+import { Progress } from "../../../../../../packages/ui/src/components/ui/progress";
+import { Button } from "../../../../../../packages/ui/src/components/ui/button";
+import { Textarea } from "../../../../../../packages/ui/src/components/ui/textarea";
 
 export default function ProductDetails({ product }: any) {
+  console.log("KJHKJASHKDJHASD", product);
   const { user } = useUser();
   const { location } = useLocationTracking();
   const { deviceInfo } = useDeviceTracking();
@@ -166,10 +172,10 @@ export default function ProductDetails({ product }: any) {
         <div className="p-4">
           <h1 className="text-xl mb-2 font-medium">{product?.title}</h1>
           <div className="w-full flex items-center justify-between">
-            <div className="flex gap-2 mt-2">
-              <StarRating rating={product?.reviewRating} iconClassName="size-4" />
-
-              <Link href={"#reviews"} className="text-blue-500 hover:underline">
+            <div className="flex items-center gap-2 mt-2">
+              <h1 className="font-bold text-base mr-2">{roundToDecimalPlace(product.reviewRating, 1)}</h1>
+              <StarRating rating={product.reviewRating} iconClassName="size-4" />
+              <Link href={"#reviews"} className="text-blue-500 hover:underline text-base">
                 {product.reviewCount} Reviews
               </Link>
             </div>
@@ -380,6 +386,25 @@ export default function ProductDetails({ product }: any) {
       <div className="w-[90%] lg:w-[80%] mx-auto mt-5">
         <div className="bg-white min-h-[60vh] h-full p-5">
           <h3 className="text-lg font-semibold">Product details of {product?.title}</h3>
+
+          <Button>This is a test</Button>
+          <Textarea placeholder="Want to leave a written review?" className="h-28" />
+          <div className="grid grid-cols-[auto_1fr_auto] gap-3 mt-4">
+            {[5, 4, 3, 2, 1].map((stars) => (
+              <Fragment key={stars}>
+                <div className="font-medium">
+                  {stars} <StarIcon size={18} className="text-gray-400" />
+                </div>
+                <Progress
+                  value={product.ratingDistribution[stars]}
+                  className="relative h-2 w-full overflow-hidden rounded-full bg-secondary"
+                  style={{ border: "1px solid gray" }}
+                />
+
+                <div className="font-medium">{product.ratingDistribution[stars]}%</div>
+              </Fragment>
+            ))}
+          </div>
           <div
             className="prose prose-sm max-w-none"
             dangerouslySetInnerHTML={{
@@ -392,19 +417,63 @@ export default function ProductDetails({ product }: any) {
       <div className="w-[90%] lg:w-[80%] mx-auto">
         <div className="bg-white min-h-[50vh] h-full mt-5 p-5">
           <h3 className="text-lg font-semibold">Ratings & Reviews of {product?.title}</h3>
-          {product.reviews.length > 0 ? (
-            product.reviews?.map((review: any) => (
-              <div key={review.id} className="border-b py-4">
-                {/* <p className="font-semibold">
-                    {review.userId} - {review.rating}/5
-                  </p> */}
-                <StarRating rating={review.rating} iconClassName="size-4" />
-                <p>{review.comment}</p>
+
+          <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 lg:gap-16">
+            <div className="lg:col-span-2 border-r-4 border-gray-200">
+              <div className="p-4 bg-white gap-4">
+                <h2 className="font-bold mb-4">Kundenbewertungen</h2>
+                <div className="flex items-center gap-2">
+                  <h1 className="font-bold text-2xl">{roundToDecimalPlace(product.reviewRating, 1)}</h1> <span className="text-xs">of 5</span>
+                  <StarRating rating={product.reviewRating} iconClassName="size-4" className="ml-2" />
+                  <span>({product.reviewCount})</span>
+                  {/* Rating distribution */}
+                  <div className="grid grid-cols-[auto_1fr_auto] gap-3 mt-4">
+                    {[5, 4, 3, 2, 1].map((stars) => (
+                      <Fragment key={stars}>
+                        <div className="font-medium">
+                          {stars} {stars === 1 ? "star" : "stars"}
+                        </div>
+                        <Progress
+                          value={product.ratingDistribution[stars]}
+                          className="relative h-2 overflow-hidden rounded-full bg-secondary w-[30%]"
+                          style={{ border: "1px solid gray" }}
+                        />
+                        <div className="font-medium">{product.ratingDistribution[stars]}%</div>
+                      </Fragment>
+                    ))}
+                  </div>
+                </div>
               </div>
-            ))
-          ) : (
-            <p className="text-center pt-14">No Reviews available yet!</p>
-          )}
+            </div>
+            <div className="lg:col-span-5">
+              <div className="grid grid-cols-[auto_1fr_auto] gap-3 mt-4">
+                {[5, 4, 3, 2, 1].map((stars) => (
+                  <Fragment key={stars}>
+                    <div className="font-medium">
+                      {stars} {stars === 1 ? "star" : "stars"}
+                    </div>
+                    <Progress
+                      value={product.ratingDistribution[stars]}
+                      className="relative h-2 overflow-hidden rounded-full bg-secondary w-[30%]"
+                      style={{ border: "1px solid gray" }}
+                    />
+                    <div className="font-medium">{product.ratingDistribution[stars]}%</div>
+                  </Fragment>
+                ))}
+              </div>
+              {product.reviews.length > 0 ? (
+                product.reviews?.map((review: any) => (
+                  <div key={review.id} className="border-b py-4 border-gray-200">
+                    <StarRating rating={review.rating} iconClassName="size-4" className="mb-2" />
+                    <h2 className="font-extrabold text-sm pb-1">{review.title}</h2>
+                    <p className="text-sm">{review.comment}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="text-center pt-14">No Reviews available yet!</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

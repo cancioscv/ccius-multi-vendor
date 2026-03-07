@@ -12,6 +12,8 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
+    "./src/**/*.{js,ts,jsx,tsx}",
+    "../../packages/ui/src/**/*.{js,ts,jsx,tsx}",
     "./{src,pages,components,app}/**/*.{ts,tsx,js,jsx,html}",
     // "./src/**/*.{ts, tsx, js, jsx}",
     "!./{src,pages,components,app}/**/*.{stories,spec}.{ts,tsx,js,jsx,html}",
@@ -25,7 +27,16 @@ module.exports = {
         Oregano: ["var(--font-oregano)"],
         Jost: ["var(--font-jost)"],
       },
+      keyframes: {
+        progress: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(0)" },
+        },
+      },
+      animation: {
+        progress: "progress 1s ease-in-out infinite",
+      },
     },
   },
-  plugins: [],
+  plugins: [require("tailwindcss-animate")],
 };

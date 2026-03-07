@@ -268,7 +268,7 @@ export async function deleteProduct(req: any, res: Response, next: NextFunction)
 // Create product review
 export async function createReview(req: any, res: Response, next: NextFunction) {
   const userId = req.user?.id;
-  const { rating, comment, productId } = req.body;
+  const { rating, comment, title, productId } = req.body;
 
   // TODO: - find Product to create review?
   // TODO: - find existing review for that product. Below already implemented
@@ -278,6 +278,7 @@ export async function createReview(req: any, res: Response, next: NextFunction) 
       data: {
         rating,
         comment,
+        title,
         productId,
         userId,
       },
@@ -292,7 +293,7 @@ export async function createReview(req: any, res: Response, next: NextFunction) 
 // Update product review
 export async function updateReview(req: any, res: Response, next: NextFunction) {
   const userId = req.user?.id;
-  const { productId, rating, comment } = req.body;
+  const { productId, rating, comment, title } = req.body;
 
   try {
     // Find existing product's review
@@ -315,6 +316,7 @@ export async function updateReview(req: any, res: Response, next: NextFunction) 
       data: {
         rating,
         comment,
+        title,
       },
       where: {
         id: existingReview?.id,
@@ -467,22 +469,6 @@ export async function getAllProducts(req: Request, res: Response, next: NextFunc
       }),
     ]);
 
-    // const dataWithSummarizedReviews = await Promise.all(
-    //   products?.map(async (product: any) => {
-    //     const reviewsData = await prisma.review.findMany({
-    //       where: {
-    //         productId: product.id,
-    //       },
-    //     });
-
-    //     return {
-    //       ...product,
-    //       reviewCount: reviewsData.length,
-    //       reviewRating: reviewsData.length === 0 ? 0 : reviewsData.reduce((acc, review) => acc + review.rating, 0) / reviewsData.length,
-    //     };
-    //   })
-    // );
-
     const dataWithSummarizedReviews = products.map((product) => ({
       ...product,
       reviewCount: product.reviews.length,
@@ -526,7 +512,31 @@ export async function getProductBySlug(req: Request, res: Response, next: NextFu
       reviewRating: product?.reviews.length === 0 ? 0 : product?.reviews.reduce((acc, review) => acc + review.rating, 0) / product?.reviews?.length,
     };
 
-    return res.status(201).json({ success: true, product: dataWithSummarizedReviews });
+    const ratingDistribution: Record<number, number> = {
+      5: 0,
+      4: 0,
+      3: 0,
+      2: 0,
+      1: 0,
+    };
+
+    if (dataWithSummarizedReviews.reviews.length > 0) {
+      dataWithSummarizedReviews.reviews.forEach((review) => {
+        const rating = review.rating;
+
+        if (rating >= 1 && rating <= 5) {
+          ratingDistribution[rating] = (ratingDistribution[rating] || 0) + 1;
+        }
+      });
+
+      Object.keys(ratingDistribution).forEach((key) => {
+        const rating = Number(key);
+        const count = ratingDistribution[rating] || 0;
+        ratingDistribution[rating] = Math.round((count / product.reviews.length) * 100);
+      });
+    }
+
+    return res.status(201).json({ success: true, product: { ...dataWithSummarizedReviews, ratingDistribution } });
   } catch (error) {
     return next(error);
   }

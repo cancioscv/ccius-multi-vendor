@@ -1,4 +1,4 @@
-import { Form, FormControl, FormField, FormItem, FormMessage, Textarea, Button } from "@e-com/ui";
+import { Form, FormControl, FormField, FormItem, FormMessage, Textarea, Button, InputShadcn, FormLabel, FormDescription } from "@e-com/ui";
 import StarPicker from "./star-picker";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "@/utils/axiosInstance";
@@ -15,6 +15,7 @@ interface Props {
 const formSchema = z.object({
   rating: z.number().min(1, { message: "Rating is required" }).max(5),
   comment: z.string().min(1, { message: "Description is required" }),
+  title: z.string().min(1, { message: "Title is required" }),
 });
 
 export default function ReviewForm({ productId }: Props) {
@@ -36,6 +37,7 @@ export default function ReviewForm({ productId }: Props) {
     defaultValues: {
       rating: reviewData?.rating ?? 0,
       comment: reviewData?.comment ?? "",
+      title: reviewData?.title ?? "",
     },
   });
 
@@ -81,12 +83,14 @@ export default function ReviewForm({ productId }: Props) {
         productId,
         rating: data.rating,
         comment: data.comment,
+        title: data.title,
       });
     } else {
       createReview.mutate({
         productId,
         rating: data.rating,
         comment: data.comment,
+        title: data.title,
       });
     }
   }
@@ -103,6 +107,21 @@ export default function ReviewForm({ productId }: Props) {
               <FormControl>
                 <StarPicker value={field.value} onChange={field.onChange} disabled={isPreview} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Title</FormLabel>
+              <FormControl>
+                <InputShadcn {...field} disabled={isPreview} />
+              </FormControl>
+              <FormDescription>Enter review title</FormDescription>
               <FormMessage />
             </FormItem>
           )}
