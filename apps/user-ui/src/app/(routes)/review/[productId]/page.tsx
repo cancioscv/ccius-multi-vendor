@@ -22,20 +22,11 @@ export default function ProductReview() {
           <span className="text font-medium">Back to Orders</span>
         </Link>
       </nav>
-      <section className="max-w-(--breakpoint-xl) mx-auto px-4 lg:px-12 py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 lg:gap-16">
-          <div className="lg:col-span-2">
-            <div className="p-4 bg-white rounded-md border gap-4">
-              <Suspense fallback={<ReviewFormSkeleton />}>
-                <ReviewForm productId={productId} />
-              </Suspense>
-            </div>
-          </div>
-          <div className="lg:col-span-5">
-            <Textarea placeholder="Want to leave a written review?" />
-          </div>
-        </div>
-      </section>
+      <div className="w-full xl:px-80 lg:px-40 md:px-20 sm:px-10 pt-4">
+        <Suspense fallback={<ReviewFormSkeleton />}>
+          <ReviewForm productId={productId} />
+        </Suspense>
+      </div>
     </div>
   );
 }

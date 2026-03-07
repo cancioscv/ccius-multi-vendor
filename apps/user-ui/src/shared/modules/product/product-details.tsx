@@ -385,26 +385,8 @@ export default function ProductDetails({ product }: any) {
 
       <div className="w-[90%] lg:w-[80%] mx-auto mt-5">
         <div className="bg-white min-h-[60vh] h-full p-5">
-          <h3 className="text-lg font-semibold">Product details of {product?.title}</h3>
+          <h3 className="text-lg font-semibold pb-4">Product details of {product?.title}</h3>
 
-          <Button>This is a test</Button>
-          <Textarea placeholder="Want to leave a written review?" className="h-28" />
-          <div className="grid grid-cols-[auto_1fr_auto] gap-3 mt-4">
-            {[5, 4, 3, 2, 1].map((stars) => (
-              <Fragment key={stars}>
-                <div className="font-medium">
-                  {stars} <StarIcon size={18} className="text-gray-400" />
-                </div>
-                <Progress
-                  value={product.ratingDistribution[stars]}
-                  className="relative h-2 w-full overflow-hidden rounded-full bg-secondary"
-                  style={{ border: "1px solid gray" }}
-                />
-
-                <div className="font-medium">{product.ratingDistribution[stars]}%</div>
-              </Fragment>
-            ))}
-          </div>
           <div
             className="prose prose-sm max-w-none"
             dangerouslySetInnerHTML={{
@@ -418,35 +400,17 @@ export default function ProductDetails({ product }: any) {
         <div className="bg-white min-h-[50vh] h-full mt-5 p-5">
           <h3 className="text-lg font-semibold">Ratings & Reviews of {product?.title}</h3>
 
-          <div className="grid grid-cols-1 lg:grid-cols-7 gap-4 lg:gap-16">
-            <div className="lg:col-span-2 border-r-4 border-gray-200">
-              <div className="p-4 bg-white gap-4">
-                <h2 className="font-bold mb-4">Kundenbewertungen</h2>
-                <div className="flex items-center gap-2">
-                  <h1 className="font-bold text-2xl">{roundToDecimalPlace(product.reviewRating, 1)}</h1> <span className="text-xs">of 5</span>
-                  <StarRating rating={product.reviewRating} iconClassName="size-4" className="ml-2" />
-                  <span>({product.reviewCount})</span>
-                  {/* Rating distribution */}
-                  <div className="grid grid-cols-[auto_1fr_auto] gap-3 mt-4">
-                    {[5, 4, 3, 2, 1].map((stars) => (
-                      <Fragment key={stars}>
-                        <div className="font-medium">
-                          {stars} {stars === 1 ? "star" : "stars"}
-                        </div>
-                        <Progress
-                          value={product.ratingDistribution[stars]}
-                          className="relative h-2 overflow-hidden rounded-full bg-secondary w-[30%]"
-                          style={{ border: "1px solid gray" }}
-                        />
-                        <div className="font-medium">{product.ratingDistribution[stars]}%</div>
-                      </Fragment>
-                    ))}
-                  </div>
-                </div>
+          <div className="flex flex-wrap">
+            <div className="w-[30%]  p-4 border-r-4 border-gray-200">
+              <h2 className="font-bold mb-4">Kundenbewertungen</h2>
+              <div className="flex items-center gap-2">
+                <h1 className="font-bold text-2xl">{roundToDecimalPlace(product.reviewRating, 1)}</h1> <span className="text-xs">of 5</span>
+                <StarRating rating={product.reviewRating} iconClassName="size-4" className="ml-2" />
+                <span>({product.reviewCount})</span>
               </div>
-            </div>
-            <div className="lg:col-span-5">
-              <div className="grid grid-cols-[auto_1fr_auto] gap-3 mt-4">
+
+              {/* Rating distribution */}
+              <div className="grid grid-cols-[auto_1fr_auto] gap-3 mt-8 items-center">
                 {[5, 4, 3, 2, 1].map((stars) => (
                   <Fragment key={stars}>
                     <div className="font-medium">
@@ -454,13 +418,16 @@ export default function ProductDetails({ product }: any) {
                     </div>
                     <Progress
                       value={product.ratingDistribution[stars]}
-                      className="relative h-2 overflow-hidden rounded-full bg-secondary w-[30%]"
+                      className="relative h-2 overflow-hidden rounded-full bg-secondary w-full"
                       style={{ border: "1px solid gray" }}
                     />
                     <div className="font-medium">{product.ratingDistribution[stars]}%</div>
                   </Fragment>
                 ))}
               </div>
+            </div>
+
+            <div className="w-[70%]  p-4">
               {product.reviews.length > 0 ? (
                 product.reviews?.map((review: any) => (
                   <div key={review.id} className="border-b py-4 border-gray-200">

@@ -98,7 +98,7 @@ export default function ReviewForm({ productId }: Props) {
   return (
     <Form {...form}>
       <form className="flex flex-col gap-y-4" onSubmit={form.handleSubmit(onSubmit)}>
-        <p className="font-medium">{isPreview ? "Your rating" : "Like it? Give it a rating."}</p>
+        <p className="font-medium mt-2">{isPreview ? "Your rating" : "Like it? Give it a rating."}</p>
         <FormField
           control={form.control}
           name="rating"
@@ -117,11 +117,10 @@ export default function ReviewForm({ productId }: Props) {
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Title</FormLabel>
+              <FormLabel>Review title</FormLabel>
               <FormControl>
                 <InputShadcn {...field} disabled={isPreview} />
               </FormControl>
-              <FormDescription>Enter review title</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -131,8 +130,10 @@ export default function ReviewForm({ productId }: Props) {
           name="comment"
           render={({ field }) => (
             <FormItem>
+              <FormLabel>Write you comment</FormLabel>
+
               <FormControl>
-                <Textarea placeholder="Want to leave a written review?" disabled={isPreview} {...field} className="h-40" />
+                <Textarea placeholder="Want to leave a written review?" disabled={isPreview} {...field} className="h-28" />
               </FormControl>
               <FormMessage />
             </FormItem>
