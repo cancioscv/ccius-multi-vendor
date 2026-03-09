@@ -4,8 +4,9 @@ import axiosInstance from "@/utils/axiosInstance";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { ColumnDef, useReactTable, getCoreRowModel, flexRender } from "@tanstack/react-table";
-import { ArrowUpRight } from "lucide-react";
-import Link from "next/link";
+import { ArrowUpRight, UserStar } from "lucide-react";
+import Image from "next/image";
+import { Button } from "@e-com/ui";
 
 export default function OrdersTable() {
   const router = useRouter();
@@ -27,15 +28,15 @@ export default function OrdersTable() {
       accessorKey: "shop",
       header: "Product",
       cell: ({ row }: any) => {
-        console.log("row.ORIGINAL", row.original);
-        return <Link href={`/review/${row.original.items[0].productId}`}>{row.original.items[0].productId.slice(-8)}</Link>;
-        // return (
-        // <img
-        //   src={item.product?.images[0]?.url || "/placeholder.png"}
-        //   alt={item.product?.title || "Product image"}
-        //   className="w-16 h-16 object-cover rounded-md border border-gray-200"
-        // />
-        // );
+        return (
+          <Image
+            src={row.original.items[0].product?.images[0]?.url || "/placeholder.png"}
+            alt={row.original.items[0].product?.title || "Product image"}
+            height={20}
+            width={20}
+            className="w-16 h-16 object-cover rounded-md border border-gray-200"
+          />
+        );
       },
     },
     {
@@ -65,9 +66,17 @@ export default function OrdersTable() {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => (
-        <button onClick={() => router.push(`/order/${row.original.id}`)} className="text-blue-600 hover:underline text-xs flex items-center gap-1">
-          Track Order <ArrowUpRight className="w-3 h-3" />
-        </button>
+        <div className="flex gap-6">
+          <Button
+            className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded-lg flex gap-2"
+            onClick={() => router.push(`/review/${row.original.items[0].productId}`)}
+          >
+            <UserStar size={18} /> Write Review
+          </Button>
+          <button onClick={() => router.push(`/order/${row.original.id}`)} className="text-blue-600 hover:underline text-xs flex items-center gap-1">
+            Track Order <ArrowUpRight className="w-3 h-3" />
+          </button>
+        </div>
       ),
     },
   ];

@@ -375,7 +375,15 @@ export async function getUserOrders(req: any, res: Response, next: NextFunction)
         userId: user.id,
       },
       include: {
-        items: true,
+        items: {
+          include: {
+            product: {
+              include: {
+                images: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",

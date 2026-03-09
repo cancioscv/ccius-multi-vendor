@@ -8,6 +8,7 @@ import OrdersTable from "@/shared/components/orders-table";
 import ShippingAddress from "@/shared/components/shipping-address";
 import NavItem from "@/shared/widgets/nav-item";
 import axiosInstance from "@/utils/axiosInstance";
+import { cn } from "@e-com/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BadgeCheck,
@@ -124,7 +125,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Main Content */}
-          <div className="bg-white p-6 rounded-md shadow-sm border border-gray-100 w-full md:w-[55%]">
+          <div className={cn(`bg-white p-6 rounded-md shadow-sm border border-gray-100 w-full `, activeTab !== "My Orders" && "md:w-[55%]")}>
             <h2 className="text-xl font-semibold text-gray-800 mb-4">{activeTab}</h2>
             {activeTab === "Profile" && !isLoading && user ? (
               <div className="space-y-4 text-sm text-gray-700">
@@ -194,13 +195,15 @@ export default function ProfilePage() {
           </div>
 
           {/* Right Quick Panel */}
-          <div className="w-full md:w-1/4 space-y-4">
-            <QuickActionCard icon={Gift} title="Referral Program" description="Invite friends and earn rewards." />
-            <QuickActionCard icon={BadgeCheck} title="Your Badges" description="View your earned achievements." />
-            <QuickActionCard icon={Settings} title="Account Settings" description="Manage preferences and security." />
-            <QuickActionCard icon={Receipt} title="Billing History" description="Check your recent payments." />
-            <QuickActionCard icon={PhoneCall} title="Support Center" description="Need help? Contact support." />
-          </div>
+          {activeTab !== "My Orders" && (
+            <div className="w-full md:w-1/4 space-y-4">
+              <QuickActionCard icon={Gift} title="Referral Program" description="Invite friends and earn rewards." />
+              <QuickActionCard icon={BadgeCheck} title="Your Badges" description="View your earned achievements." />
+              <QuickActionCard icon={Settings} title="Account Settings" description="Manage preferences and security." />
+              <QuickActionCard icon={Receipt} title="Billing History" description="Check your recent payments." />
+              <QuickActionCard icon={PhoneCall} title="Support Center" description="Need help? Contact support." />
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -498,7 +498,11 @@ export async function getProductBySlug(req: Request, res: Response, next: NextFu
       include: {
         images: true,
         shop: true,
-        reviews: true,
+        reviews: {
+          include: {
+            user: true,
+          },
+        },
       },
     });
 
