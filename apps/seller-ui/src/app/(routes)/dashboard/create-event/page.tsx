@@ -4,7 +4,7 @@ import Breadcrumbs from "@/shared/components/breadcrumbs";
 import ImagePlaceholder from "@/shared/components/image-placeholder";
 import axiosInstance from "@/utils/axiosInstance";
 import { isProtected } from "@/utils/protected";
-import { ColorSelector, CustomProperties, CustomSpecifications, Input, SizeSelector } from "@e-com/ui";
+import { ColorSelector, CustomProperties, CustomSpecifications, Input, RichTextEditor, SizeSelector } from "@e-com/ui";
 import { useQuery } from "@tanstack/react-query";
 import { Wand2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -428,25 +428,10 @@ export default function CreateEvent() {
                 {errors.subcategory && <p className="text-red-500 text-xs mt-1">{errors.subcategory.message as string}</p>}
               </div>
 
-              <div className="mt-6 mb-6">
-                <Input
-                  type="textarea"
-                  rows={7}
-                  cols={10}
-                  label="Detailed Description * (min. 100 words)"
-                  placeholder="Enter product detailed description."
-                  {...register("detailedDescription", {
-                    required: "Detailed Description is required",
-                    validate: (value) => {
-                      const wordCount = value?.split(/\s+/).filter((word: string) => word).length;
-                      return wordCount >= 100 || "Detailed description must be at least 100 words.";
-                    },
-                  })}
-                />
-              </div>
-
-              {/* <div className="mt-2">
-                <label className="block font-semibold text-gray-300 mb-1">Detailed Description * (Min 100 words)</label>
+              <div className="mt-2">
+                <label htmlFor="detailedDescription" className="block font-semibold text-gray-300 mb-1">
+                  Detailed Description * (Min 20 words)
+                </label>
                 <Controller
                   name="detailedDescription"
                   control={control}
@@ -454,13 +439,13 @@ export default function CreateEvent() {
                     required: "Detailed description is required!",
                     validate: (value) => {
                       const wordCount = value?.split(/\s+/).filter((word: string) => word).length;
-                      return wordCount >= 100 || "Description must be at least 100 words!";
+                      return wordCount >= 20 || "Detailed description must be at least 20 words.";
                     },
                   }}
                   render={({ field }) => <RichTextEditor value={field.value} onChange={field.onChange} />}
                 />
                 {errors.detailed_description && <p className="text-red-500 text-xs mt-1">{errors.detailed_description.message as string}</p>}
-              </div> */}
+              </div>
 
               <div className="mt-2">
                 <label className="block font-semibold text-gray-300 mb-1">Ending Date *</label>

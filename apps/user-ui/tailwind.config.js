@@ -12,8 +12,8 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./src/**/*.{js,ts,jsx,tsx}",
-    "../../packages/ui/src/**/*.{js,ts,jsx,tsx}",
+    "./src/**/*.{js,ts,jsx,tsx}", // TODO: Remove this possibly
+    "../../packages/ui/src/**/*.{js,ts,jsx,tsx}", // TODO: Remove this possibly
     "./{src,pages,components,app}/**/*.{ts,tsx,js,jsx,html}",
     // "./src/**/*.{ts, tsx, js, jsx}",
     "!./{src,pages,components,app}/**/*.{stories,spec}.{ts,tsx,js,jsx,html}",

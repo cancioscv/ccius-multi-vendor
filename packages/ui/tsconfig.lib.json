@@ -8,11 +8,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
-    "lib": [
-      "ESNext",
-      "DOM",
-      "DOM.Iterable" // Recommended for modern web development
-    ]
+    "lib": ["ESNext", "DOM", "DOM.Iterable"]
   },
   "exclude": [
     "out-tsc",

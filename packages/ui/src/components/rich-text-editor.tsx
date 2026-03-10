@@ -1,54 +1,84 @@
-// import { useCallback, useRef, useMemo, useState } from "react";
+import { useState } from "react";
+import dynamic from "next/dynamic";
+import "react-quill-new/dist/quill.snow.css";
 
-// import dynamic from "next/dynamic";
+const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
-// const JoditEditor = dynamic(() => import("jodit-react"), {
-//   ssr: false,
-//   loading: () => <p>Loading editor...</p>,
-// });
-// interface Props {
-//   value: string;
-//   onChange: (content: string) => void;
-//   onBlur: (content: string) => void;
-// }
-// export function RichTextEditor({ value, onChange }: Props) {
-//   const editor = useRef(null);
-//   const [editorValue, setEditorValue] = useState(value || "");
+interface RichTextEditorProps {
+  value: string;
+  onChange: (content: string) => void;
+}
 
-//   const config = useMemo(
-//     () => ({
-//       readonly: false,
-//       placeholder: "Start typing...",
-//       buttons: ["bold", "italic", "underline", "|", "ul", "ol", "|", "font", "fontsize", "brush", "|", "image", "link", "|", "align", "undo", "redo"],
-//       height: 400,
-//       style: {
-//         backgroundColor: "#000000",
-//         color: "#e0e0e0",
-//       },
-//       uploader: {
-//         insertImageAsBase64URI: true,
-//       },
-//     }),
-//     []
-//   );
+const toolbarModules = {
+  toolbar: [
+    [{ font: [] }],
+    [{ header: [1, 2, 3, 4, 5, 6, false] }],
+    [{ size: ["small", false, "large", "huge"] }],
+    ["bold", "italic", "underline", "strike"],
+    [{ color: [] }, { background: [] }],
+    [{ script: "sub" }, { script: "super" }],
+    [{ list: "ordered" }, { list: "bullet" }],
+    [{ indent: "-1" }, { indent: "+1" }],
+    [{ align: [] }],
+    ["blockquote", "code-block"],
+    ["link", "image", "video"],
+    ["clean"],
+  ],
+} as const;
 
-//   const handleBlur = useCallback((newContent: string) => {
-//     setEditorValue(newContent);
-//   }, []);
+const editorStyles = `
+  .ql-toolbar {
+    background: transparent;
+    border-color: #444;
+  }
+  .ql-container {
+    background: transparent !important;
+    border-color: #444;
+    color: white;
+  }
+  .ql-picker {
+    color: white !important;
+  }
+  .ql-editor {
+    min-height: 200px;
+  }
+  .ql-snow {
+    border-color: #444 !important;
+  }
+  .ql-editor.ql-blank::before {
+    color: #aaa !important;
+  }
+  .ql-picker-options {
+    background: #333 !important;
+    color: white !important;
+  }
+  .ql-picker-item {
+    color: white !important;
+  }
+  .ql-stroke {
+    stroke: white !important;
+  }
+`;
 
-//   const handleChange = useCallback((newContent: string) => {
-//     // You can handle onChange here if needed
-//     console.log("is there any new content?", newContent);
-//     onChange(newContent);
-//   }, []);
+export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
+  const [editorValue, setEditorValue] = useState<string>(value || "");
 
-//   return (
-//     <div>
-//       <JoditEditor ref={editor} value={editorValue} config={config} tabIndex={1} onChange={handleChange} onBlur={handleBlur} />
-//     </div>
-//   );
-// }
+  const handleChange = (content: string) => {
+    setEditorValue(content);
+    onChange(content);
+  };
 
-export default function RichTextEditor() {
-  return <div>RichTextEditor</div>;
+  return (
+    <div className="relative">
+      <ReactQuill
+        theme="snow"
+        value={editorValue}
+        onChange={handleChange}
+        modules={toolbarModules}
+        placeholder="Write a detailed product description here..."
+        className="bg-transparent border border-gray-700 text-white rounded-md"
+      />
+      <style>{editorStyles}</style>
+    </div>
+  );
 }

@@ -95,7 +95,7 @@ export default function ProductDetails({ product }: any) {
     fetchFilteredProducts();
   }, [priceRange]);
 
-  const cleanDescription = DOMPurify.sanitize(product?.detailedDescription);
+  const sanitized = DOMPurify.sanitize(product?.detailedDescription);
 
   return (
     <div className="w-full py-5">
@@ -381,14 +381,11 @@ export default function ProductDetails({ product }: any) {
 
       <div className="w-[90%] lg:w-[80%] mx-auto mt-5">
         <div className="bg-white min-h-[60vh] h-full p-5">
-          <h3 className="text-lg font-semibold pb-4">Product details of {product?.title}</h3>
+          <h1 className="text-xl font-bold pb-4">Product details of {product?.title}</h1>
 
-          <div
-            className="prose prose-sm max-w-none"
-            dangerouslySetInnerHTML={{
-              __html: cleanDescription,
-            }}
-          />
+          <div className="ql-snow quill-display">
+            <div className="ql-editor" dangerouslySetInnerHTML={{ __html: sanitized }} style={{ padding: 0 }} />
+          </div>
         </div>
       </div>
 

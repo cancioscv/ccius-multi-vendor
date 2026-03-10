@@ -450,40 +450,24 @@ export default function CreateProductPage() {
                 {errors.subCategories && <p className=" text-red-500 text-sx mt-1">{errors.subCategories.message as string}</p>}
               </div>
 
-              <div className="mt-6 mb-6">
-                <Input
-                  type="textarea"
-                  rows={7}
-                  cols={10}
-                  label="Detailed Description * (min. 100 words)"
-                  placeholder="Enter product detailed description."
-                  {...register("detailedDescription", {
-                    required: "Detailed Description is required",
+              <div className="mt-2">
+                <label htmlFor="detailedDescription" className="block font-semibold text-gray-300 mb-1">
+                  Detailed Description * (Min 20 words)
+                </label>
+                <Controller
+                  name="detailedDescription"
+                  control={control}
+                  rules={{
+                    required: "Detailed description is required!",
                     validate: (value) => {
                       const wordCount = value?.split(/\s+/).filter((word: string) => word).length;
-                      return wordCount >= 100 || "Detailed description must be at least 100 words.";
+                      return wordCount >= 20 || "Detailed description must be at least 20 words.";
                     },
-                  })}
+                  }}
+                  render={({ field }) => <RichTextEditor value={field.value} onChange={field.onChange} />}
                 />
+                {errors.detailedDescription && <p className="text-red-500 text-xs mt-1">{errors.detailedDescription.message as string}</p>}
               </div>
-              {/* <div className="mt-2">
-                <label htmlFor="detailedDescription" className="bllock font-semibold text-gray-300 mb-1">
-                  Detailed Description * (min. 100 words)
-                  <Controller
-                    name="detailedDescription"
-                    control={control}
-                    rules={{
-                      required: "Detailed description is required.",
-                      validate: (value) => {
-                        const wordCount = value?.split(/\s+/).filter((word: string) => word).length;
-                        return wordCount >= 100 || "Detailed description must be at least 100 words.";
-                      },
-                    }}
-                    render={({ field }) => <RichTextEditor value={field.value} onChange={field.onChange} onBlur={field.onBlur} />}
-                  />
-                  {errors.detailedDescription && <p className=" text-red-500 text-sx mt-1">{errors.detailedDescription.message as string}</p>}
-                </label>
-              </div> */}
 
               <div className="mt-2">
                 <Input
