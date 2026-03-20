@@ -16,6 +16,11 @@ app.use(
   })
 );
 
+// Increase JSON payload limit to 10MB
+app.use(express.json({ limit: "10mb" }));
+// Increase URL-encoded payload limit to 10MB and set extended to true
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
+
 // For Stripe for communicating with the Server properly
 app.post(
   "/api/create-order",

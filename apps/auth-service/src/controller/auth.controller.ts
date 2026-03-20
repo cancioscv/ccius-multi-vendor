@@ -218,7 +218,6 @@ export async function verifyForgotPassword(req: Request, res: Response, next: Ne
 export async function getUser(req: CustomRequest, res: Response, next: NextFunction) {
   try {
     const user = req.user;
-    console.log("USER", user);
 
     // await sendLog({
     //   type: "success",
@@ -353,10 +352,12 @@ export async function createStripeConnectLink(req: Request, res: Response, next:
       return next(new ValidationError("Seller is not available with this Id."));
     }
 
+    const country = seller?.country ?? "DE";
+
     const account = await stripe.accounts.create({
       type: "express",
       email: seller?.email,
-      country: "DE",
+      country,
       capabilities: {
         card_payments: { requested: true },
         transfers: { requested: true },

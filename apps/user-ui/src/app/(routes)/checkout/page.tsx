@@ -17,11 +17,15 @@ export default function CheckoutPage() {
   const [coupon, setCoupon] = useState();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currency, setCurrency] = useState<string>("eur");
 
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const sessionId = searchParams.get("sessionId");
+
+  // ← Read paymentMethod from URL (set in CartPage)
+  const paymentMethod = (searchParams.get("paymentMethod") ?? "stripe") as "stripe" | "klarna";
 
   useEffect(() => {
     const fetchSessionAndClientSecret = async () => {
@@ -32,24 +36,33 @@ export default function CheckoutPage() {
       }
 
       try {
+        // Verify session (same endpoint for both methods)
         const res = await axiosInstance.get(`/order/api/verify-payment-session?sessionId=${sessionId}`);
         const { totalAmount, sellers, cart, coupon } = res.data.session;
 
-        if (!sellers || sellers.length === 0 || totalAmount === undefined || totalAmount === null) {
+        if (!sellers?.length || totalAmount === undefined || totalAmount === null) {
           throw new Error("Invalid payment session data.");
         }
 
         setCartItems(cart);
         setCoupon(coupon);
+
         const sellerStripeAccountId = sellers[0].stripeAccountId;
 
-        const intentRes = await axiosInstance.post("/order/api/create-payment-intent", {
-          amount: coupon?.discountAmount ? totalAmount - coupon?.discountAmount : totalAmount,
+        const amount = coupon?.discountAmount ? totalAmount - coupon.discountAmount : totalAmount;
+
+        const intentEndpoint = paymentMethod === "klarna" ? "/payment/api/create-klarna-payment-intent" : "/order/api/create-payment-intent";
+
+        const intentRes = await axiosInstance.post(intentEndpoint, {
+          amount,
           sellerStripeAccountId,
           sessionId,
         });
 
+        console.log("INTENT ENDPOINT", intentRes);
+
         setClientSecret(intentRes.data.clientSecret);
+        setCurrency(intentRes.data.currency ?? "eur");
       } catch (err: any) {
         console.error(err);
         setError("Something went wrong while preparing your payment.");
@@ -59,16 +72,24 @@ export default function CheckoutPage() {
     };
 
     fetchSessionAndClientSecret();
-  }, [sessionId]);
+  }, [sessionId, paymentMethod]);
 
   const appearance: Appearance = {
     theme: "stripe",
+    variables: {
+      colorPrimary: paymentMethod === "klarna" ? "#ff85a1" : "#7b4fff",
+      borderRadius: "10px",
+      fontFamily: "Lato, sans-serif",
+    },
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[70vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent" />
+      <div className="flex flex-col justify-center items-center min-h-[70vh] gap-4">
+        <div className="relative w-14 h-14">
+          <div className="animate-spin rounded-full h-14 w-14 border-4 border-[#f0f0f8] border-t-[#7b4fff]" />
+        </div>
+        <p className="text-[#9090b0] text-sm animate-pulse">Preparing your checkout…</p>
       </div>
     );
   }
@@ -76,18 +97,13 @@ export default function CheckoutPage() {
   if (error) {
     return (
       <div className="flex justify-center items-center min-h-[60vh] px-4">
-        <div className="w-full text-center">
-          <div className="flex justify-center mb-4">
-            <XCircle className="text-red-500 w-10 h-10" />
-          </div>
-          <h2 className="text-xl font-semibold text-red-600 mb-2">Payment Failed</h2>
-          <p className="text-sm text-gray-600 mb-6">
-            {error} <br className="hidden sm:block" />
-            Please go back and try checking out again.
-          </p>
+        <div className="w-full max-w-sm text-center bg-white rounded-2xl shadow-sm p-10">
+          <XCircle className="text-red-400 w-12 h-12 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-[#1a1a2e] mb-2">Payment Error</h2>
+          <p className="text-sm text-[#9090b0] mb-6">{error}</p>
           <button
             onClick={() => router.push("/cart")}
-            className="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 transition text-sm font-medium"
+            className="bg-[#7b4fff] text-white px-6 py-2.5 rounded-lg hover:bg-[#6234e0] transition text-sm font-semibold"
           >
             Back to Cart
           </button>
@@ -96,11 +112,16 @@ export default function CheckoutPage() {
     );
   }
 
-  return (
-    clientSecret && (
-      <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
-        <CheckoutForm clientSecret={clientSecret} cartItems={cartItems} coupon={coupon} sessionId={sessionId} />
-      </Elements>
-    )
-  );
+  return clientSecret ? (
+    <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
+      <CheckoutForm
+        clientSecret={clientSecret}
+        cartItems={cartItems}
+        coupon={coupon}
+        sessionId={sessionId}
+        paymentMethod={paymentMethod}
+        currency={currency}
+      />
+    </Elements>
+  ) : null;
 }

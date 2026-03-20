@@ -6,13 +6,14 @@ import useUser from "@/hooks/useUser";
 import { useCartStore } from "@/store";
 import axiosInstance from "@/utils/axiosInstance";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { CreditCard, Loader2, ShoppingBag, Sparkles, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
+type PaymentMethod = "stripe" | "klarna";
 export default function CartPage() {
   const { user } = useUser();
   const { location } = useLocationTracking();
@@ -29,6 +30,7 @@ export default function CartPage() {
   const [error, setError] = useState("");
   const [storedCouponCode, setStoredCouponCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("stripe");
 
   function decreaseQuantity(id: string | undefined) {
     useCartStore.setState((state: any) => ({
@@ -84,18 +86,26 @@ export default function CartPage() {
     }
     setLoading(true);
     try {
-      const res = await axiosInstance.post("/order/api/create-payment-session", {
+      const couponPayload = {
+        code: storedCouponCode,
+        discountAmount,
+        discountPercent,
+        discountedProductId,
+      };
+
+      // ── Route to the correct session endpoint based on chosen method ──
+      const endpoint = paymentMethod === "klarna" ? "/payment/api/create-klarna-payment-session" : "/order/api/create-payment-session";
+
+      const res = await axiosInstance.post(endpoint, {
         cart,
         selectedAddressId,
-        coupon: {
-          code: storedCouponCode,
-          discountAmount,
-          discountPercent,
-          discountedProductId,
-        },
+        coupon: couponPayload,
       });
+
       const sessionId = res.data.sessionId;
-      router.push(`/checkout?sessionId=${sessionId}`);
+
+      // Pass paymentMethod so CheckoutPage knows which intent to create
+      router.push(`/checkout?sessionId=${sessionId}&paymentMethod=${paymentMethod}`);
     } catch (error) {
       toast.error("Something went wrong. Please try again.");
     } finally {
@@ -115,186 +125,511 @@ export default function CartPage() {
   useEffect(() => {
     if (addresses.length > 0 && !selectedAddressId) {
       const defaultAddr = addresses.find((addr) => addr.isDefault);
-      if (defaultAddr) {
-        setSelectedAddressId(defaultAddr.id);
-      } else {
-        setSelectedAddressId(addresses[0].id);
-      }
+      setSelectedAddressId(defaultAddr ? defaultAddr.id : addresses[0].id);
     }
   }, [addresses, selectedAddressId]);
 
+  // return (
+  //   <div className="w-full bg-white">
+  //     <div className="md:w-[80%] w-[95%] mx-auto min-h-screen">
+  //       <div className="pb-[50px]">
+  //         <h1 className="md:pt-[50px] font-medium text-[44px] leading-[1] mb-[16px] font-jost">Shopping Cart</h1>
+  //         <Link href={"/"} className="text-[#55585b] hover:underline">
+  //           Home
+  //         </Link>
+  //         <span className="inline-block p-[1.5px] mx-1 bg-[#a8acb0] rounded-full"></span>
+  //         <span className="text-[#55585b]">Cart</span>
+  //       </div>
+
+  //       {cart.length === 0 ? (
+  //         <div className="text-center text-gray-600 text-lg">Your cart is empty! Start adding products.</div>
+  //       ) : (
+  //         <div className="lg:flex items-start gap-10">
+  //           <table className="w-full lg:w-[70%] border-collapse">
+  //             <thead className="bg-[#f1f3f4] rounded">
+  //               <tr>
+  //                 <th className="py-3 text-left pl-6 align-middle">Product</th>
+  //                 <th className="py-3 text-center align-middle">Price</th>
+  //                 <th className="py-3 text-center align-middle">Quantity</th>
+  //                 <th className="py-3 text-center align-middle"></th>
+  //               </tr>
+  //             </thead>
+  //             <tbody>
+  //               {cart?.map((item: any) => (
+  //                 <tr key={item.id} className="border-b border-b-[#0000000e]">
+  //                   <td className="flex items-center gap-4 p-4">
+  //                     <Image
+  //                       src={(item?.images as Record<string, any>)[0]?.url || "/placeholder.png"}
+  //                       alt={item.title}
+  //                       width={80}
+  //                       height={80}
+  //                       className="rounded"
+  //                     />
+
+  //                     <div className="flex flex-col">
+  //                       <span className="font-medium">{item.title}</span>
+  //                       {item?.selectedOptions && (
+  //                         <div className="text-sm text-gray-500">
+  //                           {item?.selectedOptions?.color && (
+  //                             <span>
+  //                               Color: {}
+  //                               <span
+  //                                 style={{
+  //                                   backgroundColor: item?.selectedOptions?.color,
+  //                                   width: "12px",
+  //                                   height: "12px",
+  //                                   borderRadius: "100%",
+  //                                   display: "inline-block",
+  //                                   border: "1px solid #a6a6a6",
+  //                                 }}
+  //                               />
+  //                             </span>
+  //                           )}
+  //                           {item?.selectedOptions.size && <span className="ml-2">Size: {item?.selectedOptions?.size}</span>}
+  //                         </div>
+  //                       )}
+  //                     </div>
+  //                   </td>
+  //                   <td className="px-6 text-lg text-center">
+  //                     {item?.id === discountedProductId ? (
+  //                       <div className="flex flex-col items-center">
+  //                         <span className="line-through text-gray-500 text-sm">${item.salePrice.toFixed(2)}</span>{" "}
+  //                         <span className="text-green-600 font-semibold">${((item.salePrice * (100 - discountPercent)) / 100).toFixed(2)}</span>
+  //                         <span className="text-xs text-green-700 bg-green-100 px-2 py-[2px] rounded-full mt-1">Discount Applied</span>
+  //                       </div>
+  //                     ) : (
+  //                       <span>${item.salePrice.toFixed(2)}</span>
+  //                     )}
+  //                   </td>
+  //                   <td>
+  //                     <div className="flex justify-center items-center border border-gray-200 rounded-[20px] w-[100px] mx-auto p-[6px]">
+  //                       <button className="text-[#000] cursor-pointer text-xl" onClick={() => decreaseQuantity(item.id)}>
+  //                         -
+  //                       </button>
+  //                       <span className="px-4">{item.quantity}</span>
+  //                       <button className="text-[#000] cursor-pointer text-xl" onClick={() => increaseQuantity(item.id)}>
+  //                         +
+  //                       </button>
+  //                     </div>
+  //                   </td>
+  //                   <td className="text-center">
+  //                     <button
+  //                       className="text-[#818487] cursor-pointer hover:text-[#ff1826] transition duration-200"
+  //                       onClick={() => removeFromCart(item?.id, user, location, deviceInfo)}
+  //                     >
+  //                       ✕ Remove
+  //                     </button>
+  //                   </td>
+  //                 </tr>
+  //               ))}
+  //             </tbody>
+  //           </table>
+
+  //           <div className="p-6 shadow-md w-full lg:w-[30%] bg-[#f9f9ff9] rounded-lg">
+  //             {discountAmount > 0 && (
+  //               <div className="flex justify-between items-center text-[#010f1c] text-base font-medium pb-1">
+  //                 <span className="font-jost">Discount ({discountPercent}%)</span>
+  //                 <span className="text-green-600">- ${discountAmount.toFixed(2)}</span>
+  //               </div>
+  //             )}
+
+  //             <div className="flex justify-between items-center text-[#010f1c] text-[20px] font-[550] pb-3">
+  //               <span className="font-jost">Subtotal</span>
+  //               <span>${(subTotal - discountAmount).toFixed(2)}</span>
+  //             </div>
+  //             <hr className="my-4 text-slate-200" />
+
+  //             <div className="mb-4">
+  //               <h4 className="mb-[7px] font-[500] text-[15px]">Have a Coupon?</h4>
+  //               <div className="flex">
+  //                 <input
+  //                   type="text"
+  //                   value={couponCode}
+  //                   onChange={(e: any) => setCouponCode(e.target.value)}
+  //                   placeholder="Enter coupon code"
+  //                   className="w-full p-2 border border-gray-200 rounded-l-md focus:outline-none focus:border-blue-500"
+  //                 />
+  //                 <button
+  //                   className="bg-blue-500 cursor-pointer text-white px-4 rounded-r-md hover:bg-blue-600 transition-all"
+  //                   onClick={() => applyCouponCode()}
+  //                 >
+  //                   Apply
+  //                 </button>
+  //               </div>
+  //               {error && <p className="text-sm pt-2 text-red-500">{error}</p>}
+  //               <hr className="my-4 text-slate-200" />
+
+  //               <div className="mb-4">
+  //                 <h4 className="mb-[7px] font-medium text-[15px]">Select Shipping Address</h4>
+  //                 {addresses?.length !== 0 && (
+  //                   <select
+  //                     className="w-full p-2 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500"
+  //                     value={selectedAddressId}
+  //                     onChange={(e: any) => setSelectedAddressId(e.target.value)}
+  //                   >
+  //                     {addresses?.map((address: any) => (
+  //                       <option key={address.id} value={address.id}>
+  //                         {address.street}, {address.zip} — {address.city}, {address.country}
+  //                       </option>
+  //                     ))}
+  //                   </select>
+  //                 )}
+  //                 {addresses?.length === 0 && <p className="text-sm text-slate-800">Please add an address from profile to create an order!</p>}
+  //               </div>
+  //               <hr className="my-4 text-slate-200" />
+
+  //               <div className="mb-4">
+  //                 <h4 className="mb-[7px] font-[500] text-[15px]">Select Payment Method</h4>
+  //                 <select className="w-full p-2 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500">
+  //                   <option value="credit_card">Online Payment</option>
+  //                   <option value="cash_on_delivery">Cash on Delivery</option>
+  //                 </select>
+  //               </div>
+  //               <hr className="my-4 text-slate-200" />
+
+  //               <div className="flex justify-between items-center text-[#010f1c] text-[20px] font-[550] pb-3">
+  //                 <span className="font-jost">Total</span>
+  //                 <span>${(subTotal - discountAmount).toFixed(2)}</span>
+  //               </div>
+
+  //               <button
+  //                 onClick={createPaymentSession}
+  //                 disabled={loading}
+  //                 className="w-full flex items-center justify-center gap-2 cursor-pointer mt-4 py-3 bg-[#010f1c] text-white hover:bg-[#0989FF] transition-all rounded-lg"
+  //               >
+  //                 {loading && <Loader2 className="animate-spin w-5 h-5" />}
+  //                 {loading ? "Redirecting..." : "Proceed to Checkout"}
+  //               </button>
+  //             </div>
+  //           </div>
+  //         </div>
+  //       )}
+  //     </div>
+  //   </div>
+  // );
+
   return (
-    <div className="w-full bg-white">
-      <div className="md:w-[80%] w-[95%] mx-auto min-h-screen">
-        <div className="pb-[50px]">
-          <h1 className="md:pt-[50px] font-medium text-[44px] leading-[1] mb-[16px] font-jost">Shopping Cart</h1>
-          <Link href={"/"} className="text-[#55585b] hover:underline">
-            Home
-          </Link>
-          <span className="inline-block p-[1.5px] mx-1 bg-[#a8acb0] rounded-full"></span>
-          <span className="text-[#55585b]">Cart</span>
+    <div className="w-full min-h-screen bg-[#f7f7fb]">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Lato:wght@300;400;700&display=swap');
+        .cart-root { font-family: 'Lato', sans-serif; }
+        .cart-root h1 { font-family: 'Syne', sans-serif; }
+        .payment-card {
+          transition: all 0.22s cubic-bezier(.4,0,.2,1);
+          border: 2px solid transparent;
+          cursor: pointer;
+          background: #fff;
+          border-radius: 14px;
+          padding: 14px 18px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex: 1;
+        }
+        .payment-card:hover { border-color: #c7b8ff; box-shadow: 0 4px 20px rgba(120,80,255,0.08); }
+        .payment-card.selected { border-color: #7b4fff; background: #f4f0ff; }
+        .payment-card.klarna-card.selected { border-color: #ffb3c6; background: #fff5f8; }
+        .qty-btn {
+          width: 28px; height: 28px; border-radius: 50%;
+          border: 1.5px solid #e2e2ef;
+          background: #fff;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer; font-size: 16px; font-weight: 600;
+          transition: background 0.15s, border-color 0.15s;
+        }
+        .qty-btn:hover { background: #7b4fff; border-color: #7b4fff; color: #fff; }
+        .checkout-btn {
+          width: 100%;
+          padding: 15px;
+          border-radius: 12px;
+          font-family: 'Syne', sans-serif;
+          font-size: 15px;
+          font-weight: 700;
+          letter-spacing: 0.04em;
+          border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          transition: all 0.22s cubic-bezier(.4,0,.2,1);
+        }
+        .stripe-btn { background: #7b4fff; color: #fff; }
+        .stripe-btn:hover:not(:disabled) { background: #6234e0; box-shadow: 0 6px 24px rgba(123,79,255,0.25); transform: translateY(-1px); }
+        .klarna-btn { background: #ffb3c6; color: #1a1a2e; }
+        .klarna-btn:hover:not(:disabled) { background: #ff85a1; box-shadow: 0 6px 24px rgba(255,130,160,0.28); transform: translateY(-1px); }
+        .checkout-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none !important; }
+        .coupon-input:focus { outline: none; border-color: #7b4fff; box-shadow: 0 0 0 3px rgba(123,79,255,0.12); }
+        .remove-btn { color: #bbb; transition: color 0.15s; background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 12px; }
+        .remove-btn:hover { color: #ff4d6d; }
+      `}</style>
+
+      <div className="cart-root md:w-[82%] w-[95%] mx-auto py-10">
+        {/* Header */}
+        <div className="pb-8">
+          <h1 className="text-[42px] font-extrabold text-[#1a1a2e] leading-tight mb-2">Shopping Cart</h1>
+          <div className="flex items-center gap-2 text-sm text-[#7a7a9a]">
+            <Link href="/" className="hover:text-[#7b4fff] transition">
+              Home
+            </Link>
+            <span>›</span>
+            <span>Cart</span>
+          </div>
         </div>
 
         {cart.length === 0 ? (
-          <div className="text-center text-gray-600 text-lg">Your cart is empty! Start adding products.</div>
+          <div className="flex flex-col items-center justify-center py-28 text-center">
+            <ShoppingBag className="w-16 h-16 text-[#d0d0e8] mb-4" />
+            <p className="text-[#7a7a9a] text-lg">Your cart is empty.</p>
+            <Link href="/" className="mt-4 px-6 py-2.5 bg-[#7b4fff] text-white rounded-full text-sm font-semibold hover:bg-[#6234e0] transition">
+              Browse Products
+            </Link>
+          </div>
         ) : (
-          <div className="lg:flex items-start gap-10">
-            <table className="w-full lg:w-[70%] border-collapse">
-              <thead className="bg-[#f1f3f4] rounded">
-                <tr>
-                  <th className="py-3 text-left pl-6 align-middle">Product</th>
-                  <th className="py-3 text-center align-middle">Price</th>
-                  <th className="py-3 text-center align-middle">Quantity</th>
-                  <th className="py-3 text-center align-middle"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {cart?.map((item: any) => (
-                  <tr key={item.id} className="border-b border-b-[#0000000e]">
-                    <td className="flex items-center gap-4 p-4">
-                      <Image
-                        src={(item?.images as Record<string, any>)[0]?.url || "/placeholder.png"}
-                        alt={item.title}
-                        width={80}
-                        height={80}
-                        className="rounded"
-                      />
-
-                      <div className="flex flex-col">
-                        <span className="font-medium">{item.title}</span>
-                        {item?.selectedOptions && (
-                          <div className="text-sm text-gray-500">
-                            {item?.selectedOptions?.color && (
-                              <span>
-                                Color: {}
-                                <span
-                                  style={{
-                                    backgroundColor: item?.selectedOptions?.color,
-                                    width: "12px",
-                                    height: "12px",
-                                    borderRadius: "100%",
-                                    display: "inline-block",
-                                    border: "1px solid #a6a6a6",
-                                  }}
-                                />
-                              </span>
-                            )}
-                            {item?.selectedOptions.size && <span className="ml-2">Size: {item?.selectedOptions?.size}</span>}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 text-lg text-center">
-                      {item?.id === discountedProductId ? (
-                        <div className="flex flex-col items-center">
-                          <span className="line-through text-gray-500 text-sm">${item.salePrice.toFixed(2)}</span>{" "}
-                          <span className="text-green-600 font-semibold">${((item.salePrice * (100 - discountPercent)) / 100).toFixed(2)}</span>
-                          <span className="text-xs text-green-700 bg-green-100 px-2 py-[2px] rounded-full mt-1">Discount Applied</span>
-                        </div>
-                      ) : (
-                        <span>${item.salePrice.toFixed(2)}</span>
-                      )}
-                    </td>
-                    <td>
-                      <div className="flex justify-center items-center border border-gray-200 rounded-[20px] w-[100px] mx-auto p-[6px]">
-                        <button className="text-[#000] cursor-pointer text-xl" onClick={() => decreaseQuantity(item.id)}>
-                          -
-                        </button>
-                        <span className="px-4">{item.quantity}</span>
-                        <button className="text-[#000] cursor-pointer text-xl" onClick={() => increaseQuantity(item.id)}>
-                          +
-                        </button>
-                      </div>
-                    </td>
-                    <td className="text-center">
-                      <button
-                        className="text-[#818487] cursor-pointer hover:text-[#ff1826] transition duration-200"
-                        onClick={() => removeFromCart(item?.id, user, location, deviceInfo)}
-                      >
-                        ✕ Remove
-                      </button>
-                    </td>
+          <div className="lg:flex items-start gap-8">
+            {/* ── Cart Table ── */}
+            <div className="w-full lg:w-[65%] bg-white rounded-2xl shadow-sm overflow-hidden">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-[#f4f0ff] text-[#7b4fff] text-xs uppercase tracking-widest">
+                    <th className="py-4 text-left pl-6 font-semibold">Product</th>
+                    <th className="py-4 text-center font-semibold">Price</th>
+                    <th className="py-4 text-center font-semibold">Qty</th>
+                    <th className="py-4 text-center font-semibold pr-4"></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {cart.map((item: any) => (
+                    <tr key={item.id} className="border-b border-[#f0f0f8] hover:bg-[#fafafe] transition">
+                      <td className="flex items-center gap-4 p-4">
+                        <div className="relative w-[72px] h-[72px] rounded-xl overflow-hidden bg-[#f4f0ff] flex-shrink-0">
+                          <Image
+                            src={(item?.images as Record<string, any>)[0]?.url || "/placeholder.png"}
+                            alt={item.title}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-[#1a1a2e] text-sm leading-snug mb-1">{item.title}</p>
+                          {item?.selectedOptions && (
+                            <div className="flex items-center gap-2 text-xs text-[#9090b0]">
+                              {item.selectedOptions?.color && (
+                                <span className="flex items-center gap-1">
+                                  <span
+                                    style={{ backgroundColor: item.selectedOptions.color }}
+                                    className="w-3 h-3 rounded-full border border-gray-300 inline-block"
+                                  />
+                                </span>
+                              )}
+                              {item.selectedOptions?.size && (
+                                <span className="bg-[#f4f0ff] text-[#7b4fff] px-2 py-0.5 rounded-full text-[11px] font-medium">
+                                  {item.selectedOptions.size}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </td>
 
-            <div className="p-6 shadow-md w-full lg:w-[30%] bg-[#f9f9ff9] rounded-lg">
-              {discountAmount > 0 && (
-                <div className="flex justify-between items-center text-[#010f1c] text-base font-medium pb-1">
-                  <span className="font-jost">Discount ({discountPercent}%)</span>
-                  <span className="text-green-600">- ${discountAmount.toFixed(2)}</span>
+                      <td className="text-center px-4">
+                        {item.id === discountedProductId ? (
+                          <div className="flex flex-col items-center">
+                            <span className="line-through text-[#b0b0c8] text-xs">${item.salePrice.toFixed(2)}</span>
+                            <span className="text-[#2ec27e] font-bold text-sm">${((item.salePrice * (100 - discountPercent)) / 100).toFixed(2)}</span>
+                            <span className="text-[10px] text-[#2ec27e] bg-[#edfaf3] px-2 py-0.5 rounded-full mt-0.5">-{discountPercent}%</span>
+                          </div>
+                        ) : (
+                          <span className="font-semibold text-[#1a1a2e] text-sm">${item.salePrice.toFixed(2)}</span>
+                        )}
+                      </td>
+
+                      <td className="text-center px-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <button className="qty-btn" onClick={() => decreaseQuantity(item.id)}>
+                            −
+                          </button>
+                          <span className="w-6 text-center text-sm font-semibold text-[#1a1a2e]">{item.quantity}</span>
+                          <button className="qty-btn" onClick={() => increaseQuantity(item.id)}>
+                            +
+                          </button>
+                        </div>
+                      </td>
+
+                      <td className="text-center pr-4">
+                        <button className="remove-btn mx-auto" onClick={() => removeFromCart(item?.id, user, location, deviceInfo)}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* ── Summary Panel ── */}
+            <div className="w-full lg:w-[35%] space-y-4 mt-6 lg:mt-0">
+              {/* Order Summary Card */}
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <h3 className="font-bold text-[#1a1a2e] text-base mb-4" style={{ fontFamily: "Syne, sans-serif" }}>
+                  Order Summary
+                </h3>
+
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-sm mb-2 text-[#2ec27e] font-medium">
+                    <span>Discount ({discountPercent}%)</span>
+                    <span>- ${discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm text-[#7a7a9a] mb-1">
+                  <span>Subtotal</span>
+                  <span className="text-[#1a1a2e] font-semibold">${subTotal.toFixed(2)}</span>
                 </div>
-              )}
-
-              <div className="flex justify-between items-center text-[#010f1c] text-[20px] font-[550] pb-3">
-                <span className="font-jost">Subtotal</span>
-                <span>${(subTotal - discountAmount).toFixed(2)}</span>
+                <div className="border-t border-[#f0f0f8] my-3" />
+                <div className="flex justify-between text-[17px] font-bold text-[#1a1a2e]">
+                  <span>Total</span>
+                  <span>${(subTotal - discountAmount).toFixed(2)}</span>
+                </div>
               </div>
-              <hr className="my-4 text-slate-200" />
 
-              <div className="mb-4">
-                <h4 className="mb-[7px] font-[500] text-[15px]">Have a Coupon?</h4>
-                <div className="flex">
+              {/* Coupon Card */}
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <h3 className="font-semibold text-[#1a1a2e] text-sm mb-3 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#7b4fff]" />
+                  Have a coupon?
+                </h3>
+                <div className="flex gap-2">
                   <input
                     type="text"
                     value={couponCode}
-                    onChange={(e: any) => setCouponCode(e.target.value)}
-                    placeholder="Enter coupon code"
-                    className="w-full p-2 border border-gray-200 rounded-l-md focus:outline-none focus:border-blue-500"
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    placeholder="Enter code..."
+                    className="coupon-input flex-1 text-sm px-3 py-2.5 border border-[#e2e2ef] rounded-lg transition"
+                    onKeyDown={(e) => e.key === "Enter" && applyCouponCode()}
                   />
                   <button
-                    className="bg-blue-500 cursor-pointer text-white px-4 rounded-r-md hover:bg-blue-600 transition-all"
-                    onClick={() => applyCouponCode()}
+                    onClick={applyCouponCode}
+                    className="px-4 py-2.5 bg-[#7b4fff] text-white text-sm font-semibold rounded-lg hover:bg-[#6234e0] transition"
                   >
                     Apply
                   </button>
                 </div>
-                {error && <p className="text-sm pt-2 text-red-500">{error}</p>}
-                <hr className="my-4 text-slate-200" />
-
-                <div className="mb-4">
-                  <h4 className="mb-[7px] font-medium text-[15px]">Select Shipping Address</h4>
-                  {addresses?.length !== 0 && (
-                    <select
-                      className="w-full p-2 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500"
-                      value={selectedAddressId}
-                      onChange={(e: any) => setSelectedAddressId(e.target.value)}
-                    >
-                      {addresses?.map((address: any) => (
-                        <option key={address.id} value={address.id}>
-                          {address.street}, {address.zip} — {address.city}, {address.country}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                  {addresses?.length === 0 && <p className="text-sm text-slate-800">Please add an address from profile to create an order!</p>}
-                </div>
-                <hr className="my-4 text-slate-200" />
-
-                <div className="mb-4">
-                  <h4 className="mb-[7px] font-[500] text-[15px]">Select Payment Method</h4>
-                  <select className="w-full p-2 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500">
-                    <option value="credit_card">Online Payment</option>
-                    <option value="cash_on_delivery">Cash on Delivery</option>
-                  </select>
-                </div>
-                <hr className="my-4 text-slate-200" />
-
-                <div className="flex justify-between items-center text-[#010f1c] text-[20px] font-[550] pb-3">
-                  <span className="font-jost">Total</span>
-                  <span>${(subTotal - discountAmount).toFixed(2)}</span>
-                </div>
-
-                <button
-                  onClick={createPaymentSession}
-                  disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 cursor-pointer mt-4 py-3 bg-[#010f1c] text-white hover:bg-[#0989FF] transition-all rounded-lg"
-                >
-                  {loading && <Loader2 className="animate-spin w-5 h-5" />}
-                  {loading ? "Redirecting..." : "Proceed to Checkout"}
-                </button>
+                {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
+                {discountAmount > 0 && (
+                  <p className="text-[#2ec27e] text-xs mt-2 font-medium">✓ Coupon applied — saving ${discountAmount.toFixed(2)}</p>
+                )}
               </div>
+
+              {/* Address Card */}
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <h3 className="font-semibold text-[#1a1a2e] text-sm mb-3">Shipping Address</h3>
+                {addresses.length === 0 ? (
+                  <p className="text-xs text-[#9090b0]">Please add an address from your profile first.</p>
+                ) : (
+                  <select
+                    className="w-full text-sm p-2.5 border border-[#e2e2ef] rounded-lg focus:outline-none focus:border-[#7b4fff] transition bg-white text-[#1a1a2e]"
+                    value={selectedAddressId}
+                    onChange={(e) => setSelectedAddressId(e.target.value)}
+                  >
+                    {addresses.map((address: any) => (
+                      <option key={address.id} value={address.id}>
+                        {address.street}, {address.zip} — {address.city}, {address.country}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              {/* ── Payment Method Selector ── */}
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <h3 className="font-semibold text-[#1a1a2e] text-sm mb-3">Payment Method</h3>
+                <div className="flex gap-3">
+                  {/* Stripe Card */}
+                  <div
+                    className={`payment-card ${paymentMethod === "stripe" ? "selected" : ""}`}
+                    onClick={() => setPaymentMethod("stripe")}
+                    role="button"
+                    aria-pressed={paymentMethod === "stripe"}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-[#7b4fff]/10 flex items-center justify-center flex-shrink-0">
+                      <CreditCard className="w-4 h-4 text-[#7b4fff]" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-[#1a1a2e]">Card</p>
+                      <p className="text-[11px] text-[#9090b0]">Stripe</p>
+                    </div>
+                    <div
+                      className={`ml-auto w-4 h-4 rounded-full border-2 flex-shrink-0 transition-all ${
+                        paymentMethod === "stripe" ? "border-[#7b4fff] bg-[#7b4fff]" : "border-[#d0d0e8]"
+                      }`}
+                    >
+                      {paymentMethod === "stripe" && (
+                        <svg viewBox="0 0 16 16" fill="none" className="w-full h-full">
+                          <circle cx="8" cy="8" r="8" fill="#7b4fff" />
+                          <path d="M5 8l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Klarna Card */}
+                  <div
+                    className={`payment-card klarna-card ${paymentMethod === "klarna" ? "selected" : ""}`}
+                    onClick={() => setPaymentMethod("klarna")}
+                    role="button"
+                    aria-pressed={paymentMethod === "klarna"}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-[#ffb3c6]/30 flex items-center justify-center flex-shrink-0">
+                      {/* Klarna K logo */}
+                      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="#1a1a2e">
+                        <path d="M5 3h3v18H5V3zm9 0c0 4.5-2 8-5 10l6.5 8H19l-6-7.5C15.5 11 16.5 7 16.5 3H14z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-[#1a1a2e]">Klarna</p>
+                      <p className="text-[11px] text-[#9090b0]">Buy now, pay later</p>
+                    </div>
+                    <div
+                      className={`ml-auto w-4 h-4 rounded-full border-2 flex-shrink-0 transition-all ${
+                        paymentMethod === "klarna" ? "border-[#ff85a1] bg-[#ff85a1]" : "border-[#d0d0e8]"
+                      }`}
+                    >
+                      {paymentMethod === "klarna" && (
+                        <svg viewBox="0 0 16 16" fill="none" className="w-full h-full">
+                          <circle cx="8" cy="8" r="8" fill="#ff85a1" />
+                          <path d="M5 8l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Klarna info badge */}
+                {paymentMethod === "klarna" && (
+                  <div className="mt-3 p-3 bg-[#fff5f8] border border-[#ffb3c6] rounded-xl text-xs text-[#c44569] leading-relaxed">
+                    <strong>Klarna note:</strong> Prices are charged in <strong>EUR</strong>. Your cart total will be converted automatically.
+                  </div>
+                )}
+              </div>
+
+              {/* Checkout Button */}
+              <button
+                onClick={createPaymentSession}
+                disabled={loading || addresses.length === 0}
+                className={`checkout-btn ${paymentMethod === "klarna" ? "klarna-btn" : "stripe-btn"}`}
+              >
+                {loading ? (
+                  <Loader2 className="animate-spin w-5 h-5" />
+                ) : paymentMethod === "klarna" ? (
+                  <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
+                    <path d="M5 3h3v18H5V3zm9 0c0 4.5-2 8-5 10l6.5 8H19l-6-7.5C15.5 11 16.5 7 16.5 3H14z" />
+                  </svg>
+                ) : (
+                  <CreditCard className="w-5 h-5" />
+                )}
+                {loading ? "Redirecting..." : paymentMethod === "klarna" ? "Continue with Klarna" : "Pay with Card"}
+              </button>
             </div>
           </div>
         )}

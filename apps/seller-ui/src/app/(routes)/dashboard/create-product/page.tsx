@@ -459,10 +459,10 @@ export default function CreateProductPage() {
                   control={control}
                   rules={{
                     required: "Detailed description is required!",
-                    validate: (value) => {
-                      const wordCount = value?.split(/\s+/).filter((word: string) => word).length;
-                      return wordCount >= 20 || "Detailed description must be at least 20 words.";
-                    },
+                    // validate: (value) => {
+                    //   const wordCount = value?.split(/\s+/).filter((word: string) => word).length;
+                    //   return wordCount >= 20 || "Detailed description must be at least 20 words.";
+                    // },
                   }}
                   render={({ field }) => <RichTextEditor value={field.value} onChange={field.onChange} />}
                 />

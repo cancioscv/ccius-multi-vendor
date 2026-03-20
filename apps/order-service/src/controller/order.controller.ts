@@ -307,7 +307,7 @@ export async function createOrder(req: any, res: Response, next: NextFunction) {
         await sendEmail(email, subject, "order-confirmation-email", {
           name,
           cart,
-          totalAmount: coupon?.discountAmount ? totalAmount - coupon?.discountAmoun : totalAmount,
+          totalAmount: coupon?.discountAmount ? totalAmount - coupon?.discountAmount : totalAmount,
           trackingUrl: `/order/${order.id}`,
         });
 

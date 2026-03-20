@@ -85,6 +85,8 @@ model Order {
   items             OrderItem[]   @relation("OrderItemRelation")
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
+
+  paymentMethod String @default("card") // ← "card" | "klarna" | "paypal"
 }
 
 model ShopReview {
