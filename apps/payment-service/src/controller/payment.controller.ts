@@ -1,19 +1,11 @@
-import {
-  prisma,
-  //  OrderStatus,
-  PaymentStatus,
-  // DiscountType,
-  UserRole,
-} from "@e-com/db";
+import { prisma, PaymentStatus, UserRole } from "@e-com/db";
 import Stripe from "stripe";
 import { NextFunction, Response } from "express";
-import redis, {
-  //  NotFoundError,
-  ValidationError,
-} from "@e-com/libs";
+import redis, { ValidationError } from "@e-com/libs";
 import stripe from "../utils/stripe.js";
 import { sendEmail } from "../utils/send-email/index.js";
 import { getKlarnaCurrency } from "../utils/klarna.js";
+import { capturePayPalOrder, createPayPalOrder, verifyPayPalWebhook } from "../utils/paypal.js";
 
 // ─────────────────────────────────────────────
 // KLARNA: Create Payment Intent (mirrors createPaymentIntent)
@@ -180,7 +172,6 @@ export async function createKlarnaPaymentSession(req: any, res: Response, next: 
 }
 
 export async function createOrder(req: any, res: Response, next: NextFunction) {
-  console.log("PAYMENT CONTROLLER CREATE ORDER**");
   try {
     const stripeSignature = req.headers["stripe-signature"];
     if (!stripeSignature) {
@@ -218,9 +209,12 @@ export async function createOrder(req: any, res: Response, next: NextFunction) {
 // SHARED: processOrder — handles both Stripe card & Klarna
 // Extracted from your original createOrder to avoid duplication
 // ─────────────────────────────────────────────
-async function processOrder(paymentIntent: Stripe.PaymentIntent, sessionId: string, userId: string, paymentMethod: "card" | "klarna") {
+async function processOrder(paymentIntent: Stripe.PaymentIntent, sessionId: string, userId: string, paymentMethod: "card" | "klarna" | "paypal") {
   const sessionKey = `payment-session:${sessionId}`;
-  const sessionData = await redis.get(sessionKey);
+  const sessionData = (await redis.get(sessionKey)) as any;
+
+  // const sessionDataObject = JSON.parse(sessionData);
+  // const userId = buyerId ? buyerId : sessionDataObject?.userId;
 
   if (!sessionData) {
     console.warn("Session data expired or missing for", sessionId);
@@ -382,5 +376,201 @@ async function processOrder(paymentIntent: Stripe.PaymentIntent, sessionId: stri
     });
 
     await redis.del(sessionKey);
+  }
+}
+
+// ─────────────────────────────────────────────
+// PAYPAL: Create Payment Session
+// Reuses existing Redis session logic, tagged for PayPal
+// ─────────────────────────────────────────────
+export async function createPayPalPaymentSession(req: any, res: Response, next: NextFunction) {
+  const { cart, selectedAddressId, coupon } = req.body;
+  const userId = req.user?.id;
+
+  try {
+    if (!cart || !Array.isArray(cart) || cart.length === 0) {
+      return next(new ValidationError("Cart is empty or invalid."));
+    }
+
+    const normalizedCart = JSON.stringify(
+      cart.map((item: any) => ({
+        id: item.id,
+        quantity: item.quantity,
+        salePrice: item.salePrice,
+        shopId: item.shopId,
+        selectedOptions: item.selectedOptions || {},
+      }))
+    );
+
+    // Reuse existing session if cart matches
+    const keys = await redis.keys("payment-session:*");
+    for (const key of keys) {
+      const data = await redis.get(key);
+      if (data) {
+        const session = JSON.parse(data);
+        if (session.userId === userId && session.paymentMethod === "paypal") {
+          const existingCart = JSON.stringify(
+            session.cart.map((item: any) => ({
+              id: item.id,
+              quantity: item.quantity,
+              salePrice: item.salePrice,
+              shopId: item.shopId,
+              selectedOptions: item.selectedOptions || {},
+            }))
+          );
+          if (existingCart === normalizedCart) {
+            return res.status(200).json({ sessionId: key.split(":")[1] });
+          } else {
+            await redis.del(key);
+          }
+        }
+      }
+    }
+
+    const uniqueShopIds = [...new Set(cart.map((item: any) => item.shopId as string))];
+
+    const shops = await prisma.shop.findMany({
+      where: { id: { in: uniqueShopIds } },
+      select: {
+        id: true,
+        sellerId: true,
+        sellers: { select: { stripeId: true, paypalEmail: true } },
+      },
+    });
+
+    const sellerData = shops.map((shop) => ({
+      shopId: shop.id,
+      sellerId: shop.sellerId,
+      stripeAccountId: shop.sellers.stripeId,
+      paypalEmail: shop.sellers.paypalEmail, // ← PayPal seller email
+    }));
+
+    const totalAmount = cart.reduce((total: number, item: any) => total + item.quantity * item.salePrice, 0);
+
+    const sessionId = crypto.randomUUID();
+    const sessionData = {
+      userId,
+      cart,
+      sellers: sellerData,
+      totalAmount,
+      shippingAddressId: selectedAddressId || null,
+      coupon: coupon || null,
+      paymentMethod: "paypal",
+    };
+
+    await redis.setex(`payment-session:${sessionId}`, 600, JSON.stringify(sessionData));
+
+    return res.status(201).json({ sessionId });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// ─────────────────────────────────────────────
+// PAYPAL: Create Order (redirects buyer to PayPal)
+// ─────────────────────────────────────────────
+export async function createPayPalOrderHandler(req: any, res: Response, next: NextFunction) {
+  const { sessionId } = req.body;
+  const userId = req.user?.id;
+
+  try {
+    const sessionKey = `payment-session:${sessionId}`;
+    const sessionData = await redis.get(sessionKey);
+
+    if (!sessionData) {
+      return next(new ValidationError("Payment session expired or not found."));
+    }
+
+    const { totalAmount, sellers, coupon } = JSON.parse(sessionData);
+
+    const amount = coupon?.discountAmount ? totalAmount - coupon.discountAmount : totalAmount;
+
+    // Use first seller's PayPal email (for multi-shop, loop and create multiple orders)
+    const sellerPayPalEmail = sellers[0]?.paypalEmail ?? process.env.PAYPAL_PLATFORM_EMAIL!;
+
+    if (!sellerPayPalEmail) {
+      throw new Error("No seller PayPal email configured.");
+    }
+
+    const { orderId, approveUrl } = await createPayPalOrder(amount, sessionId, userId, sellerPayPalEmail);
+
+    // Store PayPal orderId in Redis session for capture step
+    const updated = { ...JSON.parse(sessionData), paypalOrderId: orderId };
+    await redis.setex(sessionKey, 600, JSON.stringify(updated));
+
+    return res.status(200).json({ orderId, approveUrl });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// ─────────────────────────────────────────────
+// PAYPAL: Capture Payment (called after buyer returns)
+// ─────────────────────────────────────────────
+export async function capturePayPalPayment(req: any, res: Response, next: NextFunction) {
+  const { paypalOrderId, sessionId } = req.body;
+
+  try {
+    const captureData = await capturePayPalOrder(paypalOrderId);
+
+    if (captureData.status !== "COMPLETED") {
+      return res.status(400).json({ error: "Payment not completed", status: captureData.status });
+    }
+
+    // Extract metadata stored in custom_id
+    const customId = captureData.purchase_units?.[0]?.payments?.captures?.[0].custom_id;
+    const { userId } = JSON.parse(customId);
+
+    // Reuse the shared processOrder function from your webhook handler
+    await processOrder(
+      {
+        metadata: { sessionId, userId, paymentMethod: "paypal" },
+        id: paypalOrderId,
+      } as any,
+      sessionId,
+      userId,
+      "paypal"
+    );
+
+    return res.status(200).json({ success: true, captureData });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// ─────────────────────────────────────────────
+// PAYPAL: Webhook handler (IPN alternative)
+// Handles async events like disputes, refunds
+// ─────────────────────────────────────────────
+export async function paypalWebhook(req: any, res: Response, next: NextFunction) {
+  try {
+    const isValid = await verifyPayPalWebhook(req.headers as Record<string, string>, req.rawBody);
+
+    if (!isValid) {
+      return res.status(400).json({ error: "Invalid webhook signature" });
+    }
+
+    const event = JSON.parse(req.rawBody);
+
+    if (event.event_type === "PAYMENT.CAPTURE.COMPLETED") {
+      const resource = event.resource;
+      const customId = resource.custom_id;
+
+      if (customId) {
+        const { sessionId, userId } = JSON.parse(customId);
+
+        // Only process if not already handled by capturePayPalPayment()
+        const sessionKey = `payment-session:${sessionId}`;
+        const sessionData = await redis.get(sessionKey);
+
+        if (sessionData) {
+          await processOrder({ metadata: { sessionId, userId, paymentMethod: "paypal" } } as any, sessionId, userId, "paypal");
+        }
+      }
+    }
+
+    return res.status(200).json({ received: true });
+  } catch (error) {
+    return next(error);
   }
 }

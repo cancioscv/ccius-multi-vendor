@@ -114,6 +114,7 @@ model Seller {
   updatedAt   DateTime  @updatedAt
   isDeleted   Boolean   @default(false)
   deletedAt   DateTime?
+  paypalEmail String?
 }
 
 model Shop {

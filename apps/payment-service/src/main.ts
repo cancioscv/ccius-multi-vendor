@@ -3,8 +3,11 @@ import express, { NextFunction, Request, Response } from "express";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import cors from "cors";
-import klarnaRouter from "./routes/payment.routes.js";
-import { createOrder } from "./controller/payment.controller.js";
+import paymentRouter from "./routes/payment.routes.js";
+import {
+  createOrder,
+  //  paypalWebhook
+} from "./controller/payment.controller.js";
 
 const app = express();
 
@@ -30,11 +33,21 @@ app.post(
   createOrder
 );
 
+// app.post(
+//   "/paypal/webhook",
+//   bodyParser.raw({ type: "application/json" }),
+//   (req, res, next) => {
+//     (req as any).rawBody = req.body;
+//     next();
+//   },
+//   paypalWebhook
+// );
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use("/api", klarnaRouter);
+app.use("/api", paymentRouter);
 
 // Start
 const port = process.env.PORT || 6009;

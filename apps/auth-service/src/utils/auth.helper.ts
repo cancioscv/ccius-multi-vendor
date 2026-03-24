@@ -6,11 +6,11 @@ import { sendEmail } from "./sendMail/index.js";
 import { prisma, UserRole } from "@e-com/db";
 
 export function validateRegistrationData(data: any, userType: "USER" | "SELLER") {
-  const { name, email, password, phoneNumber, country } = data;
+  const { name, email, paypalEmail, password, phoneNumber, country } = data;
 
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-  if (!name || !email || !password || (userType === UserRole.SELLER && (!phoneNumber || !country))) {
+  if (!name || !email || !paypalEmail || !password || (userType === UserRole.SELLER && (!phoneNumber || !country))) {
     throw new ValidationError("Missing required fields");
   }
 

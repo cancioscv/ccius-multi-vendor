@@ -13,6 +13,7 @@ import CreateShop from "@/shared/module/auth/create-shop";
 type FormData = {
   name: string;
   email: string;
+  paypalEmail: string;
   phoneNumber: number;
   country: string;
   password: string;
@@ -181,6 +182,24 @@ export default function SignupPage() {
                   })}
                 />
                 {errors.email && <p className="text-red-500 text-sm">{String(errors.email.message)}</p>}
+
+                <label htmlFor="paypalEmail" className="block text-gray-700 mb-1 mt-2">
+                  PayPal Email
+                </label>
+                <input
+                  id="paypalEmail"
+                  type="email"
+                  placeholder="paypal@yourbusiness.com"
+                  className="w-full p-2 border border-gray-300 rounded-[4px] mb-1 outline-none"
+                  {...register("paypalEmail", {
+                    required: "Paypal Email is required",
+                    pattern: {
+                      value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+                      message: "Invalid email address",
+                    },
+                  })}
+                />
+                {errors.paypalEmail && <p className="text-red-500 text-sm">{String(errors.paypalEmail.message)}</p>}
 
                 <label htmlFor="phoneNumber" className="block text-gray-700 mb-1 mt-2">
                   Phone Number

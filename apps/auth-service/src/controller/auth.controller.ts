@@ -273,9 +273,9 @@ export async function createSeller(req: Request, res: Response, next: NextFuncti
 // Verify Seller with OTP
 export async function verifySeller(req: Request, res: Response, next: NextFunction) {
   try {
-    const { email, name, password, otp, phoneNumber, country } = req.body;
+    const { email, paypalEmail, name, password, otp, phoneNumber, country } = req.body;
 
-    if (!email || !name || !password || !otp || !phoneNumber || !country) {
+    if (!email || !paypalEmail || !name || !password || !otp || !phoneNumber || !country) {
       return next(new ValidationError("All fields are required."));
     }
 
@@ -290,6 +290,7 @@ export async function verifySeller(req: Request, res: Response, next: NextFuncti
     const sellerData: any = {
       name,
       email,
+      paypalEmail,
       password: hashedPassword,
       phoneNumber,
       country,
