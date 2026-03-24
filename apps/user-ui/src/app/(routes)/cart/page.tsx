@@ -153,185 +153,6 @@ export default function CartPage() {
     }
   }, [addresses, selectedAddressId]);
 
-  // return (
-  //   <div className="w-full bg-white">
-  //     <div className="md:w-[80%] w-[95%] mx-auto min-h-screen">
-  //       <div className="pb-[50px]">
-  //         <h1 className="md:pt-[50px] font-medium text-[44px] leading-[1] mb-[16px] font-jost">Shopping Cart</h1>
-  //         <Link href={"/"} className="text-[#55585b] hover:underline">
-  //           Home
-  //         </Link>
-  //         <span className="inline-block p-[1.5px] mx-1 bg-[#a8acb0] rounded-full"></span>
-  //         <span className="text-[#55585b]">Cart</span>
-  //       </div>
-
-  //       {cart.length === 0 ? (
-  //         <div className="text-center text-gray-600 text-lg">Your cart is empty! Start adding products.</div>
-  //       ) : (
-  //         <div className="lg:flex items-start gap-10">
-  //           <table className="w-full lg:w-[70%] border-collapse">
-  //             <thead className="bg-[#f1f3f4] rounded">
-  //               <tr>
-  //                 <th className="py-3 text-left pl-6 align-middle">Product</th>
-  //                 <th className="py-3 text-center align-middle">Price</th>
-  //                 <th className="py-3 text-center align-middle">Quantity</th>
-  //                 <th className="py-3 text-center align-middle"></th>
-  //               </tr>
-  //             </thead>
-  //             <tbody>
-  //               {cart?.map((item: any) => (
-  //                 <tr key={item.id} className="border-b border-b-[#0000000e]">
-  //                   <td className="flex items-center gap-4 p-4">
-  //                     <Image
-  //                       src={(item?.images as Record<string, any>)[0]?.url || "/placeholder.png"}
-  //                       alt={item.title}
-  //                       width={80}
-  //                       height={80}
-  //                       className="rounded"
-  //                     />
-
-  //                     <div className="flex flex-col">
-  //                       <span className="font-medium">{item.title}</span>
-  //                       {item?.selectedOptions && (
-  //                         <div className="text-sm text-gray-500">
-  //                           {item?.selectedOptions?.color && (
-  //                             <span>
-  //                               Color: {}
-  //                               <span
-  //                                 style={{
-  //                                   backgroundColor: item?.selectedOptions?.color,
-  //                                   width: "12px",
-  //                                   height: "12px",
-  //                                   borderRadius: "100%",
-  //                                   display: "inline-block",
-  //                                   border: "1px solid #a6a6a6",
-  //                                 }}
-  //                               />
-  //                             </span>
-  //                           )}
-  //                           {item?.selectedOptions.size && <span className="ml-2">Size: {item?.selectedOptions?.size}</span>}
-  //                         </div>
-  //                       )}
-  //                     </div>
-  //                   </td>
-  //                   <td className="px-6 text-lg text-center">
-  //                     {item?.id === discountedProductId ? (
-  //                       <div className="flex flex-col items-center">
-  //                         <span className="line-through text-gray-500 text-sm">${item.salePrice.toFixed(2)}</span>{" "}
-  //                         <span className="text-green-600 font-semibold">${((item.salePrice * (100 - discountPercent)) / 100).toFixed(2)}</span>
-  //                         <span className="text-xs text-green-700 bg-green-100 px-2 py-[2px] rounded-full mt-1">Discount Applied</span>
-  //                       </div>
-  //                     ) : (
-  //                       <span>${item.salePrice.toFixed(2)}</span>
-  //                     )}
-  //                   </td>
-  //                   <td>
-  //                     <div className="flex justify-center items-center border border-gray-200 rounded-[20px] w-[100px] mx-auto p-[6px]">
-  //                       <button className="text-[#000] cursor-pointer text-xl" onClick={() => decreaseQuantity(item.id)}>
-  //                         -
-  //                       </button>
-  //                       <span className="px-4">{item.quantity}</span>
-  //                       <button className="text-[#000] cursor-pointer text-xl" onClick={() => increaseQuantity(item.id)}>
-  //                         +
-  //                       </button>
-  //                     </div>
-  //                   </td>
-  //                   <td className="text-center">
-  //                     <button
-  //                       className="text-[#818487] cursor-pointer hover:text-[#ff1826] transition duration-200"
-  //                       onClick={() => removeFromCart(item?.id, user, location, deviceInfo)}
-  //                     >
-  //                       ✕ Remove
-  //                     </button>
-  //                   </td>
-  //                 </tr>
-  //               ))}
-  //             </tbody>
-  //           </table>
-
-  //           <div className="p-6 shadow-md w-full lg:w-[30%] bg-[#f9f9ff9] rounded-lg">
-  //             {discountAmount > 0 && (
-  //               <div className="flex justify-between items-center text-[#010f1c] text-base font-medium pb-1">
-  //                 <span className="font-jost">Discount ({discountPercent}%)</span>
-  //                 <span className="text-green-600">- ${discountAmount.toFixed(2)}</span>
-  //               </div>
-  //             )}
-
-  //             <div className="flex justify-between items-center text-[#010f1c] text-[20px] font-[550] pb-3">
-  //               <span className="font-jost">Subtotal</span>
-  //               <span>${(subTotal - discountAmount).toFixed(2)}</span>
-  //             </div>
-  //             <hr className="my-4 text-slate-200" />
-
-  //             <div className="mb-4">
-  //               <h4 className="mb-[7px] font-[500] text-[15px]">Have a Coupon?</h4>
-  //               <div className="flex">
-  //                 <input
-  //                   type="text"
-  //                   value={couponCode}
-  //                   onChange={(e: any) => setCouponCode(e.target.value)}
-  //                   placeholder="Enter coupon code"
-  //                   className="w-full p-2 border border-gray-200 rounded-l-md focus:outline-none focus:border-blue-500"
-  //                 />
-  //                 <button
-  //                   className="bg-blue-500 cursor-pointer text-white px-4 rounded-r-md hover:bg-blue-600 transition-all"
-  //                   onClick={() => applyCouponCode()}
-  //                 >
-  //                   Apply
-  //                 </button>
-  //               </div>
-  //               {error && <p className="text-sm pt-2 text-red-500">{error}</p>}
-  //               <hr className="my-4 text-slate-200" />
-
-  //               <div className="mb-4">
-  //                 <h4 className="mb-[7px] font-medium text-[15px]">Select Shipping Address</h4>
-  //                 {addresses?.length !== 0 && (
-  //                   <select
-  //                     className="w-full p-2 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500"
-  //                     value={selectedAddressId}
-  //                     onChange={(e: any) => setSelectedAddressId(e.target.value)}
-  //                   >
-  //                     {addresses?.map((address: any) => (
-  //                       <option key={address.id} value={address.id}>
-  //                         {address.street}, {address.zip} — {address.city}, {address.country}
-  //                       </option>
-  //                     ))}
-  //                   </select>
-  //                 )}
-  //                 {addresses?.length === 0 && <p className="text-sm text-slate-800">Please add an address from profile to create an order!</p>}
-  //               </div>
-  //               <hr className="my-4 text-slate-200" />
-
-  //               <div className="mb-4">
-  //                 <h4 className="mb-[7px] font-[500] text-[15px]">Select Payment Method</h4>
-  //                 <select className="w-full p-2 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500">
-  //                   <option value="credit_card">Online Payment</option>
-  //                   <option value="cash_on_delivery">Cash on Delivery</option>
-  //                 </select>
-  //               </div>
-  //               <hr className="my-4 text-slate-200" />
-
-  //               <div className="flex justify-between items-center text-[#010f1c] text-[20px] font-[550] pb-3">
-  //                 <span className="font-jost">Total</span>
-  //                 <span>${(subTotal - discountAmount).toFixed(2)}</span>
-  //               </div>
-
-  //               <button
-  //                 onClick={createPaymentSession}
-  //                 disabled={loading}
-  //                 className="w-full flex items-center justify-center gap-2 cursor-pointer mt-4 py-3 bg-[#010f1c] text-white hover:bg-[#0989FF] transition-all rounded-lg"
-  //               >
-  //                 {loading && <Loader2 className="animate-spin w-5 h-5" />}
-  //                 {loading ? "Redirecting..." : "Proceed to Checkout"}
-  //               </button>
-  //             </div>
-  //           </div>
-  //         </div>
-  //       )}
-  //     </div>
-  //   </div>
-  // );
-
   return (
     <div className="w-full min-h-screen bg-[#f7f7fb]">
       <style>{`
@@ -568,41 +389,24 @@ export default function CartPage() {
               {/* ── Payment Method Selector ── */}
               <div className="bg-white rounded-2xl shadow-sm p-6">
                 <h3 className="font-semibold text-[#1a1a2e] text-sm mb-3">Payment Method</h3>
-                <div className="flex gap-3">
+
+                <div className="flex flex-col gap-3">
                   {/* Stripe Card */}
-                  <div
-                    className={`payment-card ${paymentMethod === "stripe" ? "selected" : ""}`}
-                    onClick={() => setPaymentMethod("stripe")}
-                    role="button"
-                    aria-pressed={paymentMethod === "stripe"}
-                  >
+                  <div className={`payment-card ${paymentMethod === "stripe" ? "selected" : ""}`} onClick={() => setPaymentMethod("stripe")}>
                     <div className="w-8 h-8 rounded-lg bg-[#7b4fff]/10 flex items-center justify-center flex-shrink-0">
                       <CreditCard className="w-4 h-4 text-[#7b4fff]" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-[#1a1a2e]">Card</p>
-                      <p className="text-[11px] text-[#9090b0]">Stripe</p>
+                      <p className="text-[11px] text-[#9090b0]">Stripe · Visa, Mastercard</p>
                     </div>
-                    <div
-                      className={`ml-auto w-4 h-4 rounded-full border-2 flex-shrink-0 transition-all ${
-                        paymentMethod === "stripe" ? "border-[#7b4fff] bg-[#7b4fff]" : "border-[#d0d0e8]"
-                      }`}
-                    >
-                      {paymentMethod === "stripe" && (
-                        <svg viewBox="0 0 16 16" fill="none" className="w-full h-full">
-                          <circle cx="8" cy="8" r="8" fill="#7b4fff" />
-                          <path d="M5 8l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      )}
-                    </div>
+                    <RadioDot selected={paymentMethod === "stripe"} color="#7b4fff" />
                   </div>
 
                   {/* Klarna Card */}
                   <div
                     className={`payment-card klarna-card ${paymentMethod === "klarna" ? "selected" : ""}`}
                     onClick={() => setPaymentMethod("klarna")}
-                    role="button"
-                    aria-pressed={paymentMethod === "klarna"}
                   >
                     <div className="w-8 h-8 rounded-lg bg-[#ffb3c6]/30 flex items-center justify-center flex-shrink-0">
                       {/* Klarna K logo */}
@@ -614,18 +418,7 @@ export default function CartPage() {
                       <p className="text-sm font-semibold text-[#1a1a2e]">Klarna</p>
                       <p className="text-[11px] text-[#9090b0]">Buy now, pay later</p>
                     </div>
-                    <div
-                      className={`ml-auto w-4 h-4 rounded-full border-2 flex-shrink-0 transition-all ${
-                        paymentMethod === "klarna" ? "border-[#ff85a1] bg-[#ff85a1]" : "border-[#d0d0e8]"
-                      }`}
-                    >
-                      {paymentMethod === "klarna" && (
-                        <svg viewBox="0 0 16 16" fill="none" className="w-full h-full">
-                          <circle cx="8" cy="8" r="8" fill="#ff85a1" />
-                          <path d="M5 8l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      )}
-                    </div>
+                    <RadioDot selected={paymentMethod === "klarna"} color="#ff85a1" />
                   </div>
 
                   {/* PayPal Card */}
@@ -648,14 +441,12 @@ export default function CartPage() {
                     <RadioDot selected={paymentMethod === "paypal"} color="#003087" />
                   </div>
                 </div>
-
                 {/* Klarna info badge */}
                 {paymentMethod === "klarna" && (
                   <div className="mt-3 p-3 bg-[#fff5f8] border border-[#ffb3c6] rounded-xl text-xs text-[#c44569] leading-relaxed">
                     <strong>Klarna note:</strong> Prices are charged in <strong>EUR</strong>. Your cart total will be converted automatically.
                   </div>
                 )}
-
                 {/* PayPal info badge */}
                 {paymentMethod === "paypal" && (
                   <div className="mt-3 p-3 bg-[#f0f4ff] border border-[#b3c6ff] rounded-xl text-xs text-[#003087] leading-relaxed">

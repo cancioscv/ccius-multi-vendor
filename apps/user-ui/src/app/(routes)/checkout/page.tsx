@@ -59,8 +59,6 @@ export default function CheckoutPage() {
           sessionId,
         });
 
-        console.log("INTENT ENDPOINT", intentRes);
-
         setClientSecret(intentRes.data.clientSecret);
         setCurrency(intentRes.data.currency ?? "eur");
       } catch (err: any) {

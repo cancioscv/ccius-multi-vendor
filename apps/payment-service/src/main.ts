@@ -19,9 +19,6 @@ app.get("/api", (req, res) => {
   res.send({ message: "Welcome to payment-service!" });
 });
 
-// IMPORTANT: Webhooks need raw body — register before express.json()
-// app.use("/api/klarna/webhooks", express.raw({ type: "application/json" }));
-
 // For Stripe for communicating with the Server properly
 app.post(
   "/api/create-order",

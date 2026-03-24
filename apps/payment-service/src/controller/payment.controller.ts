@@ -481,18 +481,9 @@ export async function createPayPalOrderHandler(req: any, res: Response, next: Ne
       return next(new ValidationError("Payment session expired or not found."));
     }
 
-    const { totalAmount, sellers, coupon } = JSON.parse(sessionData);
+    const { totalAmount, coupon } = JSON.parse(sessionData);
 
-    const amount = coupon?.discountAmount ? totalAmount - coupon.discountAmount : totalAmount;
-
-    // Use first seller's PayPal email (for multi-shop, loop and create multiple orders)
-    const sellerPayPalEmail = sellers[0]?.paypalEmail ?? process.env.PAYPAL_PLATFORM_EMAIL!;
-
-    if (!sellerPayPalEmail) {
-      throw new Error("No seller PayPal email configured.");
-    }
-
-    const { orderId, approveUrl } = await createPayPalOrder(amount, sessionId, userId, sellerPayPalEmail);
+    const { orderId, approveUrl } = await createPayPalOrder(sessionId, userId, totalAmount, coupon);
 
     // Store PayPal orderId in Redis session for capture step
     const updated = { ...JSON.parse(sessionData), paypalOrderId: orderId };
@@ -510,15 +501,31 @@ export async function createPayPalOrderHandler(req: any, res: Response, next: Ne
 export async function capturePayPalPayment(req: any, res: Response, next: NextFunction) {
   const { paypalOrderId, sessionId } = req.body;
 
+  console.log("Capture attempt — paypalOrderId:", paypalOrderId, "sessionId:", sessionId);
+
+  if (!paypalOrderId) {
+    return next(new ValidationError("PayPal order ID is required."));
+  }
+
+  if (!sessionId) {
+    return next(new ValidationError("Session ID is required."));
+  }
+
   try {
     const captureData = await capturePayPalOrder(paypalOrderId);
 
     if (captureData.status !== "COMPLETED") {
-      return res.status(400).json({ error: "Payment not completed", status: captureData.status });
+      return res.status(400).json({ error: "Payment not completed", status: captureData.status, details: captureData });
     }
 
     // Extract metadata stored in custom_id
-    const customId = captureData.purchase_units?.[0]?.payments?.captures?.[0].custom_id;
+    const customId = captureData.purchase_units?.[0]?.payments?.captures?.[0].custom_id ?? captureData.purchase_units?.[0]?.custom_id;
+
+    if (!customId) {
+      console.error("No custom_id found in capture response:", JSON.stringify(captureData, null, 2));
+      return next(new Error("Missing custom_id in PayPal capture response."));
+    }
+
     const { userId } = JSON.parse(customId);
 
     // Reuse the shared processOrder function from your webhook handler

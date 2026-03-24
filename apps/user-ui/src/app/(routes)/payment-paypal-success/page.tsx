@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import axiosInstance from "@/utils/axiosInstance";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { useCartStore } from "@/store";
 
 export default function PaymentSuccessPage() {
   const searchParams = useSearchParams();
@@ -16,6 +17,20 @@ export default function PaymentSuccessPage() {
 
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("");
+
+  // Clear cart
+  useEffect(() => {
+    useCartStore.setState({ cart: [] });
+  }, []);
+
+  // Add a guard before calling capture
+  if (!paypalOrderId) {
+    setStatus("error");
+    setMessage("Missing PayPal order ID. Please contact support.");
+    return;
+  }
+
+  console.log("Capturing PayPal order:", paypalOrderId);
 
   useEffect(() => {
     if (cancelled) {
