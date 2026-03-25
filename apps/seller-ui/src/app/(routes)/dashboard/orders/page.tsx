@@ -26,7 +26,7 @@ export default function OrdersPage() {
       {
         accessorKey: "id",
         header: "Order ID",
-        cell: ({ row }: any) => <span className="text-white text-sm truncate">#{row.original.id.slice(-6).toUpperCase()}</span>,
+        cell: ({ row }: any) => <span className="text-white text-sm truncate">#{row.original.id?.slice(-6).toUpperCase()}</span>,
       },
       {
         accessorKey: "user.name",
@@ -50,6 +50,11 @@ export default function OrdersPage() {
             {row.original.paymentStatus}
           </span>
         ),
+      },
+      {
+        accessorKey: "paymentMethod",
+        header: "Payment Method",
+        cell: ({ row }: any) => <span>{row.original.paymentMethod}</span>,
       },
       {
         accessorKey: "createdAt",

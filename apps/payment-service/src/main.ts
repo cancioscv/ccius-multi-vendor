@@ -15,6 +15,11 @@ const app = express();
 app.use(cors({ origin: process.env.NEXT_PUBLIC_APP_URL, credentials: true }));
 app.use(cookieParser());
 
+// Increase JSON payload limit to 10MB
+app.use(express.json({ limit: "10mb" }));
+// Increase URL-encoded payload limit to 10MB and set extended to true
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
+
 app.get("/api", (req, res) => {
   res.send({ message: "Welcome to payment-service!" });
 });

@@ -6,6 +6,7 @@ import stripe from "../utils/stripe.js";
 import { sendEmail } from "../utils/send-email/index.js";
 import { getKlarnaCurrency } from "../utils/klarna.js";
 import { capturePayPalOrder, createPayPalOrder, verifyPayPalWebhook } from "../utils/paypal.js";
+import { getPayPalCurrency } from "../utils/paypalCurrency.js";
 
 // ─────────────────────────────────────────────
 // KLARNA: Create Payment Intent (mirrors createPaymentIntent)
@@ -481,15 +482,37 @@ export async function createPayPalOrderHandler(req: any, res: Response, next: Ne
       return next(new ValidationError("Payment session expired or not found."));
     }
 
-    const { totalAmount, coupon } = JSON.parse(sessionData);
+    const { totalAmount, coupon, cart } = JSON.parse(sessionData);
 
-    const { orderId, approveUrl } = await createPayPalOrder(sessionId, userId, totalAmount, coupon);
+    const uniqueShopIds = [...new Set(cart.map((item: any) => item.shopId as string))] as any;
+
+    const shops = await prisma.shop.findMany({
+      where: { id: { in: uniqueShopIds } },
+      select: {
+        id: true,
+        sellers: {
+          select: {
+            paypalEmail: true,
+            country: true,
+          },
+        },
+      },
+    });
+
+    // Derive currency from the first seller's country
+    // (for a single-vendor cart this is exact;
+    //  for multi-vendor all sellers should be in the same country —
+    //  if cross-border, default to USD as the common denominator)
+    const sellerCountry = shops[0]?.sellers?.country;
+    const currency = getPayPalCurrency(sellerCountry);
+
+    const { orderId, approveUrl } = await createPayPalOrder(sessionId, userId, totalAmount, coupon, currency);
 
     // Store PayPal orderId in Redis session for capture step
-    const updated = { ...JSON.parse(sessionData), paypalOrderId: orderId };
+    const updated = { ...JSON.parse(sessionData), paypalOrderId: orderId, currency };
     await redis.setex(sessionKey, 600, JSON.stringify(updated));
 
-    return res.status(200).json({ orderId, approveUrl });
+    return res.status(200).json({ orderId, approveUrl, currency });
   } catch (error) {
     return next(error);
   }

@@ -38,7 +38,8 @@ export async function createPayPalOrder(
   userId: string,
 
   totalAmount: number,
-  coupon: any
+  coupon: any,
+  currency: string = "USD"
 ): Promise<{ orderId: string; approveUrl: string }> {
   const token = await getPayPalAccessToken();
 
@@ -53,7 +54,7 @@ export async function createPayPalOrder(
         reference_id: sessionId,
         custom_id: JSON.stringify({ sessionId, userId }),
         amount: {
-          currency_code: "USD",
+          currency_code: currency,
           value: total,
         },
         // No payee, no payment_instruction — full amount to your platform
