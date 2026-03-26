@@ -187,15 +187,75 @@ export async function createOrder(req: any, res: Response, next: NextFunction) {
       return res.status(400).send(`Webhook Error: ${error.message}`);
     }
 
-    if (event.type === "payment_intent.succeeded") {
+    const { type } = event;
+
+    // ── payment_intent.succeeded handles card, Klarna AND SEPA ──
+
+    if (type === "payment_intent.succeeded") {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
       const { sessionId, userId, paymentMethod } = paymentIntent.metadata;
 
       // ── Route to the correct order processor ──
       if (paymentMethod === "klarna") {
         await processOrder(paymentIntent, sessionId, userId, "klarna");
+      } else if (paymentMethod === "sepa") {
+        await processOrder(paymentIntent, sessionId, userId, "sepa");
       } else {
         await processOrder(paymentIntent, sessionId, userId, "card");
+      }
+    }
+
+    // ── SEPA-specific: payment processing (debit initiated, not yet settled) ──
+    if (type === "payment_intent.processing") {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      const { sessionId, userId } = paymentIntent.metadata;
+
+      if (paymentIntent.metadata.paymentMethod === "sepa") {
+        // Update order status to PROCESSING in DB
+        // The order was already created optimistically — just update status
+        console.log(`SEPA payment processing for session ${sessionId}`);
+
+        await prisma.order.updateMany({
+          where: {
+            userId,
+            paymentStatus: PaymentStatus.PENDING,
+          },
+          data: {
+            paymentStatus: PaymentStatus.PROCESSING,
+          },
+        });
+
+        // Notify user that SEPA debit is initiated
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (user?.email) {
+          await sendEmail(user.email, "Your SEPA payment is being processed", "sepa-processing-email", {
+            name: user.name,
+            message: "Your bank transfer has been initiated. It typically takes 1–5 business days to complete.",
+          });
+        }
+      }
+    }
+
+    // ── SEPA-specific: payment failed after processing ──
+    if (type === "payment_intent.payment_failed") {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      const { sessionId, userId } = paymentIntent.metadata;
+
+      if (paymentIntent.metadata.paymentMethod === "sepa") {
+        console.error(`SEPA payment failed for session ${sessionId}`);
+
+        await prisma.order.updateMany({
+          where: { userId, paymentStatus: PaymentStatus.PROCESSING },
+          data: { paymentStatus: PaymentStatus.FAILED },
+        });
+
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (user?.email) {
+          await sendEmail(user.email, "Your SEPA payment failed", "sepa-failed-email", {
+            name: user.name,
+            message: "Your bank transfer could not be completed. Please try again or use a different payment method.",
+          });
+        }
       }
     }
 
@@ -210,7 +270,12 @@ export async function createOrder(req: any, res: Response, next: NextFunction) {
 // SHARED: processOrder — handles both Stripe card & Klarna
 // Extracted from your original createOrder to avoid duplication
 // ─────────────────────────────────────────────
-async function processOrder(paymentIntent: Stripe.PaymentIntent, sessionId: string, userId: string, paymentMethod: "card" | "klarna" | "paypal") {
+async function processOrder(
+  paymentIntent: Stripe.PaymentIntent,
+  sessionId: string,
+  userId: string,
+  paymentMethod: "card" | "klarna" | "paypal" | "sepa"
+) {
   const sessionKey = `payment-session:${sessionId}`;
   const sessionData = (await redis.get(sessionKey)) as any;
 
@@ -600,6 +665,173 @@ export async function paypalWebhook(req: any, res: Response, next: NextFunction)
     }
 
     return res.status(200).json({ received: true });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// ─────────────────────────────────────────────
+// SEPA: Create Payment Session
+// Mirrors Klarna session — tagged for SEPA
+// ─────────────────────────────────────────────
+export async function createSepaPaymentSession(req: any, res: Response, next: NextFunction) {
+  const { cart, selectedAddressId, coupon } = req.body;
+  const userId = req.user?.id;
+
+  try {
+    if (!cart || !Array.isArray(cart) || cart.length === 0) {
+      return next(new ValidationError("Cart is empty or invalid."));
+    }
+
+    const normalizedCart = JSON.stringify(
+      cart.map((item: any) => ({
+        id: item.id,
+        quantity: item.quantity,
+        salePrice: item.salePrice,
+        shopId: item.shopId,
+        selectedOptions: item.selectedOptions || {},
+      }))
+    );
+
+    // Reuse existing session if cart matches
+    const keys = await redis.keys("payment-session:*");
+    for (const key of keys) {
+      const data = await redis.get(key);
+      if (data) {
+        const session = JSON.parse(data);
+        if (session.userId === userId && session.paymentMethod === "sepa") {
+          const existingCart = JSON.stringify(
+            session.cart.map((item: any) => ({
+              id: item.id,
+              quantity: item.quantity,
+              salePrice: item.salePrice,
+              shopId: item.shopId,
+              selectedOptions: item.selectedOptions || {},
+            }))
+          );
+          if (existingCart === normalizedCart) {
+            return res.status(200).json({ sessionId: key.split(":")[1] });
+          } else {
+            await redis.del(key);
+          }
+        }
+      }
+    }
+
+    const uniqueShopIds = [...new Set(cart.map((item: any) => item.shopId as string))];
+
+    const shops = await prisma.shop.findMany({
+      where: { id: { in: uniqueShopIds } },
+      select: {
+        id: true,
+        sellerId: true,
+        sellers: { select: { stripeId: true } },
+      },
+    });
+
+    const sellerData = shops.map((shop) => ({
+      shopId: shop.id,
+      sellerId: shop.sellerId,
+      stripeAccountId: shop.sellers.stripeId,
+    }));
+
+    const totalAmount = cart.reduce((total: number, item: any) => total + item.quantity * item.salePrice, 0);
+
+    const sessionId = crypto.randomUUID();
+    const sessionData = {
+      userId,
+      cart,
+      sellers: sellerData,
+      totalAmount,
+      shippingAddressId: selectedAddressId || null,
+      coupon: coupon || null,
+      paymentMethod: "sepa",
+    };
+
+    await redis.setex(
+      `payment-session:${sessionId}`,
+      // SEPA mandates can take time — extend session to 1 hour
+      3600,
+      JSON.stringify(sessionData)
+    );
+
+    return res.status(201).json({ sessionId });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// ─────────────────────────────────────────────
+// SEPA: Create Payment Intent
+// SEPA requires EUR + specific setup_future_usage
+// for mandate collection
+// ─────────────────────────────────────────────
+export async function createSepaPaymentIntent(req: any, res: Response, next: NextFunction) {
+  const { amount, sellerStripeAccountId, sessionId } = req.body;
+
+  // SEPA uses EUR only — amounts in cents
+  const customerAmount = Math.round(amount * 100);
+  const platformFee = Math.round(customerAmount * 0.1); // 10% platform fee
+
+  try {
+    if (!sellerStripeAccountId) {
+      return next(new ValidationError("Seller Stripe account ID is required."));
+    }
+
+    const sessionKey = `payment-session:${sessionId}`;
+    const sessionData = await redis.get(sessionKey);
+
+    if (!sessionData) {
+      return next(new ValidationError("Payment session expired or not found."));
+    }
+
+    // Fetch customer — SEPA requires a Stripe Customer with email
+    const { userId } = JSON.parse(sessionData);
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user?.email) {
+      return next(new ValidationError("User email is required for SEPA."));
+    }
+
+    // Find or create Stripe Customer (required for SEPA mandate)
+    let stripeCustomerId = user.stripeCustomerId ?? undefined;
+
+    if (!stripeCustomerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        name: user.name,
+        metadata: { userId },
+      });
+      stripeCustomerId = customer.id;
+
+      // Save for future use
+      await prisma.user.update({
+        where: { id: userId },
+        data: { stripeCustomerId: customer.id },
+      });
+    }
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: customerAmount,
+      currency: "eur", // SEPA is EUR only
+      payment_method_types: ["sepa_debit"],
+      application_fee_amount: platformFee,
+      transfer_data: {
+        destination: sellerStripeAccountId,
+      },
+      customer: stripeCustomerId, // required for SEPA
+      // Saves the mandate for potential future debits
+      setup_future_usage: "off_session",
+      metadata: {
+        sessionId,
+        userId,
+        paymentMethod: "sepa",
+      },
+    });
+
+    return res.status(200).json({
+      clientSecret: paymentIntent.client_secret,
+    });
   } catch (error) {
     return next(error);
   }

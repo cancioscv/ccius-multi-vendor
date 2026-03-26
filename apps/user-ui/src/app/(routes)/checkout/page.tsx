@@ -6,7 +6,7 @@ import { Elements } from "@stripe/react-stripe-js";
 
 import { XCircle } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import CheckoutForm from "@/shared/components/checkout/checkout-form";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
@@ -19,15 +19,21 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
   const [currency, setCurrency] = useState<string>("eur");
 
+  const hasFetched = useRef(false);
+
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const sessionId = searchParams.get("sessionId");
 
   // ← Read paymentMethod from URL (set in CartPage)
-  const paymentMethod = (searchParams.get("paymentMethod") ?? "stripe") as "stripe" | "klarna";
+  const paymentMethod = (searchParams.get("paymentMethod") ?? "stripe") as "stripe" | "klarna" | "sepa";
 
   useEffect(() => {
+    // ── Guard: only run once even in React Strict Mode ──
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+
     const fetchSessionAndClientSecret = async () => {
       if (!sessionId) {
         setError("Invalid session. Please try again.");
@@ -51,9 +57,15 @@ export default function CheckoutPage() {
 
         const amount = coupon?.discountAmount ? totalAmount - coupon.discountAmount : totalAmount;
 
-        const intentEndpoint = paymentMethod === "klarna" ? "/payment/api/create-klarna-payment-intent" : "/order/api/create-payment-intent";
+        const intentEndpointMap: Record<string, string> = {
+          stripe: "/order/api/create-payment-intent",
+          klarna: "/payment/api/create-klarna-payment-intent",
+          sepa: "/payment/api/create-sepa-payment-intent",
+        };
 
-        const intentRes = await axiosInstance.post(intentEndpoint, {
+        const intentEndpoint = intentEndpointMap[paymentMethod];
+
+        const intentRes = await axiosInstance.post(intentEndpoint ?? intentEndpointMap.stripe, {
           amount,
           sellerStripeAccountId,
           sessionId,
@@ -75,7 +87,7 @@ export default function CheckoutPage() {
   const appearance: Appearance = {
     theme: "stripe",
     variables: {
-      colorPrimary: paymentMethod === "klarna" ? "#ff85a1" : "#7b4fff",
+      colorPrimary: paymentMethod === "klarna" ? "#ff85a1" : paymentMethod === "sepa" ? "#1a6b3c" : "#7b4fff",
       borderRadius: "10px",
       fontFamily: "Lato, sans-serif",
     },

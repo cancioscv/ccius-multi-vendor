@@ -18,20 +18,21 @@ model Image {
 }
 
 model User {
-  id          String       @id @default(auto()) @map("_id") @db.ObjectId
-  name        String
-  email       String       @unique
-  password    String?
-  following   String[]
-  avatar      Image?       @relation(fields: [imageId], references: [id])
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  shopReviews ShopReview[]
-  followings  Follower[] // watch this
-  orders      Order[]
-  imageId     String?      @db.ObjectId
-  role        UserRole     @default(USER)
-  reviews     Review[]
+  id               String       @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  email            String       @unique
+  password         String?
+  following        String[]
+  avatar           Image?       @relation(fields: [imageId], references: [id])
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  shopReviews      ShopReview[]
+  followings       Follower[] // watch this
+  orders           Order[]
+  imageId          String?      @db.ObjectId
+  role             UserRole     @default(USER)
+  reviews          Review[]
+  stripeCustomerId String? // required for SEPA mandate
 }
 
 enum UserRole {
@@ -56,6 +57,7 @@ enum PaymentStatus {
   REFUNDED
   FAILED
   CANCELLED
+  PROCESSING // SEPA debit initiated, awaiting settlement
 }
 
 model OrderItem {
@@ -86,7 +88,7 @@ model Order {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
-  paymentMethod String @default("card") // ← "card" | "klarna" | "paypal"
+  paymentMethod String @default("card") // ← "card" | "klarna" | "paypal" | "SEPA"
 }
 
 model ShopReview {

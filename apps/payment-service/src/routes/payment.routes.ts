@@ -9,6 +9,8 @@ import {
   createKlarnaPaymentSession,
   createPayPalOrderHandler,
   createPayPalPaymentSession,
+  createSepaPaymentIntent,
+  createSepaPaymentSession,
   paypalWebhook,
 } from "../controller/payment.controller.js";
 
@@ -24,5 +26,9 @@ router.post("/create-paypal-order", isAuth, createPayPalOrderHandler);
 router.post("/capture-paypal-payment", isAuth, capturePayPalPayment);
 
 router.post("/paypal/webhook", express.raw({ type: "application/json" }), paypalWebhook);
+
+// ── SEPA routes ──
+router.post("/create-sepa-payment-session", isAuth, createSepaPaymentSession);
+router.post("/create-sepa-payment-intent", isAuth, createSepaPaymentIntent);
 
 export default router;

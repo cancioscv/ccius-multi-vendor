@@ -446,3 +446,13 @@ summary svg {
   width: 300px;
   padding: 0.5em 0;
 }
+
+.payment-card.sepa-card.selected {
+  border-color: #6fcf97;
+  background: #f0faf4;
+}
+
+.payment-card.paypal-card.selected {
+  border-color: #003087;
+  background: #f0f8ff;
+}

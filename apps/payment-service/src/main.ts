@@ -11,6 +11,17 @@ import {
 
 const app = express();
 
+// For Stripe for communicating with the Server properly
+app.post(
+  "/api/create-order",
+  bodyParser.raw({ type: "application/json" }),
+  (req, res, next) => {
+    (req as any).rawBody = req.body;
+    next();
+  },
+  createOrder
+);
+
 // Middleware
 app.use(cors({ origin: process.env.NEXT_PUBLIC_APP_URL, credentials: true }));
 app.use(cookieParser());
@@ -23,17 +34,6 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.get("/api", (req, res) => {
   res.send({ message: "Welcome to payment-service!" });
 });
-
-// For Stripe for communicating with the Server properly
-app.post(
-  "/api/create-order",
-  bodyParser.raw({ type: "application/json" }),
-  (req, res, next) => {
-    (req as any).rawBody = req.body;
-    next();
-  },
-  createOrder
-);
 
 // app.post(
 //   "/paypal/webhook",

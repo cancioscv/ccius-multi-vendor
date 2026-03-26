@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-type PaymentMethod = "stripe" | "klarna" | "paypal";
+type PaymentMethod = "stripe" | "klarna" | "paypal" | "sepa";
 export default function CartPage() {
   const { user } = useUser();
   const { location } = useLocationTracking();
@@ -98,6 +98,7 @@ export default function CartPage() {
         stripe: "/order/api/create-payment-session",
         klarna: "/payment/api/create-klarna-payment-session",
         paypal: "/payment/api/create-paypal-payment-session",
+        sepa: "/payment/api/create-sepa-payment-session",
       };
 
       const res = await axiosInstance.post(endpointMap[paymentMethod], {
@@ -106,18 +107,7 @@ export default function CartPage() {
         coupon: couponPayload,
       });
 
-      // const endpoint = paymentMethod === "klarna" ? "/payment/api/create-klarna-payment-session" : "/order/api/create-payment-session";
-
-      // const res = await axiosInstance.post(endpoint, {
-      //   cart,
-      //   selectedAddressId,
-      //   coupon: couponPayload,
-      // });
-
       const sessionId = res.data.sessionId;
-
-      // Pass paymentMethod so CheckoutPage knows which intent to create
-      // router.push(`/checkout?sessionId=${sessionId}&paymentMethod=${paymentMethod}`);
 
       if (paymentMethod === "paypal") {
         // PayPal: create order immediately and redirect to PayPal
@@ -440,6 +430,26 @@ export default function CartPage() {
                     </div>
                     <RadioDot selected={paymentMethod === "paypal"} color="#003087" />
                   </div>
+
+                  {/* SEPA Card */}
+                  <div
+                    className={`payment-card sepa-card ${paymentMethod === "sepa" ? "selected" : ""}`}
+                    onClick={() => setPaymentMethod("sepa")}
+                    role="button"
+                    aria-pressed={paymentMethod === "sepa"}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-[#1a6b3c]/10 flex items-center justify-center flex-shrink-0">
+                      {/* Bank/SEPA icon */}
+                      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="#1a6b3c">
+                        <path d="M2 10h20v2H2v-2zm0 4h20v2H2v-2zM12 2L2 7h20L12 2zM4 18h2v3H4v-3zm6 0h2v3h-2v-3zm6 0h2v3h-2v-3z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-[#1a1a2e]">SEPA Direct Debit</p>
+                      <p className="text-[11px] text-[#9090b0]">Bank transfer · EUR · 1–5 days</p>
+                    </div>
+                    <RadioDot selected={paymentMethod === "sepa"} color="#1a6b3c" />
+                  </div>
                 </div>
                 {/* Klarna info badge */}
                 {paymentMethod === "klarna" && (
@@ -451,6 +461,13 @@ export default function CartPage() {
                 {paymentMethod === "paypal" && (
                   <div className="mt-3 p-3 bg-[#f0f4ff] border border-[#b3c6ff] rounded-xl text-xs text-[#003087] leading-relaxed">
                     <strong>PayPal:</strong> You'll be redirected to PayPal to complete your payment securely.
+                  </div>
+                )}
+                {/* SEPA info badge */}
+                {paymentMethod === "sepa" && (
+                  <div className="mt-3 p-3 bg-[#f0faf4] border border-[#b3e6c8] rounded-xl text-xs text-[#1a6b3c] leading-relaxed">
+                    <strong>SEPA Direct Debit:</strong> EUR only. Your bank account will be debited within <strong>1–5 business days</strong> after
+                    you authorize the mandate.
                   </div>
                 )}
               </div>
@@ -467,10 +484,26 @@ export default function CartPage() {
                   <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor">
                     <path d="M5 3h3v18H5V3zm9 0c0 4.5-2 8-5 10l6.5 8H19l-6-7.5C15.5 11 16.5 7 16.5 3H14z" />
                   </svg>
+                ) : paymentMethod === "sepa" ? (
+                  <svg viewBox="0 0 24 24" className="w-4 h-4" fill="#ffffff">
+                    <path d="M2 10h20v2H2v-2zm0 4h20v2H2v-2zM12 2L2 7h20L12 2zM4 18h2v3H4v-3zm6 0h2v3h-2v-3zm6 0h2v3h-2v-3z" />
+                  </svg>
+                ) : paymentMethod === "paypal" ? (
+                  <svg viewBox="0 0 24 24" className="w-4 h-4" fill="#ffffff">
+                    <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.816-5.09a.932.932 0 0 1 .923-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.777-4.471z" />
+                  </svg>
                 ) : (
                   <CreditCard className="w-5 h-5" />
                 )}
-                {loading ? "Redirecting..." : paymentMethod === "klarna" ? "Continue with Klarna" : "Pay with Card"}
+                {loading
+                  ? "Redirecting..."
+                  : paymentMethod === "klarna"
+                  ? "Continue with Klarna"
+                  : paymentMethod === "sepa"
+                  ? "Continue with SEPA"
+                  : paymentMethod === "paypal"
+                  ? "Pay with Paypal"
+                  : "Pay with Card"}
               </button>
             </div>
           </div>
