@@ -28,13 +28,15 @@ const KLARNA_CURRENCY_MAP: Record<string, string> = {
   // Add more as Klarna expands
 };
 
-export async function getKlarnaCurrency(stripe: Stripe, sellerStripeAccountId: string): Promise<string> {
-  try {
-    const account = await stripe.accounts.retrieve(sellerStripeAccountId);
-    const country = account.country ?? "DE";
-    return KLARNA_CURRENCY_MAP[country] ?? "eur"; // fallback to EUR
-  } catch (err) {
-    console.warn("Could not retrieve seller account country, defaulting to EUR:", err);
-    return "eur";
+// Cache platform country — only fetched once per server lifetime
+let platformCountryCache: string | null = null;
+export async function getKlarnaCurrency(stripe: Stripe): Promise<string> {
+  if (!platformCountryCache) {
+    // Fetch YOUR platform account (no arguments = your own account)
+    const account = await stripe.accounts.retrieve();
+    platformCountryCache = account.country ?? "US";
+    console.log(`Platform account country: ${platformCountryCache}`);
   }
+
+  return KLARNA_CURRENCY_MAP[platformCountryCache] ?? "usd";
 }

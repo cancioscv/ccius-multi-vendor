@@ -45,7 +45,7 @@ export async function createKlarnaPaymentIntent(req: any, res: Response, next: N
       : null;
 
     // ✅ Dynamically resolve the correct currency for this seller's country
-    const currency = await getKlarnaCurrency(stripe, sellerStripeAccountId);
+    const currency = await getKlarnaCurrency(stripe);
     console.log("CURRENCY", currency);
 
     const paymentIntent = await stripe.paymentIntents.create({
