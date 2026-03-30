@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 // import GoogleButton from "react-google-button";
 import { useForm } from "react-hook-form";
@@ -23,6 +23,8 @@ export default function LoginPage() {
   const queryClient = useQueryClient();
   const { setLoggedIn } = useAuthStore();
 
+  const searchParams = useSearchParams();
+
   const router = useRouter();
 
   const {
@@ -40,7 +42,9 @@ export default function LoginPage() {
       setServerError(null);
       setLoggedIn(true); // ✅ mark as logged in
       queryClient.invalidateQueries({ queryKey: ["user"] }); // ✅ force re-fetch
-      router.push("/");
+
+      const callbackUrl = searchParams.get("callbackUrl") || "/";
+      router.push(callbackUrl);
     },
     onError: (error: AxiosError) => {
       const errorMessage = (error.response?.data as { message?: string })?.message || "Invalid credentials";

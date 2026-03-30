@@ -34,7 +34,7 @@ export default function CartPage() {
 
   useEffect(() => {
     if (isLoading && !user) {
-      router.push("/login");
+      router.push("/login?callbackUrl=/cart");
     }
   }, [user, isLoading]);
 
