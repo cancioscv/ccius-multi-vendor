@@ -136,13 +136,13 @@ export async function refreshToken(req: any, res: Response, next: NextFunction) 
     const refreshToken = req.cookies["refresh_token"] || req.cookies["seller_refresh_token"] || req.headers.authorization?.split(" ")[1];
 
     if (!refreshToken) {
-      return new ValidationError("Unauthorized. No refresh token.");
+      return next(new ValidationError("Unauthorized. No refresh token."));
     }
 
     const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!) as { id: string; role: string };
 
     if (!decoded || !decoded.id || !decoded.role) {
-      return next(new JsonWebTokenError("Forbidden!. Invalid refreseh token."));
+      return next(new JsonWebTokenError("Forbidden!. Invalid refresh token."));
     }
 
     // Find user or seller in the db
@@ -155,7 +155,7 @@ export async function refreshToken(req: any, res: Response, next: NextFunction) 
     }
 
     if (!account) {
-      return new AuthError("Forbidden!. User/Seller not found.");
+      return next(new AuthError("Forbidden!. User/Seller not found."));
     }
 
     // Generate new access token

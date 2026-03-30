@@ -1,12 +1,17 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface AuthState {
   isLoggedIn: boolean;
   setLoggedIn: (val: boolean) => void;
 }
 
-// TODO: Remove this duplication from user-ui and seller-ui
-export const useAuthStore = create<AuthState>((set) => ({
-  isLoggedIn: true,
-  setLoggedIn: (val) => set({ isLoggedIn: val }),
-}));
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      isLoggedIn: false,
+      setLoggedIn: (val) => set({ isLoggedIn: val }),
+    }),
+    { name: "auth-storage" } // persists to localStorage
+  )
+);

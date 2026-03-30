@@ -6,7 +6,6 @@ import { useEffect } from "react";
 
 async function fetchSeller() {
   const response = await axiosInstance.get("/api/logged-seller", isProtected);
-
   return response.data.seller;
 }
 
@@ -20,7 +19,7 @@ export default function useSeller() {
     queryKey: ["seller"],
     queryFn: fetchSeller,
     staleTime: 1000 * 60 * 5,
-    retry: 1,
+    retry: false,
     enabled: isLoggedIn,
   });
 
@@ -31,7 +30,7 @@ export default function useSeller() {
     } else if (isError) {
       setLoggedIn(false);
     }
-  }, [isLoggedIn, seller, isError]);
+  }, [seller, isLoggedIn, isError]);
 
   return { seller, isLoading, isError };
 }

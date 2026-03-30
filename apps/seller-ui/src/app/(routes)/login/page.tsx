@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Eye, EyeOff } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
+import { useAuthStore } from "@/store/useAuthStore";
 
 type FormData = {
   email: string;
@@ -16,6 +17,9 @@ export default function LoginPage() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
+
+  const queryClient = useQueryClient();
+  const { setLoggedIn } = useAuthStore();
 
   const router = useRouter();
 
@@ -32,11 +36,14 @@ export default function LoginPage() {
     },
     onSuccess: () => {
       setServerError(null);
+      setLoggedIn(true);
+      queryClient.invalidateQueries({ queryKey: ["seller"] });
       router.push("/");
     },
     onError: (error: AxiosError) => {
       const errorMessage = (error.response?.data as { message?: string })?.message || "Invalid credentials";
       setServerError(errorMessage);
+      setLoggedIn(false);
     },
   });
 
