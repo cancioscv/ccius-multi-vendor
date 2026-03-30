@@ -49,6 +49,8 @@ export default function ProfilePage() {
       const res = await axiosInstance.get(`/order/api/user-orders`);
       return res.data.orders;
     },
+    refetchOnMount: "always", // TODO: This is a temporary fix for SEPA
+    structuralSharing: false, // TODO: This is a temporary fix for SEPA
   });
 
   const totalOrders = orders.length;
