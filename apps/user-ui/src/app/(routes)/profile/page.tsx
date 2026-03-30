@@ -7,6 +7,7 @@ import ChangePassword from "@/shared/components/change-password";
 import OrdersTable from "@/shared/components/orders-table";
 import ShippingAddress from "@/shared/components/shipping-address";
 import NavItem from "@/shared/widgets/nav-item";
+import { useAuthStore } from "@/store/authStore";
 import axiosInstance from "@/utils/axiosInstance";
 import { cn } from "@e-com/ui";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -43,6 +44,8 @@ export default function ProfilePage() {
   const queryTab = searchParams.get("active") || "Profile";
   const [activeTab, setActiveTab] = useState(queryTab);
 
+  const { setLoggedIn } = useAuthStore();
+
   const { data: orders = [] } = useQuery({
     queryKey: ["user-orders"],
     queryFn: async () => {
@@ -59,11 +62,13 @@ export default function ProfilePage() {
   const completedOrders = orders.filter((order: any) => order?.deliveryStatus === "DELIVERED").length;
 
   async function logout() {
-    await axiosInstance.get("/api/logout-user").then((res) => {
-      queryClient.invalidateQueries({ queryKey: ["user"] });
+    await axiosInstance.get("/api/logout-user");
 
-      router.push("/login");
-    });
+    setLoggedIn(false); // ✅ disables the query
+    queryClient.removeQueries({ queryKey: ["user"] }); // ✅ clears cached user data
+    queryClient.removeQueries({ queryKey: ["shipping-addresses"] });
+
+    router.push("/login");
   }
 
   const { data: notifications, isLoading: isLoadingNotifications } = useQuery({

@@ -15,7 +15,7 @@ import { toast } from "react-toastify";
 
 type PaymentMethod = "stripe" | "klarna" | "paypal" | "sepa";
 export default function CartPage() {
-  const { user } = useUser();
+  const { user, isLoading } = useUser();
   const { location } = useLocationTracking();
   const { deviceInfo } = useDeviceTracking();
 
@@ -31,6 +31,12 @@ export default function CartPage() {
   const [storedCouponCode, setStoredCouponCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("stripe");
+
+  useEffect(() => {
+    if (isLoading && !user) {
+      router.push("/login");
+    }
+  }, [user, isLoading]);
 
   function decreaseQuantity(id: string | undefined) {
     useCartStore.setState((state: any) => ({
@@ -134,6 +140,7 @@ export default function CartPage() {
       const res = await axiosInstance.get("/api/shipping-addresses");
       return res.data.addresses;
     },
+    enabled: !!user, // ✅ only fetch when user exists
   });
 
   useEffect(() => {
