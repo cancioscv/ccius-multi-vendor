@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Eye, EyeOff } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
 import { useAuthStore } from "@/store/useAuthStore";
+import useSeller from "@/hooks/useSeller";
 
 type FormData = {
   email: string;
@@ -17,6 +18,14 @@ export default function LoginPage() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
+
+  const { seller } = useSeller();
+
+  useEffect(() => {
+    if (seller) {
+      router.push("/");
+    }
+  }, [seller]);
 
   const queryClient = useQueryClient();
   const { setLoggedIn } = useAuthStore();

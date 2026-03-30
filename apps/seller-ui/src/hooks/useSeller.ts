@@ -20,7 +20,6 @@ export default function useSeller() {
     queryFn: fetchSeller,
     staleTime: 1000 * 60 * 5,
     retry: false,
-    enabled: isLoggedIn,
   });
 
   // Update auth state based on query results
