@@ -23,9 +23,9 @@ router.patch("/restore-shop-seller", isAuth, restoreShopAndSeller);
 router.post("/upload-image", isAuth, uploadImage);
 router.put("/update-profile-picture", isAuth, updateProfilePicture);
 router.put("/edit-seller-shop", isAuth, editSellerShop);
-router.get("/seller-info/:id", getSellerInfo); // TODO: isAuth must be included here.
+router.get("/seller-info/:id", getSellerInfo);
 router.get("/seller-products/:id", getSellerProducts);
-router.get("/seller-offers/:id", isAuth, getSellerOffers);
+router.get("/seller-offers/:id", getSellerOffers);
 router.post("/follow-shop", isAuth, followShop);
 router.post("/unfollow-shop", isAuth, unfollowShop); // Watch: Should not be this delete request?
 router.get("/is-following/:id", isAuth, isFollowing);

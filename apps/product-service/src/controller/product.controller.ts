@@ -721,17 +721,30 @@ export async function getFilteredShops(req: Request, res: Response, next: NextFu
         take: parsedLimit,
         include: {
           // sellers: true, // TODO: Find out why it does not work with this
-          products: true,
+          products: {
+            include: {
+              reviews: true,
+            },
+          },
           followers: true,
         },
       }),
       prisma.shop.count({ where: filters }),
     ]);
 
+    const shopsWithSummarizedReviews = shops.map((shop) => ({
+      ...shop,
+      products: shop.products.map((product) => ({
+        ...product,
+        reviewCount: product.reviews.length,
+        reviewRating: product.reviews.length === 0 ? 0 : product.reviews.reduce((acc, review) => acc + review.rating, 0) / product.reviews.length,
+      })),
+    }));
+
     const totalPages = Math.ceil(total / parsedLimit);
 
     return res.status(200).json({
-      shops,
+      shops: shopsWithSummarizedReviews,
       pagination: {
         total,
         page: parsedPage,

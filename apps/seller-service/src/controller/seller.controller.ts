@@ -244,6 +244,7 @@ export async function getSellerProducts(req: any, res: Response, next: NextFunct
         include: {
           images: true,
           shop: true,
+          reviews: true,
         },
       }),
       prisma.product.count({
@@ -254,9 +255,15 @@ export async function getSellerProducts(req: any, res: Response, next: NextFunct
       }),
     ]);
 
+    const dataWithSummarizedReviews = products.map((product) => ({
+      ...product,
+      reviewCount: product.reviews.length,
+      reviewRating: product.reviews.length === 0 ? 0 : product.reviews.reduce((acc, review) => acc + review.rating, 0) / product.reviews.length,
+    }));
+
     return res.status(200).json({
       success: true,
-      products,
+      products: dataWithSummarizedReviews,
       pagination: {
         total,
         page,

@@ -47,7 +47,7 @@ export default function SellerProfile({ shop, followersCount }: SellerProfile) {
   const { data: products, isLoading } = useQuery({
     queryKey: ["seller-products", params],
     queryFn: () => fetchSellerProducts(params.id),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 0,
   });
 
   async function getFollowStatus() {
