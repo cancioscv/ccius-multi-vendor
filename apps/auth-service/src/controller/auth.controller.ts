@@ -579,10 +579,10 @@ export async function loginAdmin(req: Request, res: Response, next: NextFunction
       return next(new ValidationError("Email and password are required."));
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email, role: UserRole.ADMIN } });
 
     if (!user) {
-      return next(new AuthError("User does not exist."));
+      return next(new AuthError("Admin with that credentials does not exist."));
     }
 
     if (user.password) {
