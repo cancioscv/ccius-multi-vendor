@@ -180,6 +180,7 @@ model Product {
   slug                 String        @unique
   category             String
   subCategory          String
+  productType          String?
   description          String
   detailedDescription  String
   images               Image[]
