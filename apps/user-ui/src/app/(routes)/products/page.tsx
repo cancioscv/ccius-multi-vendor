@@ -4,24 +4,28 @@ import ProductCard from "@/shared/components/cards/product-card";
 import axiosInstance from "@/utils/axiosInstance";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { Range } from "react-range";
 
 const MIN = 0;
 const MAX = 1199;
 export default function ProductsPage() {
   const [isProductLoading, setIsProductLoading] = useState(false);
-  const [priceRange, setPriceRange] = useState([0, 1199]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
-  const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [page, setPage] = useState(1);
+
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [priceRange, setPriceRange] = useState([MIN, MAX]);
+  const [tempPriceRange, setTempPriceRange] = useState([MIN, MAX]);
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [totalPages, setTotalPages] = useState(1);
-  const [tempPriceRange, setTempPriceRange] = useState([0, 1199]);
 
+  const searchParams = useSearchParams();
   const router = useRouter();
+
+  const isNavigatingFromURL = useRef(false);
 
   const colors = [
     { name: "Black", code: "#000000" },
@@ -44,6 +48,36 @@ export default function ProductsPage() {
     },
     staleTime: 1000 * 60 * 30,
   });
+
+  // Effect 1: sync state from URL (nav clicks)
+  useEffect(() => {
+    isNavigatingFromURL.current = true;
+
+    const raw = searchParams.get("categories") || searchParams.get("category");
+    setSelectedCategories(raw ? raw.split(",") : []);
+
+    const rawPrice = searchParams.get("priceRange");
+    const price = rawPrice ? rawPrice.split(",").map(Number) : [MIN, MAX];
+    setPriceRange(price);
+    setTempPriceRange(price);
+
+    setSelectedColors(searchParams.get("colors")?.split(",") ?? []);
+    setSelectedSizes(searchParams.get("sizes")?.split(",") ?? []);
+    setPage(Number(searchParams.get("page")) || 1);
+  }, [searchParams]);
+
+  // Effect 2: fetch + update URL when filter state changes
+  useEffect(() => {
+    // If state was just set from URL, skip updateURL to avoid the loop
+    if (isNavigatingFromURL.current) {
+      isNavigatingFromURL.current = false;
+      fetchFilteredProducts();
+      return;
+    }
+
+    updateURL();
+    fetchFilteredProducts();
+  }, [priceRange, selectedCategories, selectedSizes, selectedColors, page]);
 
   function updateURL() {
     const params = new URLSearchParams();
@@ -76,11 +110,6 @@ export default function ProductsPage() {
       setIsProductLoading(false);
     }
   }
-
-  useEffect(() => {
-    updateURL();
-    fetchFilteredProducts();
-  }, [priceRange, selectedCategories, selectedSizes, selectedColors, page]);
 
   function toggleCategory(label: string) {
     setSelectedCategories((prev) => (prev.includes(label) ? prev.filter((cat) => cat !== label) : [...prev, label]));

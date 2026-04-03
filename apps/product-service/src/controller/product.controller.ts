@@ -8,10 +8,21 @@ export async function getCategories(req: Request, res: Response, next: NextFunct
   try {
     const config = await prisma.siteConfig.findFirst();
     if (!config) {
-      return res.status(404).json({ message: "Categories not found" });
+      return res.status(404).json({ message: "Config not found" });
     }
 
-    return res.status(200).json({ categories: config.categories, subCategories: config.subCategories });
+    const subCategories = config.subCategories as Record<string, Record<string, string[]>>;
+
+    // Flatten subcategory keys per category for backwards compat if needed
+    const flatSubCategories: Record<string, string[]> = {};
+    const productTypes: Record<string, Record<string, string[]>> = {};
+
+    for (const [category, subCatMap] of Object.entries(subCategories)) {
+      flatSubCategories[category] = Object.keys(subCatMap);
+      productTypes[category] = subCatMap;
+    }
+
+    return res.status(200).json({ categories: config.categories, subCategories: flatSubCategories, productTypes });
   } catch (error) {
     return next(error);
   }
@@ -126,6 +137,7 @@ export async function createProduct(req: any, res: Response, next: NextFunction)
       videoUrl,
       category,
       subCategory,
+      productType,
       colors = [],
       sizes = [],
       discountCodeData,
@@ -179,6 +191,7 @@ export async function createProduct(req: any, res: Response, next: NextFunction)
       videoUrl,
       category,
       subCategory,
+      productType: productType || null,
       colors: colors || [],
       sizes: sizes || [],
       discountCodes: discountCodeData?.map((codeId: string) => codeId) || [],

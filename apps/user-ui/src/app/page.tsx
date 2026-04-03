@@ -80,7 +80,7 @@ export default function Page() {
   return (
     <div>
       <Hero />
-      <div className="md:w-[80%] w-[90%] my-10 m-auto">
+      <div className="my-10 m-auto">
         {!isLoading && isLoggedIn && (
           <div className="mb-8">
             <SectionTitle title="Suggested Products" />

@@ -84,6 +84,9 @@ export default function CreateProductPage() {
     retry: 2,
   });
 
+  const productTypesData = data?.productTypes || {}; // from updated API
+  const selectedSubCategory = watch("subCategory");
+
   const { data: discountCodeData = [], isLoading: isLoadingDiscountCode } = useQuery({
     queryKey: ["discounts"],
     queryFn: async () => {
@@ -97,6 +100,11 @@ export default function CreateProductPage() {
 
   const selectedCategory = watch("category");
   const regularPrice = watch("regularPrice");
+
+  const productTypes = useMemo(() => {
+    if (!selectedCategory || !selectedSubCategory) return [];
+    return productTypesData[selectedCategory]?.[selectedSubCategory] || [];
+  }, [selectedCategory, selectedSubCategory, productTypesData]);
 
   const subCategories = useMemo(() => {
     return selectedCategory ? subCategoriesData[selectedCategory] || [] : [];
@@ -433,6 +441,8 @@ export default function CreateProductPage() {
                   name="subCategory"
                   control={control}
                   rules={{ required: "'Subcategory is required." }}
+                  x
+                  safa
                   render={({ field }) => (
                     <select {...field} className="w-full border outline-none border-gray-700 bg-transparent rounded-md p-2">
                       <option value={""} className="bg-black">
@@ -448,6 +458,26 @@ export default function CreateProductPage() {
                 />
 
                 {errors.subCategories && <p className=" text-red-500 text-sx mt-1">{errors.subCategories.message as string}</p>}
+              </div>
+
+              <div className="mt-2">
+                <label className="block font-semibold text-gray-300 mb-1">Product Type (optional)</label>
+                <Controller
+                  name="productType"
+                  control={control}
+                  render={({ field }) => (
+                    <select {...field} className="w-full border outline-none border-gray-700 bg-transparent rounded-md p-2">
+                      <option value="" className="bg-black">
+                        Select Product Type
+                      </option>
+                      {productTypes.map((type: string) => (
+                        <option key={type} value={type} className="bg-black">
+                          {type}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                />
               </div>
 
               <div className="mt-2">
