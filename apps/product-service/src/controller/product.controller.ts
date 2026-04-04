@@ -11,18 +11,27 @@ export async function getCategories(req: Request, res: Response, next: NextFunct
       return res.status(404).json({ message: "Config not found" });
     }
 
-    const subCategories = config.subCategories as Record<string, Record<string, string[]>>;
+    const rawSubCategories = config.subCategories as Record<string, Record<string, string[]>>;
 
-    // Flatten subcategory keys per category for backwards compat if needed
-    const flatSubCategories: Record<string, string[]> = {};
-    const productTypes: Record<string, Record<string, string[]>> = {};
+    // ["Electronics", "Fashion & Apparel", ...]
+    const categories = config.categories as string[];
 
-    for (const [category, subCatMap] of Object.entries(subCategories)) {
-      flatSubCategories[category] = Object.keys(subCatMap);
-      productTypes[category] = subCatMap;
+    // { "Electronics": ["Computers & Laptops", "Mobile Phones", ...], ... }
+    const subCategories: Record<string, string[]> = {};
+
+    // { "Computers & Laptops": ["Laptops", "Desktops", ...], ... }
+    const productTypes: Record<string, string[]> = {};
+
+    for (const category of categories) {
+      const subCatMap = rawSubCategories[category] ?? {};
+      subCategories[category] = Object.keys(subCatMap);
+
+      for (const [subCat, types] of Object.entries(subCatMap)) {
+        productTypes[subCat] = types;
+      }
     }
 
-    return res.status(200).json({ categories: config.categories, subCategories: flatSubCategories, productTypes });
+    return res.status(200).json({ categories, subCategories, productTypes });
   } catch (error) {
     return next(error);
   }
@@ -562,7 +571,7 @@ export async function getProductBySlug(req: Request, res: Response, next: NextFu
 // Get filtered products
 export async function getFilteredProducts(req: Request, res: Response, next: NextFunction) {
   try {
-    const { priceRange = [0, 10000], categories = [], colors = [], sizes = [], page = 1, limit = 12 } = req.query;
+    const { priceRange = [0, 10000], categories = [], subCategory, productType, colors = [], sizes = [], page = 1, limit = 12 } = req.query;
 
     const parsedPriceRange = typeof priceRange === "string" ? priceRange.split(",").map(Number) : [0, 10000];
     const parsedPage = Number(page);
@@ -583,6 +592,15 @@ export async function getFilteredProducts(req: Request, res: Response, next: Nex
         in: Array.isArray(categories) ? categories : String(categories).split(","),
       };
     }
+
+    if (subCategory && String(subCategory).length > 0) {
+      filters.subCategory = String(subCategory);
+    }
+
+    if (productType && String(productType).length > 0) {
+      filters.productType = String(productType);
+    }
+
     if (colors && (colors as string[]).length > 0) {
       filters.colors = {
         hasSome: Array.isArray(colors) ? colors : String(colors).split(","),

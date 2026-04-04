@@ -441,8 +441,6 @@ export default function CreateProductPage() {
                   name="subCategory"
                   control={control}
                   rules={{ required: "'Subcategory is required." }}
-                  x
-                  safa
                   render={({ field }) => (
                     <select {...field} className="w-full border outline-none border-gray-700 bg-transparent rounded-md p-2">
                       <option value={""} className="bg-black">

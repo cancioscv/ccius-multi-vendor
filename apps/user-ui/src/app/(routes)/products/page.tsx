@@ -15,6 +15,8 @@ export default function ProductsPage() {
   const [page, setPage] = useState(1);
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
+  const [selectedProductType, setSelectedProductType] = useState<string>("");
   const [priceRange, setPriceRange] = useState([MIN, MAX]);
   const [tempPriceRange, setTempPriceRange] = useState([MIN, MAX]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
@@ -49,12 +51,18 @@ export default function ProductsPage() {
     staleTime: 1000 * 60 * 30,
   });
 
+  // Also need productTypes from the categories query
+  const productTypes: Record<string, string[]> = data?.productTypes ?? {};
+  const subCategories: Record<string, string[]> = data?.subCategories ?? {};
+
   // Effect 1: sync state from URL (nav clicks)
   useEffect(() => {
     isNavigatingFromURL.current = true;
 
     const raw = searchParams.get("categories") || searchParams.get("category");
     setSelectedCategories(raw ? raw.split(",") : []);
+    setSelectedSubCategory(searchParams.get("subCategory") ?? "");
+    setSelectedProductType(searchParams.get("productType") ?? "");
 
     const rawPrice = searchParams.get("priceRange");
     const price = rawPrice ? rawPrice.split(",").map(Number) : [MIN, MAX];
@@ -77,12 +85,14 @@ export default function ProductsPage() {
 
     updateURL();
     fetchFilteredProducts();
-  }, [priceRange, selectedCategories, selectedSizes, selectedColors, page]);
+  }, [priceRange, selectedCategories, selectedSubCategory, selectedProductType, selectedSizes, selectedColors, page]);
 
   function updateURL() {
     const params = new URLSearchParams();
     params.set("priceRange", priceRange.join(","));
     if (selectedCategories.length > 0) params.set("categories", selectedCategories.join(","));
+    if (selectedSubCategory) params.set("subCategory", selectedSubCategory); // ✅
+    if (selectedProductType) params.set("productType", selectedProductType); // ✅
     if (selectedColors.length > 0) params.set("colors", selectedColors.join(","));
     if (selectedSizes.length > 0) params.set("sizes", selectedSizes.join(","));
     params.set("page", page.toString());
@@ -96,6 +106,8 @@ export default function ProductsPage() {
 
       query.set("priceRange", priceRange.join(","));
       if (selectedCategories.length > 0) query.set("categories", selectedCategories.join(","));
+      if (selectedSubCategory) query.set("subCategory", selectedSubCategory); // ✅
+      if (selectedProductType) query.set("productType", selectedProductType);
       if (selectedColors.length > 0) query.set("colors", selectedColors.join(","));
       if (selectedSizes?.length > 0) query.set("sizes", selectedSizes.join(","));
       query.set("page", page.toString());
@@ -206,6 +218,59 @@ export default function ProductsPage() {
                 ))
               )}
             </ul>
+
+            {/* Subcategories — shown when a category is selected */}
+            {selectedCategories.length === 1 && subCategories[selectedCategories[0]]?.length > 0 && (
+              <>
+                <h3 className="text-xl font-Poppins font-medium border-b border-b-slate-300 pb-1">Subcategory</h3>
+                <ul className="space-y-2 !mt-3">
+                  {subCategories[selectedCategories[0]].map((sub) => (
+                    <li key={sub}>
+                      <label className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="subCategory"
+                          checked={selectedSubCategory === sub}
+                          onChange={() => {
+                            setSelectedSubCategory(selectedSubCategory === sub ? "" : sub);
+                            setSelectedProductType(""); // reset product type when subcat changes
+                            setPage(1);
+                          }}
+                          className="accent-blue-600"
+                        />
+                        {sub}
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+
+            {/* Product Types — shown when a subcategory is selected */}
+            {selectedSubCategory && productTypes[selectedSubCategory]?.length > 0 && (
+              <>
+                <h3 className="text-xl font-Poppins font-medium border-b border-b-slate-300 pb-1">Product Type</h3>
+                <ul className="space-y-2 !mt-3">
+                  {productTypes[selectedSubCategory].map((type) => (
+                    <li key={type}>
+                      <label className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="productType"
+                          checked={selectedProductType === type}
+                          onChange={() => {
+                            setSelectedProductType(selectedProductType === type ? "" : type);
+                            setPage(1);
+                          }}
+                          className="accent-blue-600"
+                        />
+                        {type}
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
 
             {/* Colors */}
             <h3 className="text-xl font-Poppins font-medium border-b border-b-slate-300 pb-1 mt-6">Filter by Color</h3>
