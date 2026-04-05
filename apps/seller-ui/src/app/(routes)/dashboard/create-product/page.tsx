@@ -102,9 +102,9 @@ export default function CreateProductPage() {
   const regularPrice = watch("regularPrice");
 
   const productTypes = useMemo(() => {
-    if (!selectedCategory || !selectedSubCategory) return [];
-    return productTypesData[selectedCategory]?.[selectedSubCategory] || [];
-  }, [selectedCategory, selectedSubCategory, productTypesData]);
+    if (!selectedSubCategory) return [];
+    return productTypesData[selectedSubCategory] || [];
+  }, [selectedSubCategory, productTypesData]);
 
   const subCategories = useMemo(() => {
     return selectedCategory ? subCategoriesData[selectedCategory] || [] : [];

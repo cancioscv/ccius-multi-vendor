@@ -28,6 +28,8 @@ export default function ProductsPage() {
   const router = useRouter();
 
   const isNavigatingFromURL = useRef(false);
+  const hasHydrated = useRef(false);
+  const isFetchingFromNav = useRef(false);
 
   const colors = [
     { name: "Black", code: "#000000" },
@@ -55,36 +57,48 @@ export default function ProductsPage() {
   const productTypes: Record<string, string[]> = data?.productTypes ?? {};
   const subCategories: Record<string, string[]> = data?.subCategories ?? {};
 
-  // Effect 1: sync state from URL (nav clicks)
   useEffect(() => {
     isNavigatingFromURL.current = true;
+    isFetchingFromNav.current = true; // ✅ signal that we're handling the fetch here
+    hasHydrated.current = true;
 
     const raw = searchParams.get("categories") || searchParams.get("category");
-    setSelectedCategories(raw ? raw.split(",") : []);
-    setSelectedSubCategory(searchParams.get("subCategory") ?? "");
-    setSelectedProductType(searchParams.get("productType") ?? "");
+    const cats = raw ? raw.split(",") : [];
+    const sub = searchParams.get("subCategory") ?? "";
+    const type = searchParams.get("productType") ?? "";
 
     const rawPrice = searchParams.get("priceRange");
     const price = rawPrice ? rawPrice.split(",").map(Number) : [MIN, MAX];
+
+    const colors = searchParams.get("colors")?.split(",") ?? [];
+    const sizes = searchParams.get("sizes")?.split(",") ?? [];
+    const p = Number(searchParams.get("page")) || 1;
+
+    // Set state for UI (sidebar checkboxes etc.)
+    setSelectedCategories(cats);
+    setSelectedSubCategory(sub);
+    setSelectedProductType(type);
     setPriceRange(price);
     setTempPriceRange(price);
+    setSelectedColors(colors);
+    setSelectedSizes(sizes);
+    setPage(p);
 
-    setSelectedColors(searchParams.get("colors")?.split(",") ?? []);
-    setSelectedSizes(searchParams.get("sizes")?.split(",") ?? []);
-    setPage(Number(searchParams.get("page")) || 1);
+    // ✅ Pass fresh values directly — don't rely on state which hasn't updated yet
+    fetchFilteredProducts({ categories: cats, subCategory: sub, productType: type, priceRange: price, colors, sizes, page: p });
   }, [searchParams]);
 
-  // Effect 2: fetch + update URL when filter state changes
   useEffect(() => {
-    // If state was just set from URL, skip updateURL to avoid the loop
-    if (isNavigatingFromURL.current) {
+    if (!hasHydrated.current) return;
+
+    if (isFetchingFromNav.current) {
+      isFetchingFromNav.current = false;
       isNavigatingFromURL.current = false;
-      fetchFilteredProducts();
       return;
     }
 
     updateURL();
-    fetchFilteredProducts();
+    fetchFilteredProducts(); // sidebar interactions still use state (which is already up to date here)
   }, [priceRange, selectedCategories, selectedSubCategory, selectedProductType, selectedSizes, selectedColors, page]);
 
   function updateURL() {
@@ -96,21 +110,40 @@ export default function ProductsPage() {
     if (selectedColors.length > 0) params.set("colors", selectedColors.join(","));
     if (selectedSizes.length > 0) params.set("sizes", selectedSizes.join(","));
     params.set("page", page.toString());
-    router.replace(`/products?${decodeURIComponent(params.toString())}`);
+
+    // ✅ URLSearchParams.toString() already encodes correctly — never wrap with decodeURIComponent
+    router.replace(`/products?${params.toString()}`);
   }
 
-  async function fetchFilteredProducts() {
+  async function fetchFilteredProducts(overrides?: {
+    categories?: string[];
+    subCategory?: string;
+    productType?: string;
+    priceRange?: number[];
+    colors?: string[];
+    sizes?: string[];
+    page?: number;
+  }) {
     setIsProductLoading(true);
     try {
       const query = new URLSearchParams();
 
-      query.set("priceRange", priceRange.join(","));
-      if (selectedCategories.length > 0) query.set("categories", selectedCategories.join(","));
-      if (selectedSubCategory) query.set("subCategory", selectedSubCategory); // ✅
-      if (selectedProductType) query.set("productType", selectedProductType);
-      if (selectedColors.length > 0) query.set("colors", selectedColors.join(","));
-      if (selectedSizes?.length > 0) query.set("sizes", selectedSizes.join(","));
-      query.set("page", page.toString());
+      // ✅ Use overrides (fresh values) if provided, otherwise fall back to state
+      const cats = overrides?.categories ?? selectedCategories;
+      const sub = overrides?.subCategory ?? selectedSubCategory;
+      const type = overrides?.productType ?? selectedProductType;
+      const price = overrides?.priceRange ?? priceRange;
+      const colors = overrides?.colors ?? selectedColors;
+      const sizes = overrides?.sizes ?? selectedSizes;
+      const p = overrides?.page ?? page;
+
+      query.set("priceRange", price.join(","));
+      if (cats.length > 0) query.set("categories", cats.join(","));
+      if (sub) query.set("subCategory", sub);
+      if (type) query.set("productType", type);
+      if (colors.length > 0) query.set("colors", colors.join(","));
+      if (sizes.length > 0) query.set("sizes", sizes.join(","));
+      query.set("page", p.toString());
       query.set("limit", "12");
 
       const res = await axiosInstance.get(`/product/api/filtered-products?${query.toString()}`);
