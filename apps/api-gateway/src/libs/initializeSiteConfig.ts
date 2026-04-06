@@ -49,7 +49,6 @@ async function initializeSiteConfig() {
             },
           },
           logo: "/e-shop-logo.jpg",
-          banner: "https://ik.imagekit.io/fz0xzwtey/products/slider-img-1.png?updatedAt=1744358118885",
         },
       });
     }

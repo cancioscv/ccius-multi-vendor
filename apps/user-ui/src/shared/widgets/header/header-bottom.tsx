@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AlignLeft, HeartIcon, ShoppingCart, User, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 async function fetchCategories() {
   const res = await axiosInstance.get("/product/api/categories");
@@ -23,6 +24,9 @@ export default function HeaderBottom() {
 
   const { user, isLoading } = useUser();
   const { cart, wishList } = useCartStore();
+
+  const searchParams = useSearchParams();
+  const activeCats = (searchParams.get("categories") || searchParams.get("category") || "").split(",").filter(Boolean);
 
   const { data } = useQuery({
     queryKey: ["categories"],
@@ -98,13 +102,13 @@ export default function HeaderBottom() {
                     onMouseEnter={() => setActiveCategory(cat)}
                     onMouseLeave={() => setActiveCategory(null)}
                     className={`relative px-4 py-4 text-sm font-medium whitespace-nowrap transition-colors block ${
-                      activeCategory === cat ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+                      activeCategory === cat || activeCats.includes(cat) ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
                     }`}
                   >
                     {cat}
                     <span
                       className={`absolute bottom-0 left-0 right-0 h-[2.5px] bg-blue-600 transition-all duration-200 ${
-                        activeCategory === cat ? "opacity-100 scale-x-100" : "opacity-0 scale-x-0"
+                        activeCategory === cat || activeCats.includes(cat) ? "opacity-100 scale-x-100" : "opacity-0 scale-x-0"
                       } origin-left`}
                     />
                   </Link>

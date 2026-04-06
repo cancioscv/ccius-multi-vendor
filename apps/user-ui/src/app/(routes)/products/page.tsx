@@ -27,9 +27,7 @@ export default function ProductsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const isNavigatingFromURL = useRef(false);
   const hasHydrated = useRef(false);
-  const isFetchingFromNav = useRef(false);
 
   const colors = [
     { name: "Black", code: "#000000" },
@@ -57,24 +55,23 @@ export default function ProductsPage() {
   const productTypes: Record<string, string[]> = data?.productTypes ?? {};
   const subCategories: Record<string, string[]> = data?.subCategories ?? {};
 
+  // Single effect — searchParams is the only dependency
   useEffect(() => {
-    isNavigatingFromURL.current = true;
-    isFetchingFromNav.current = true; // ✅ signal that we're handling the fetch here
-    hasHydrated.current = true;
+    if (!hasHydrated.current) {
+      hasHydrated.current = true;
+    }
 
     const raw = searchParams.get("categories") || searchParams.get("category");
     const cats = raw ? raw.split(",") : [];
     const sub = searchParams.get("subCategory") ?? "";
     const type = searchParams.get("productType") ?? "";
-
     const rawPrice = searchParams.get("priceRange");
     const price = rawPrice ? rawPrice.split(",").map(Number) : [MIN, MAX];
-
-    const colors = searchParams.get("colors")?.split(",") ?? [];
-    const sizes = searchParams.get("sizes")?.split(",") ?? [];
+    const colors = searchParams.get("colors")?.split(",").filter(Boolean) ?? [];
+    const sizes = searchParams.get("sizes")?.split(",").filter(Boolean) ?? [];
     const p = Number(searchParams.get("page")) || 1;
 
-    // Set state for UI (sidebar checkboxes etc.)
+    // Sync UI state (sidebar checkboxes, sliders)
     setSelectedCategories(cats);
     setSelectedSubCategory(sub);
     setSelectedProductType(type);
@@ -84,34 +81,38 @@ export default function ProductsPage() {
     setSelectedSizes(sizes);
     setPage(p);
 
-    // ✅ Pass fresh values directly — don't rely on state which hasn't updated yet
+    // Fetch directly with fresh values — never touches state
     fetchFilteredProducts({ categories: cats, subCategory: sub, productType: type, priceRange: price, colors, sizes, page: p });
-  }, [searchParams]);
+  }, [searchParams]); // ✅ only fires when URL actually changes
 
-  useEffect(() => {
-    if (!hasHydrated.current) return;
-
-    if (isFetchingFromNav.current) {
-      isFetchingFromNav.current = false;
-      isNavigatingFromURL.current = false;
-      return;
-    }
-
-    updateURL();
-    fetchFilteredProducts(); // sidebar interactions still use state (which is already up to date here)
-  }, [priceRange, selectedCategories, selectedSubCategory, selectedProductType, selectedSizes, selectedColors, page]);
-
-  function updateURL() {
+  // ✅ Sidebar interactions: just update URL, let searchParams effect do the rest
+  function updateURL(
+    overrides?: Partial<{
+      categories: string[];
+      subCategory: string;
+      productType: string;
+      priceRange: number[];
+      colors: string[];
+      sizes: string[];
+      page: number;
+    }>
+  ) {
     const params = new URLSearchParams();
-    params.set("priceRange", priceRange.join(","));
-    if (selectedCategories.length > 0) params.set("categories", selectedCategories.join(","));
-    if (selectedSubCategory) params.set("subCategory", selectedSubCategory); // ✅
-    if (selectedProductType) params.set("productType", selectedProductType); // ✅
-    if (selectedColors.length > 0) params.set("colors", selectedColors.join(","));
-    if (selectedSizes.length > 0) params.set("sizes", selectedSizes.join(","));
-    params.set("page", page.toString());
+    const cats = overrides?.categories ?? selectedCategories;
+    const sub = overrides?.subCategory ?? selectedSubCategory;
+    const type = overrides?.productType ?? selectedProductType;
+    const price = overrides?.priceRange ?? priceRange;
+    const cls = overrides?.colors ?? selectedColors;
+    const szs = overrides?.sizes ?? selectedSizes;
+    const p = overrides?.page ?? page;
 
-    // ✅ URLSearchParams.toString() already encodes correctly — never wrap with decodeURIComponent
+    params.set("priceRange", price.join(","));
+    if (cats.length > 0) params.set("categories", cats.join(","));
+    if (sub) params.set("subCategory", sub);
+    if (type) params.set("productType", type);
+    if (cls.length > 0) params.set("colors", cls.join(","));
+    if (szs.length > 0) params.set("sizes", szs.join(","));
+    params.set("page", p.toString());
     router.replace(`/products?${params.toString()}`);
   }
 
@@ -157,15 +158,19 @@ export default function ProductsPage() {
   }
 
   function toggleCategory(label: string) {
-    setSelectedCategories((prev) => (prev.includes(label) ? prev.filter((cat) => cat !== label) : [...prev, label]));
+    const next = selectedCategories.includes(label) ? selectedCategories.filter((c) => c !== label) : [...selectedCategories, label];
+    // ✅ reset sub/type when category changes
+    updateURL({ categories: next, subCategory: "", productType: "", page: 1 });
   }
 
   function toggleColor(color: string) {
-    setSelectedColors((prev) => (prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color]));
+    const next = selectedColors.includes(color) ? selectedColors.filter((c) => c !== color) : [...selectedColors, color];
+    updateURL({ colors: next, page: 1 });
   }
 
   function toggleSize(size: string) {
-    setSelectedSizes((prev) => (prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]));
+    const next = selectedSizes.includes(size) ? selectedSizes.filter((s) => s !== size) : [...selectedSizes, size];
+    updateURL({ sizes: next, page: 1 });
   }
 
   return (
@@ -221,8 +226,7 @@ export default function ProductsPage() {
               </div>
               <button
                 onClick={() => {
-                  setPriceRange(tempPriceRange);
-                  setPage(1);
+                  updateURL({ priceRange: tempPriceRange, page: 1 });
                 }}
                 className="text-sm px-4 py-1 bg-gray-200 hover:bg-blue-600 hover:text-white transition !rounded"
               >
@@ -265,9 +269,8 @@ export default function ProductsPage() {
                           name="subCategory"
                           checked={selectedSubCategory === sub}
                           onChange={() => {
-                            setSelectedSubCategory(selectedSubCategory === sub ? "" : sub);
-                            setSelectedProductType(""); // reset product type when subcat changes
-                            setPage(1);
+                            const next = selectedSubCategory === sub ? "" : sub;
+                            updateURL({ subCategory: next, productType: "", page: 1 });
                           }}
                           className="accent-blue-600"
                         />
@@ -292,8 +295,8 @@ export default function ProductsPage() {
                           name="productType"
                           checked={selectedProductType === type}
                           onChange={() => {
-                            setSelectedProductType(selectedProductType === type ? "" : type);
-                            setPage(1);
+                            const next = selectedProductType === type ? "" : type;
+                            updateURL({ productType: next, page: 1 });
                           }}
                           className="accent-blue-600"
                         />
@@ -361,7 +364,7 @@ export default function ProductsPage() {
                 {Array.from({ length: totalPages }).map((_, i) => (
                   <button
                     key={i + 1}
-                    onClick={() => setPage(i + 1)}
+                    onClick={() => updateURL({ page: i + 1 })}
                     className={`px-3 py-1 !rounded border border-gray-200 text-sm ${
                       page === i + 1 ? "bg-blue-600 text-white" : "bg-white text-black"
                     }`}
