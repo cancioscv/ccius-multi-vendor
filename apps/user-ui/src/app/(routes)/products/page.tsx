@@ -244,9 +244,17 @@ export default function ProductsPage() {
                   <li key={category} className="flex items-center justify-between">
                     <label className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
                       <input
-                        type="checkbox"
+                        type="radio"
+                        name="category"
                         checked={selectedCategories.includes(category)}
-                        onChange={() => toggleCategory(category)}
+                        onChange={() =>
+                          updateURL({
+                            categories: selectedCategories.includes(category) ? [] : [category],
+                            subCategory: "",
+                            productType: "",
+                            page: 1,
+                          })
+                        }
                         className="accent-blue-600"
                       />
                       {category}

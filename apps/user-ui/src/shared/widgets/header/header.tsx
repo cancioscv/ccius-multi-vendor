@@ -6,7 +6,7 @@ import HeaderBottom from "./header-bottom";
 import useUser from "@/hooks/useUser";
 import { useCartStore } from "@/store";
 import useLayout from "@/hooks/useLayout";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Image from "next/image";
 import axiosInstance from "@/utils/axiosInstance";
 
@@ -127,7 +127,9 @@ export default function Header() {
       </div>
 
       <div className="border-b border-gray-300" />
-      <HeaderBottom />
+      <Suspense>
+        <HeaderBottom />
+      </Suspense>
     </div>
   );
 }
