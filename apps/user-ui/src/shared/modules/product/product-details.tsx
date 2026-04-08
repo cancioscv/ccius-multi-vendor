@@ -99,7 +99,7 @@ export default function ProductDetails({ product }: any) {
 
   return (
     <div className="w-full py-5">
-      <div className="w-[90%] bg-white lg:w-[80%] mx-auto pt-6 grid grid-cols-1 lg:grid-cols-[28%_44%_28%] gap-6 overflow-hidden">
+      <div className="w-full mx-auto pt-6 grid grid-cols-1 lg:grid-cols-[28%_44%_28%] gap-6 overflow-hidden">
         {/* left column - product images */}
         <div className="p-4">
           <div className="relative w-full">
@@ -379,7 +379,7 @@ export default function ProductDetails({ product }: any) {
         </div>
       </div>
 
-      <div className="w-[90%] lg:w-[80%] mx-auto mt-5">
+      <div className="w-full mx-auto mt-5">
         <div className="bg-white min-h-[60vh] h-full p-5">
           <h1 className="text-xl font-bold pb-4">Product details of {product?.title}</h1>
 
@@ -389,7 +389,7 @@ export default function ProductDetails({ product }: any) {
         </div>
       </div>
 
-      <div className="w-[90%] lg:w-[80%] mx-auto">
+      <div className="w-full mx-auto">
         <div className="bg-white min-h-[50vh] h-full mt-5 p-5">
           <h3 className="text-lg font-semibold">Ratings & Reviews of {product?.title}</h3>
           {product.reviews.length > 0 ? (
@@ -442,7 +442,7 @@ export default function ProductDetails({ product }: any) {
         </div>
       </div>
 
-      <div className="w-[90%] lg:w-[80%] mx-auto">
+      <div className="w-full mx-auto">
         <div className="w-full h-full my-5 p-5">
           <h3 className="text-xl font-semibold mb-2">You may also like</h3>
           <div className="m-auto grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
