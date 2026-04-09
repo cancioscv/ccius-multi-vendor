@@ -1,10 +1,8 @@
 "use client";
 
-import useUser from "@/hooks/useUser";
-import { useCartStore } from "@/store";
 import axiosInstance from "@/utils/axiosInstance";
 import { useQuery } from "@tanstack/react-query";
-import { AlignLeft, HeartIcon, ShoppingCart, User, X } from "lucide-react";
+import { AlignLeft, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -15,15 +13,11 @@ async function fetchCategories() {
 }
 
 export default function HeaderBottom() {
-  const [isSticky, setIsSticky] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [showMegaMenu, setShowMegaMenu] = useState(false);
   const [megaActiveCategory, setMegaActiveCategory] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const megaMenuRef = useRef<HTMLDivElement>(null);
-
-  const { user, isLoading } = useUser();
-  const { cart, wishList } = useCartStore();
 
   const searchParams = useSearchParams();
   const activeCats = (searchParams.get("categories") || searchParams.get("category") || "").split(",").filter(Boolean);
@@ -38,20 +32,11 @@ export default function HeaderBottom() {
   const subCategories: Record<string, string[]> = data?.subCategories ?? {};
   const productTypes: Record<string, string[]> = data?.productTypes ?? {};
 
-  // Set first category as default when mega menu opens
   useEffect(() => {
     if (showMegaMenu && categories.length > 0) {
       setMegaActiveCategory(categories[0]);
     }
   }, [showMegaMenu, categories]);
-
-  useEffect(() => {
-    function handleScroll() {
-      setIsSticky(window.scrollY > 100);
-    }
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -68,24 +53,19 @@ export default function HeaderBottom() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Group subcategories into columns for the mega menu panel
-  // Each "group" is a subcategory with its product types beneath it
   const activeSubs = megaActiveCategory ? subCategories[megaActiveCategory] ?? [] : [];
 
   return (
     <>
-      <div
-        className={`w-full transition-all duration-300 border-b border-gray-200 z-[90] ${
-          isSticky ? "fixed top-0 left-0 z-[100] bg-white shadow-md" : "relative bg-white"
-        }`}
-      >
-        <div className="w-[80%] m-auto flex items-center justify-between">
+      {/* ── Category bar ── */}
+      <div className="w-full bg-white border-b border-gray-200 pl-4 pr-4">
+        <div className="mx-auto flex items-center">
           <div className="flex items-center" ref={dropdownRef}>
-            {/* All Categories Trigger */}
+            {/* All Categories trigger */}
             <button
               onClick={() => setShowMegaMenu((prev) => !prev)}
-              onMouseEnter={() => setShowMegaMenu((prev) => !prev)}
-              className="flex items-center gap-2 pr-6 py-4 font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap"
+              onMouseEnter={() => setShowMegaMenu(true)}
+              className="flex items-center gap-2 pr-6 py-3 font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap"
             >
               {showMegaMenu ? <X size={18} /> : <AlignLeft size={18} />}
               <span>All Categories</span>
@@ -94,7 +74,7 @@ export default function HeaderBottom() {
             {/* Divider */}
             <div className="h-5 w-px bg-gray-200 mr-2" />
 
-            {/* Dynamic Category Tabs */}
+            {/* Category tabs */}
             <nav className="flex items-center overflow-x-auto scrollbar-hide">
               {categories.map((cat) => (
                 <div key={cat} className="relative group">
@@ -102,7 +82,7 @@ export default function HeaderBottom() {
                     href={`/products?category=${encodeURIComponent(cat)}`}
                     onMouseEnter={() => setActiveCategory(cat)}
                     onMouseLeave={() => setActiveCategory(null)}
-                    className={`relative px-4 py-4 text-sm font-medium whitespace-nowrap transition-colors block ${
+                    className={`relative px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors block ${
                       activeCategory === cat || activeCats.includes(cat) ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
                     }`}
                   >
@@ -114,7 +94,7 @@ export default function HeaderBottom() {
                     />
                   </Link>
 
-                  {/* Subcategory hover dropdown (unchanged) */}
+                  {/* Subcategory hover dropdown */}
                   {subCategories[cat] && subCategories[cat].length > 0 && (
                     <div
                       onMouseEnter={() => setActiveCategory(cat)}
@@ -139,66 +119,21 @@ export default function HeaderBottom() {
               ))}
             </nav>
           </div>
-
-          {/* Sticky icons */}
-          {isSticky && (
-            <div className="flex items-center gap-6 py-2 ml-4 shrink-0">
-              <div className="flex items-center gap-2">
-                {!isLoading && user ? (
-                  <div className="flex items-center gap-2">
-                    <Link
-                      href="/"
-                      className="border-2 w-[42px] h-[42px] flex items-center justify-center rounded-full border-gray-200 hover:border-blue-400 transition-colors"
-                    >
-                      <User size={18} />
-                    </Link>
-                    <Link href="/profile">
-                      <span className="block text-xs text-gray-500">Hello,</span>
-                      <span className="font-semibold text-sm">{user?.name?.split(" ")[0]}</span>
-                    </Link>
-                  </div>
-                ) : (
-                  <Link href="/login">
-                    <span className="block text-xs text-gray-500">Hello,</span>
-                    <span className="font-semibold text-sm">{isLoading ? "..." : "Sign In"}</span>
-                  </Link>
-                )}
-              </div>
-              <div className="flex items-center gap-4">
-                <Link href="/wishlist" className="relative">
-                  <HeartIcon size={22} />
-                  <div className="w-5 h-5 border-2 border-white bg-red-500 rounded-full flex items-center justify-center absolute -top-2 -right-2">
-                    <span className="text-white font-medium text-xs">{wishList?.length ?? 0}</span>
-                  </div>
-                </Link>
-                <Link href="/cart" className="relative">
-                  <ShoppingCart size={22} />
-                  <div className="w-5 h-5 border-2 border-white bg-red-500 rounded-full flex items-center justify-center absolute -top-2 -right-2">
-                    <span className="text-white font-medium text-xs">{cart?.length ?? 0}</span>
-                  </div>
-                </Link>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
       {/* ── Mega Menu Panel ── */}
       {showMegaMenu && (
-        <div
-          ref={megaMenuRef}
-          className={`w-full bg-white border-t border-gray-100 shadow-2xl z-[89] ${isSticky ? "fixed top-[53px] left-0" : "absolute left-0"}`}
-        >
-          <div className="w-[80%] m-auto flex" style={{ minHeight: 420 }}>
+        <div ref={megaMenuRef} className="w-full bg-white border-t border-gray-100 shadow-2xl absolute left-0 z-[89]">
+          {/* Same width token as Header */}
+          <div className="mx-auto flex pl-6 pr-6" style={{ minHeight: 420 }}>
             {/* Left: category list */}
             <div className="w-[240px] border-r border-gray-100 py-2 shrink-0">
               {categories.map((cat) => (
                 <button
                   key={cat}
                   onMouseEnter={() => setMegaActiveCategory(cat)}
-                  onClick={() => {
-                    setShowMegaMenu(false);
-                  }}
+                  onClick={() => setShowMegaMenu(false)}
                   className={`w-full flex items-center justify-between px-5 py-3 text-sm font-medium transition-colors text-left ${
                     megaActiveCategory === cat
                       ? "bg-blue-50 text-blue-600 border-l-[3px] border-blue-600"
@@ -228,7 +163,6 @@ export default function HeaderBottom() {
                   <div className="grid grid-cols-3 gap-x-8 gap-y-6">
                     {activeSubs.map((sub) => (
                       <div key={sub}>
-                        {/* Subcategory heading — clickable */}
                         <Link
                           href={`/products?category=${encodeURIComponent(megaActiveCategory)}&subCategory=${encodeURIComponent(sub)}`}
                           onClick={() => setShowMegaMenu(false)}
@@ -236,8 +170,6 @@ export default function HeaderBottom() {
                         >
                           {sub}
                         </Link>
-
-                        {/* Product types beneath it */}
                         <ul className="space-y-1">
                           {(productTypes[sub] ?? []).map((type) => (
                             <li key={type}>

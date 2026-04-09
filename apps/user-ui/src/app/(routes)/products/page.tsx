@@ -187,7 +187,8 @@ export default function ProductsPage() {
 
         <div className="w-full flex flex-col lg:flex-row gap-8">
           {/* sidebar */}
-          <aside className="w-full lg:w-[270px] !rounded bg-white p-4 space-y-6 shadow-md">
+          {/* <aside className="w-full lg:w-[270px] !rounded bg-white p-4 space-y-6 shadow-md"> */}
+          <aside className="w-full lg:w-[270px] shrink-0 !rounded bg-white p-4 space-y-6 shadow-md self-start sticky top-[123px] max-h-[calc(100vh-123px)] overflow-y-auto">
             <h3 className="text-xl font-Poppins font-medium">Price Filter</h3>
             <div className="ml-2">
               <Range
