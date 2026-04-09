@@ -1,3 +1,5 @@
+"use client";
+
 import { Controller } from "react-hook-form";
 import { Input } from "./input";
 import { Plus, X } from "lucide-react";

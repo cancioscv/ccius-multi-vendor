@@ -72,7 +72,7 @@ export default function Header() {
   }, []);
 
   return (
-    <div className="w-full bg-white border-b border-gray-200">
+    <div className="w-full bg-white border-b border-gray-100 sticky top-0 z-[100] shadow-sm">
       {/* Main header row */}
       <div className="w-[88%] max-w-[1400px] mx-auto h-[74px] flex items-center gap-5">
         {/* ── Logo ── */}

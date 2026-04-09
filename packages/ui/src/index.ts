@@ -18,3 +18,4 @@ export * from "./components/ui/textarea";
 export * from "./components/ui/form";
 export * from "./components/ui/progress";
 export * from "./components/ui/dropdown-menu";
+export * from "./components/ui/tooltip";

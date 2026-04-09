@@ -84,6 +84,7 @@ export default function HeaderBottom() {
             {/* All Categories Trigger */}
             <button
               onClick={() => setShowMegaMenu((prev) => !prev)}
+              onMouseEnter={() => setShowMegaMenu((prev) => !prev)}
               className="flex items-center gap-2 pr-6 py-4 font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap"
             >
               {showMegaMenu ? <X size={18} /> : <AlignLeft size={18} />}

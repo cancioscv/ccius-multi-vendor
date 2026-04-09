@@ -54,7 +54,7 @@
     "react-apexcharts": "^1.9.0",
     "react-dom": "^19.0.0",
     "react-google-button": "^0.8.0",
-    "react-hook-form": "^7.69.0",
+    "react-hook-form": "7.72.1",
     "react-image-magnify": "^2.7.4",
     "react-quill-new": "^3.8.3",
     "react-range": "^1.10.0",

@@ -1,3 +1,5 @@
+"use client";
+
 import { Controller } from "react-hook-form";
 
 const sizes = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];

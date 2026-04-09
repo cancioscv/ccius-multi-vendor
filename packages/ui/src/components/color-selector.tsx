@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { Controller } from "react-hook-form";
 import { Plus } from "lucide-react";

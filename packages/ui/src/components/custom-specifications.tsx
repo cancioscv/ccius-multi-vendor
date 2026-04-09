@@ -1,3 +1,5 @@
+"use client";
+
 import { Controller, useFieldArray } from "react-hook-form";
 import { Input } from "./input";
 import { PlusCircle, Trash2 } from "lucide-react";
