@@ -16,8 +16,7 @@ export default function HeaderBottom() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [showMegaMenu, setShowMegaMenu] = useState(false);
   const [megaActiveCategory, setMegaActiveCategory] = useState<string | null>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const megaMenuRef = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null); // ✅ delay timer
 
   const searchParams = useSearchParams();
   const activeCats = (searchParams.get("categories") || searchParams.get("category") || "").split(",").filter(Boolean);
@@ -38,19 +37,23 @@ export default function HeaderBottom() {
     }
   }, [showMegaMenu, categories]);
 
+  // ✅ Delay helpers — prevent flicker when moving between trigger and panel
+  function openMenu() {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setShowMegaMenu(true);
+  }
+
+  function scheduleClose() {
+    closeTimer.current = setTimeout(() => {
+      setShowMegaMenu(false);
+    }, 120);
+  }
+
+  // Cleanup on unmount
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (
-        megaMenuRef.current &&
-        !megaMenuRef.current.contains(e.target as Node) &&
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node)
-      ) {
-        setShowMegaMenu(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+    };
   }, []);
 
   const activeSubs = megaActiveCategory ? subCategories[megaActiveCategory] ?? [] : [];
@@ -60,11 +63,11 @@ export default function HeaderBottom() {
       {/* ── Category bar ── */}
       <div className="w-full bg-white border-b border-gray-200 pl-4 pr-4">
         <div className="mx-auto flex items-center">
-          <div className="flex items-center" ref={dropdownRef}>
+          <div className="flex items-center">
             {/* All Categories trigger */}
             <button
-              onClick={() => setShowMegaMenu((prev) => !prev)}
-              onMouseEnter={() => setShowMegaMenu(true)}
+              onMouseEnter={openMenu} // ✅ open
+              onMouseLeave={scheduleClose} // ✅ schedule close (cancelled if mouse enters panel)
               className="flex items-center gap-2 pr-6 py-3 font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap"
             >
               {showMegaMenu ? <X size={18} /> : <AlignLeft size={18} />}
@@ -124,9 +127,12 @@ export default function HeaderBottom() {
 
       {/* ── Mega Menu Panel ── */}
       {showMegaMenu && (
-        <div ref={megaMenuRef} className="w-full bg-white border-t border-gray-100 shadow-2xl absolute left-0 z-[89]">
-          {/* Same width token as Header */}
-          <div className="mx-auto flex pl-6 pr-6" style={{ minHeight: 420 }}>
+        <div
+          onMouseEnter={openMenu} // ✅ cancel close when mouse enters panel
+          onMouseLeave={scheduleClose} // ✅ schedule close when mouse leaves panel
+          className="w-full bg-white border-t border-gray-100 shadow-2xl absolute left-0 z-[89]"
+        >
+          <div className="mx-auto flex pl-4 pr-4" style={{ minHeight: 420 }}>
             {/* Left: category list */}
             <div className="w-[240px] border-r border-gray-100 py-2 shrink-0">
               {categories.map((cat) => (
