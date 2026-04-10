@@ -84,17 +84,20 @@ export default function Header() {
 
   return (
     <>
-      {/* Spacer — fixed height, never changes, prevents content jumping under fixed header */}
+      {/* Spacer — keeps content from jumping under the fixed header */}
       <div style={{ height: TOTAL_EXPANDED_H }} aria-hidden="true" />
 
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1280px] z-[100] bg-white shadow-sm ">
-        {/* ── Main header row ── */}
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1280px] z-[100] bg-white shadow-sm">
+        {/* ── Main header row ──
+            IMPORTANT: NO overflow-hidden here — it would clip the suggestions dropdown.
+            Height is controlled by the transition on this div itself, and logo/icons
+            clip themselves individually where needed. */}
         <div
-          className={`w-full mx-auto flex items-center gap-4 transition-all duration-300 ease-in-out pl-4 pr-4 overflow-hidden border-b border-gray-300 ${
+          className={`w-full mx-auto flex items-center gap-4 transition-all duration-300 ease-in-out pl-4 pr-4 border-b border-gray-300 ${
             isShrunken ? "h-[48px]" : "h-[74px]"
           }`}
         >
-          {/* Logo */}
+          {/* Logo — clips itself so it doesn't overflow when collapsing */}
           <Link
             href="/"
             className={`shrink-0 flex items-center transition-all duration-300 overflow-hidden ${
@@ -137,9 +140,11 @@ export default function Header() {
               </button>
             </div>
 
-            {/* Suggestions dropdown */}
+            {/* Suggestions dropdown
+                z-[300] — above the fixed header (z-100), nav bar (z-89), and mega menu (z-89).
+                Rendered outside the overflow-hidden row, so it is never clipped. */}
             {(suggestions.length > 0 || loadingSuggestions) && (
-              <div className="absolute left-0 right-0 top-[calc(100%+4px)] bg-white border border-gray-200 rounded-lg shadow-lg z-[200] overflow-hidden">
+              <div className="absolute left-0 right-0 top-[calc(100%+4px)] bg-white border border-gray-200 rounded-lg shadow-xl z-[300] overflow-hidden">
                 {loadingSuggestions ? (
                   <div className="px-4 py-3 text-sm text-gray-500 flex items-center gap-2">
                     <span className="w-3.5 h-3.5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin shrink-0" />
@@ -215,8 +220,6 @@ export default function Header() {
             </Link>
           </div>
         </div>
-
-        {/* <div className="border-b border-gray-300 w-full" /> */}
 
         {/* ── Nav bar (categories) — slides in/out ── */}
         <div className={`transition-all duration-300 ease-in-out overflow-hidden ${showNav ? "max-h-[56px] opacity-100" : "max-h-0 opacity-0"}`}>
