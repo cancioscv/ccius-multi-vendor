@@ -10,6 +10,7 @@ import { useCartStore } from "@/store";
 import useLocationTracking from "@/hooks/useLocationTracking";
 import useDeviceTracking from "@/hooks/useDeviceTracking";
 import useUser from "@/hooks/useUser";
+import StarRating from "../ratings/star-rating";
 
 interface Props {
   product: any;
@@ -158,7 +159,10 @@ export default function ProductCard({ product, isEvent }: Props) {
 
         {/* Stars + rating number + review count */}
         <div className="flex items-center gap-1.5 mt-0.5">
-          <div className="flex items-center gap-[2px]">{renderStars(reviewRating)}</div>
+          {/* <div className="flex items-center gap-[2px]">{renderStars(reviewRating)}</div> */}
+
+          <StarRating rating={product?.reviewRating} iconClassName="size-4" />
+
           {reviewRating > 0 && <span className="text-[13px] font-medium text-gray-700">{reviewRating.toFixed(1)}</span>}
           {reviewCount > 0 && <span className="text-[13px] text-gray-400">({reviewCount})</span>}
         </div>
