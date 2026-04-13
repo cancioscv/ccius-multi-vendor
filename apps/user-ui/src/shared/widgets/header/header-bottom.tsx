@@ -78,9 +78,9 @@ export default function HeaderBottom() {
             <div className="h-5 w-px bg-gray-200 mr-2" />
 
             {/* Category tabs */}
-            <nav className="flex items-center overflow-x-auto scrollbar-hide">
+            <nav className="flex items-center">
               {categories.map((cat) => (
-                <div key={cat} className="relative group">
+                <div key={cat} className="relative">
                   <Link
                     href={`/products?category=${encodeURIComponent(cat)}`}
                     onMouseEnter={() => setActiveCategory(cat)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, Search, ShoppingCart, Store, User } from "lucide-react";
+import { Heart, Search, ShoppingCart, Store, Tag, User } from "lucide-react";
 import Link from "next/link";
 import HeaderBottom from "./header-bottom";
 import useUser from "@/hooks/useUser";
@@ -17,6 +17,27 @@ interface NavIconProps {
   label: string;
   count?: number;
   hidden?: boolean;
+}
+
+interface BrandResult {
+  name: string;
+  products: {
+    id: string;
+    title: string;
+    slug: string;
+    salePrice: number;
+    regularPrice: number;
+    ratings: number;
+    brand: string | null;
+    stock: number;
+    images: { url: string }[];
+  }[];
+}
+
+interface SearchResults {
+  products: { id: string; title: string; slug: string }[];
+  shops: { id: string; name: string; avatar: string | null; category: string }[];
+  brands: BrandResult[];
 }
 
 function NavIcon({ href, icon, label, count, hidden }: NavIconProps) {
@@ -50,10 +71,12 @@ export default function Header() {
   const { layout } = useLayout();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<any[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+
+  const [results, setResults] = useState<SearchResults | null>(null);
+  const [searchedOnce, setSearchedOnce] = useState(false);
 
   const scrollState = useScrollBehavior(80, 80);
   const isShrunken = scrollState === "scrolled-down";
@@ -62,9 +85,10 @@ export default function Header() {
   async function handleSearch() {
     if (!searchQuery.trim()) return;
     setLoadingSuggestions(true);
+    setSearchedOnce(true);
     try {
-      const res = await axiosInstance.get(`/product/api/search-products?q=${encodeURIComponent(searchQuery)}`);
-      setSuggestions(res.data.products.slice(0, 10));
+      const res = await axiosInstance.get(`/product/api/search?q=${encodeURIComponent(searchQuery)}`);
+      setResults(res.data);
     } catch (error) {
       console.log(error);
     } finally {
@@ -72,10 +96,19 @@ export default function Header() {
     }
   }
 
+  const hasResults = results && (results.products?.length > 0 || results.shops?.length > 0 || results.brands?.length > 0);
+
+  function clearSearch() {
+    setResults(null);
+    setSearchQuery("");
+    setSearchedOnce(false);
+  }
+
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
-        setSuggestions([]);
+        setResults(null);
+        setSearchedOnce(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -125,7 +158,13 @@ export default function Header() {
                 value={searchQuery}
                 placeholder={isShrunken ? "Search..." : "Search for products, brands and vendors..."}
                 className="flex-1 px-2 text-sm outline-none bg-transparent text-gray-800 placeholder:text-gray-400 h-full transition-all duration-300"
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  if (e.target.value === "") {
+                    setResults(null);
+                    setSearchedOnce(false);
+                  }
+                }}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
@@ -140,34 +179,83 @@ export default function Header() {
               </button>
             </div>
 
-            {/* Suggestions dropdown
-                z-[300] — above the fixed header (z-100), nav bar (z-89), and mega menu (z-89).
-                Rendered outside the overflow-hidden row, so it is never clipped. */}
-            {(suggestions.length > 0 || loadingSuggestions) && (
-              <div className="absolute left-0 right-0 top-[calc(100%+4px)] bg-white border border-gray-200 rounded-lg shadow-xl z-[300] overflow-hidden">
+            {(hasResults || loadingSuggestions || searchedOnce) && (
+              <div className="absolute left-0 right-0 top-[calc(100%+4px)] bg-white border border-gray-200 rounded-lg shadow-lg z-[300] overflow-hidden">
                 {loadingSuggestions ? (
                   <div className="px-4 py-3 text-sm text-gray-500 flex items-center gap-2">
                     <span className="w-3.5 h-3.5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin shrink-0" />
                     Searching...
                   </div>
                 ) : (
-                  <ul>
-                    {suggestions.map((item) => (
-                      <li key={item.id}>
-                        <Link
-                          href={`/product/${item.slug}`}
-                          onClick={() => {
-                            setSuggestions([]);
-                            setSearchQuery("");
-                          }}
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 transition-colors border-b border-gray-50 last:border-0"
-                        >
-                          <Search size={12} className="text-gray-400 shrink-0" />
-                          {item.title}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="py-1">
+                    {/* ── Products ── */}
+                    {results!.products.length > 0 && (
+                      <section>
+                        <p className="px-4 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-400">Products</p>
+                        <ul>
+                          {results!.products.map((item) => (
+                            <li key={item.id}>
+                              <Link
+                                href={`/product/${item.slug}`}
+                                onClick={clearSearch}
+                                className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors"
+                              >
+                                <Search size={12} className="text-gray-400 shrink-0" />
+                                {item.title}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </section>
+                    )}
+
+                    {/* ── Shops ── */}
+                    {results!.shops.length > 0 && (
+                      <section>
+                        <p className="px-4 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-400">Stores</p>
+                        <ul>
+                          {results!.shops.map((shop) => (
+                            <li key={shop.id}>
+                              <Link
+                                href={`/shop/${shop.id}`}
+                                onClick={clearSearch}
+                                className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors"
+                              >
+                                <Store size={12} className="text-gray-400 shrink-0" />
+                                <span className="flex-1">{shop.name}</span>
+                                <span className="text-[11px] text-gray-400">{shop.category.toUpperCase()}</span>
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </section>
+                    )}
+
+                    {/* ── Brands ── */}
+                    {results!.brands.length > 0 && (
+                      <section>
+                        <p className="px-4 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-widest text-gray-400">Brands</p>
+                        <ul>
+                          {results!.brands.map((brand) => (
+                            <li key={brand.name}>
+                              <Link
+                                href={`/brands/${encodeURIComponent(brand.name.toLowerCase())}`}
+                                onClick={clearSearch}
+                                className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors"
+                              >
+                                <Tag size={12} className="text-gray-400 shrink-0" />
+                                <span className="flex-1">{brand.name}</span>
+                                <span className="text-[11px] text-gray-400">{brand.products.length} products</span>
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </section>
+                    )}
+
+                    {/* No results */}
+                    {!hasResults && <p className="px-4 py-3 text-sm text-gray-400">No results found.</p>}
+                  </div>
                 )}
               </div>
             )}

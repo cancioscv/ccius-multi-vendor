@@ -571,7 +571,7 @@ export async function getProductBySlug(req: Request, res: Response, next: NextFu
 // Get filtered products
 export async function getFilteredProducts(req: Request, res: Response, next: NextFunction) {
   try {
-    const { priceRange = [0, 10000], categories = [], subCategory, productType, colors = [], sizes = [], page = 1, limit = 12 } = req.query;
+    const { priceRange = [0, 10000], categories = [], subCategory, productType, colors = [], sizes = [], page = 1, limit = 12, brand } = req.query;
 
     const parsedPriceRange = typeof priceRange === "string" ? priceRange.split(",").map(Number) : [0, 10000];
     const parsedPage = Number(page);
@@ -610,6 +610,14 @@ export async function getFilteredProducts(req: Request, res: Response, next: Nex
     if (sizes && (sizes as string[]).length > 0) {
       filters.sizes = {
         hasSome: Array.isArray(sizes) ? sizes : String(sizes).split(","),
+      };
+    }
+
+    // ✅ Brand filter — case-insensitive match
+    if (brand && String(brand).length > 0) {
+      filters.brand = {
+        contains: String(brand),
+        mode: "insensitive",
       };
     }
 
@@ -788,43 +796,103 @@ export async function getFilteredShops(req: Request, res: Response, next: NextFu
 }
 
 // Search products
-export async function searchProducts(req: Request, res: Response, next: NextFunction) {
+export async function unifiedSearch(req: Request, res: Response, next: NextFunction) {
   try {
-    const query = req.query.q as string;
+    const query = (req.query.q as string)?.trim();
 
-    if (!query || query.trim().length === 0) {
+    if (!query || query.length === 0) {
       return res.status(400).json({ message: "Search query is required." });
     }
 
-    const products = await prisma.product.findMany({
-      where: {
-        OR: [
-          {
-            title: {
-              contains: query,
-              mode: "insensitive",
-            },
-          },
-          {
-            description: {
-              contains: query,
-              mode: "insensitive",
-            },
-          },
-        ],
-      },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-      },
-      take: 10,
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    const filter = { contains: query, mode: "insensitive" as const };
 
-    return res.status(200).json({ products });
+    const [products, shops, brandResults] = await Promise.all([
+      // Products: match title or description
+      prisma.product.findMany({
+        where: {
+          isDeleted: false,
+          status: "Active",
+          OR: [{ title: filter }, { description: filter }],
+        },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          brand: true,
+          regularPrice: true,
+          salePrice: true,
+          images: {
+            select: {
+              url: true,
+            },
+            take: 1, // only the first image for the thumbnail
+          },
+        },
+        take: 6,
+        orderBy: { totalSales: "desc" },
+      }),
+
+      // Shops: match name, bio, or category
+      prisma.shop.findMany({
+        where: {
+          isDeleted: false,
+          OR: [{ name: filter }, { bio: filter }, { category: filter }],
+        },
+        select: { id: true, name: true, avatar: true, category: true },
+        take: 4,
+        orderBy: { ratings: "desc" },
+      }),
+
+      // Brands: query distinct brand values from active products
+      prisma.product.findMany({
+        where: {
+          isDeleted: false,
+          status: "Active",
+          AND: [{ brand: { not: null } }, { brand: { contains: query, mode: "insensitive" } }],
+        },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          salePrice: true,
+          regularPrice: true,
+          ratings: true,
+          brand: true,
+          stock: true,
+          totalSales: true,
+          images: {
+            select: {
+              url: true,
+            },
+            take: 1, // only the first image for the thumbnail
+          },
+        },
+        take: 6,
+        orderBy: { totalSales: "desc" },
+      }),
+    ]);
+
+    // Deduplicate brand names case-insensitively
+    const seen = new Set<string>();
+    const brandMap = new Map<string, typeof brandResults>();
+
+    for (const product of brandResults) {
+      if (!product.brand) continue;
+      const key = product.brand.toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        brandMap.set(key, []);
+      }
+      brandMap.get(key)!.push(product);
+    }
+
+    // Shape: [{ name: "Dell", products: [...] }, ...]
+    const brands = Array.from(brandMap.entries()).map(([key, products]) => ({
+      name: products[0].brand as string, // use first occurrence casing
+      products,
+    }));
+
+    return res.status(200).json({ products, shops, brands });
   } catch (error) {
     return next(error);
   }

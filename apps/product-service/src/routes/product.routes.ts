@@ -15,7 +15,7 @@ import {
   getFilteredProducts,
   getFilteredOffers,
   getFilteredShops,
-  searchProducts,
+  unifiedSearch,
   getTopShops,
   getAllOffers,
   getStripeAccount,
@@ -49,7 +49,7 @@ router.get("/product/:slug", getProductBySlug);
 router.get("/filtered-products", getFilteredProducts);
 router.get("/filtered-offers", getFilteredOffers);
 router.get("/filtered-shops", getFilteredShops);
-router.get("/search-products", searchProducts);
+router.get("/search", unifiedSearch);
 router.get("/top-shops", getTopShops);
 router.get("/all-offers", getAllOffers);
 router.post("/slug-validator", isAuth, isSeller, slugValidator);

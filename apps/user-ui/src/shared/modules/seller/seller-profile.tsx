@@ -120,7 +120,7 @@ export default function SellerProfile({ shop, followersCount }: SellerProfile) {
       </div>
 
       {/* Seller Info Section */}
-      <div className="w-[85%] lg:w-[70%] mt-[-50px] mx-auto relative z-20 flex flex-col lg:flex-row gap-6">
+      <div className="w-[85%] mt-[-50px] mx-auto relative z-20 flex flex-col lg:flex-row gap-6">
         <div className="bg-gray-200 p-6 rounded-lg shadow-lg flex-1">
           <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
             <div className="relative w-[100px] h-[100px] rounded-full border-4 border-slate-300 overflow-hidden">
@@ -196,7 +196,7 @@ export default function SellerProfile({ shop, followersCount }: SellerProfile) {
       </div>
 
       {/* Tabs Section */}
-      <div className="w-[85%] lg:w-[70%] mx-auto mt-8">
+      <div className="w-full mx-auto mt-6">
         {/* Tabs */}
         <div className="flex border-b border-gray-300">
           {TABS.map((tab) => (
