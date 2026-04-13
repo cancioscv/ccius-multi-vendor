@@ -14,8 +14,8 @@ body {
   font-family: inherit;
   line-height: inherit;
 
-  max-width: 1280px;
-  margin: 0 auto;
+  /* max-width: 1280px; */
+  /* margin: 0 auto; */
 }
 h1,
 h2,

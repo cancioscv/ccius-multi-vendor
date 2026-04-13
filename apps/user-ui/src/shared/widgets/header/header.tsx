@@ -120,13 +120,10 @@ export default function Header() {
       {/* Spacer — keeps content from jumping under the fixed header */}
       <div style={{ height: TOTAL_EXPANDED_H }} aria-hidden="true" />
 
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1280px] z-[100] bg-white shadow-sm">
-        {/* ── Main header row ──
-            IMPORTANT: NO overflow-hidden here — it would clip the suggestions dropdown.
-            Height is controlled by the transition on this div itself, and logo/icons
-            clip themselves individually where needed. */}
+      <div className="fixed top-0 left-0 w-full z-[100] bg-white shadow-sm">
+        {/* ── Main header row ──*/}
         <div
-          className={`w-full mx-auto flex items-center gap-4 transition-all duration-300 ease-in-out pl-4 pr-4 border-b border-gray-300 ${
+          className={`max-w-[1280px] mx-auto flex items-center gap-4 transition-all duration-300 ease-in-out px-4  ${
             isShrunken ? "h-[48px]" : "h-[74px]"
           }`}
         >
@@ -308,6 +305,8 @@ export default function Header() {
             </Link>
           </div>
         </div>
+
+        <div className="border-b border-gray-300 w-full" />
 
         {/* ── Nav bar (categories) — slides in/out ── */}
         <div className={`transition-all duration-300 ease-in-out overflow-hidden ${showNav ? "max-h-[56px] opacity-100" : "max-h-0 opacity-0"}`}>
