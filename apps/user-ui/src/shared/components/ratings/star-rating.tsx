@@ -1,5 +1,5 @@
 import { cn } from "@e-com/ui";
-import { StarHalf, StarIcon } from "lucide-react";
+import { Star, StarHalf } from "lucide-react";
 
 const MAX_RATING = 5;
 const MIN_RATING = 0;
@@ -21,20 +21,18 @@ export default function StarRating({ rating, className, iconClassName, text }: S
 
         if (fill >= 1) {
           // Full star
-          return <StarIcon key={index} className={cn("size-4 fill-black", iconClassName)} />;
+          return <Star key={index} size={15} className="fill-amber-400 text-amber-400" />;
         } else if (fill > 0 && fill < 1) {
           // Half star
           return (
-            <div key={index} className="relative size-4">
-              {/* Full empty star for the outline */}
-              <StarIcon className={cn("size-4 absolute inset-0", iconClassName)} />
-              {/* Half filled star on top */}
-              <StarHalf className={cn("size-4 absolute inset-0 fill-black", iconClassName)} />
-            </div>
+            <span key={index} className="relative" style={{ width: 15, height: 15, display: "inline-block" }}>
+              <Star size={15} className="absolute inset-0 text-gray-300" />
+              <StarHalf size={15} className="absolute inset-0 fill-amber-400 text-amber-400" />
+            </span>
           );
         } else {
           // Empty star
-          return <StarIcon key={index} className={cn("size-4", iconClassName)} />;
+          return <Star key={index} size={15} className="text-gray-300" />;
         }
       })}
       {text && <p>{text}</p>}

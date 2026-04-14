@@ -353,13 +353,13 @@ export default function ProductsPage() {
           {/* product grid */}
           <div className="flex-1 px-2 lg:px-3">
             {isProductLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {Array.from({ length: 10 }).map((_, index) => (
                   <div key={index} className="h-[250px] bg-gray-300 animate-pulse rounded-xl"></div>
                 ))}
               </div>
             ) : products.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {products.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
