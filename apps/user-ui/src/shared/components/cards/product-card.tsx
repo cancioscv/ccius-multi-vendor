@@ -95,7 +95,7 @@ export default function ProductCard({ product, isEvent }: Props) {
         )}
         {product?.stock <= 5 && (
           <span
-            className="absolute z-10 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-yellow-400 text-yellow-900"
+            className="absolute z-10 text-[11px] font-semibold px-2.5 py-1 rounded-xl bg-orange-600 text-white"
             style={{ top: badge ? "2.5rem" : "0.75rem", left: "0.75rem" }}
           >
             Limited Stock
@@ -146,7 +146,7 @@ export default function ProductCard({ product, isEvent }: Props) {
       {/* Content */}
       <div className="px-4 py-3 flex flex-col gap-1 flex-1" style={{ background: "#f9f9f7" }}>
         {/* Shop name */}
-        <Link href={`/shop/${product?.shop?.id}`} className="text-[13px] font-semibold text-green-600 hover:underline truncate">
+        <Link href={`/shop/${product?.shop?.id}`} className="text-[13px] font-semibold text-orange-600 hover:underline truncate">
           {product?.shop?.name}
         </Link>
 
@@ -171,9 +171,9 @@ export default function ProductCard({ product, isEvent }: Props) {
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-baseline gap-2">
             <span className="text-[18px] font-bold text-gray-900">${product?.salePrice?.toFixed(2)}</span>
-            {hasDiscount && <span className="text-[13px] text-gray-400 line-through">${product?.regularPrice?.toFixed(2)}</span>}
+            {hasDiscount && <span className="text-[13px] text-stone-500 line-through">${product?.regularPrice?.toFixed(2)}</span>}
           </div>
-          {product?.totalSales > 0 && <span className="text-[13px] font-medium text-green-500">{product.totalSales} sold</span>}
+          {product?.totalSales > 0 && <span className="text-[13px] font-medium text-stone-500">{product.totalSales} sold</span>}
         </div>
 
         {/* Event countdown */}

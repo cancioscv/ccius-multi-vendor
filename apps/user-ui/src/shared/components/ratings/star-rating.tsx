@@ -21,13 +21,13 @@ export default function StarRating({ rating, className, iconClassName, text }: S
 
         if (fill >= 1) {
           // Full star
-          return <Star key={index} size={15} className="fill-amber-400 text-amber-400" />;
+          return <Star key={index} size={15} className="fill-orange-400 text-orange-400" />;
         } else if (fill > 0 && fill < 1) {
           // Half star
           return (
             <span key={index} className="relative" style={{ width: 15, height: 15, display: "inline-block" }}>
               <Star size={15} className="absolute inset-0 text-gray-300" />
-              <StarHalf size={15} className="absolute inset-0 fill-amber-400 text-amber-400" />
+              <StarHalf size={15} className="absolute inset-0 fill-orange-400 text-orange-400" />
             </span>
           );
         } else {

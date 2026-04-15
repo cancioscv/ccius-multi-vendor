@@ -21,14 +21,14 @@ export default function Hero() {
 
           {/* Heading */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-white leading-[1.1] mb-4">
-            Discover Unique
+            Discover & Shop
             <br />
-            <span className="text-orange-500">Artisan Goods</span>
+            <span className="text-orange-500">From Top Vendors</span>
           </h1>
 
           {/* Description */}
-          <p className="text-white/80 text-lg mb-8 max-w-md leading-relaxed">
-            Shop directly from independent creators and small businesses. Every purchase supports a real maker.
+          <p className="text-white/80 text-lg mb-8 max-w-lg leading-relaxed">
+            Browse thousands of products from trusted sellers worldwide. Electronics, fashion, home goods - all in one place.
           </p>
 
           {/* Buttons */}
