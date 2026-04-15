@@ -40,7 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`antialiased ${roboto.variable} ${poppins.variable}  ${oregano.variable} ${jost.variable} bg-[#f5f5f5]`}>
         <Providers>
           <Header />
-          <main className="max-w-[1280px] mx-auto px-4">{children}</main> <Footer />
+          <main className="max-w-[1370px] mx-auto px-4">{children}</main> <Footer />
           <ToastContainer position="bottom-right" />
         </Providers>
       </body>

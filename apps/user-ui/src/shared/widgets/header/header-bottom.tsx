@@ -62,7 +62,7 @@ export default function HeaderBottom() {
     <>
       {/* ── Category bar ── */}
       <div className="w-full bg-white border-b border-gray-200">
-        <div className="max-w-[1280px] mx-auto px-4 flex items-center">
+        <div className="max-w-[1370px] mx-auto px-4 flex items-center">
           <div className="flex items-center">
             {/* All Categories trigger */}
             <button
@@ -132,7 +132,7 @@ export default function HeaderBottom() {
           onMouseLeave={scheduleClose} // ✅ schedule close when mouse leaves panel
           className="w-full bg-white border-t border-gray-100 shadow-2xl absolute left-0 z-[89]"
         >
-          <div className="max-w-[1280px] mx-auto px-4 flex" style={{ minHeight: 420 }}>
+          <div className="max-w-[1370px] mx-auto px-4 flex" style={{ minHeight: 420 }}>
             {/* Left: category list */}
             <div className="w-[240px] border-r border-gray-100 py-2 shrink-0">
               {categories.map((cat) => (

@@ -10,7 +10,7 @@ export default function Footer() {
   if (pathname === "/inbox") return null;
   return (
     <footer className="w-full bg-[#F4F7F9] border-t border-t-slate-200 py-10 text-gray-700">
-      <div className="max-w-[1280px] mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
+      <div className="max-w-[1370px] mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-10">
         {/* About Company */}
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2"></h2>
@@ -127,7 +127,7 @@ export default function Footer() {
       <div className="border-b border-gray-300 w-full" />
 
       {/* Footer Bottom */}
-      <div className="max-w-[1280px] mx-auto px-4  pt-4 flex flex-col lg:flex-row items-center justify-between">
+      <div className="max-w-[1370px] mx-auto px-4  pt-4 flex flex-col lg:flex-row items-center justify-between">
         <p className="text-sm">© 2025 All Rights Reserved | Becodemy Private Ltd</p>
 
         {/* Back to Top Button */}

@@ -108,7 +108,7 @@ export default function ProductCard({ product, isEvent }: Props) {
             alt={product?.title}
             width={400}
             height={260}
-            className="w-full h-[260px] object-cover"
+            className="w-full h-[315px] object-cover"
           />
         </Link>
 
@@ -146,7 +146,7 @@ export default function ProductCard({ product, isEvent }: Props) {
       {/* Content */}
       <div className="px-4 py-3 flex flex-col gap-1 flex-1" style={{ background: "#f9f9f7" }}>
         {/* Shop name */}
-        <Link href={`/shop/${product?.shop?.id}`} className="text-[13px] font-semibold text-orange-600 hover:underline truncate">
+        <Link href={`/shop/${product?.shop?.id}`} className="text-[13px] font-semibold text-orange-600 hover:underline truncate mb-1">
           {product?.shop?.name}
         </Link>
 

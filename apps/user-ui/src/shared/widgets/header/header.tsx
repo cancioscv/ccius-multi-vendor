@@ -123,7 +123,7 @@ export default function Header() {
       <div className="fixed top-0 left-0 w-full z-[100] bg-white shadow-sm">
         {/* ── Main header row ──*/}
         <div
-          className={`max-w-[1280px] mx-auto flex items-center gap-4 transition-all duration-300 ease-in-out px-4  ${
+          className={`max-w-[1370px] mx-auto flex items-center gap-4 transition-all duration-300 ease-in-out px-4  ${
             isShrunken ? "h-[48px]" : "h-[74px]"
           }`}
         >

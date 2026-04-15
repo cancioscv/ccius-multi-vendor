@@ -11,8 +11,8 @@ export default function Hero() {
         <div className="absolute inset-0 bg-black/40" />
       </div>
 
-      {/* Content - Aligned with main container (max-w-[1280px]) */}
-      <div className="relative z-10 max-w-[1280px] mx-auto px-4 py-24 md:py-36 lg:py-44">
+      {/* Content - Aligned with main container (max-w-[1370px]) */}
+      <div className="relative z-10 max-w-[1370px] mx-auto px-4 py-24 md:py-36 lg:py-44">
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="max-w-xl">
           {/* Badge */}
           <span className="inline-block px-4 py-1.5 rounded-full bg-black/50 text-white text-xs font-semibold tracking-wider uppercase mb-6 backdrop-blur-sm border border-white/10">
