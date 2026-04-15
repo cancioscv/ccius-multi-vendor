@@ -68,7 +68,7 @@ export default function HeaderBottom() {
             <button
               onMouseEnter={openMenu} // ✅ open
               onMouseLeave={scheduleClose} // ✅ schedule close (cancelled if mouse enters panel)
-              className="flex items-center gap-2 pr-6 py-3 font-medium text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap"
+              className="flex items-center gap-2 pr-6 py-3 font-medium text-gray-700 hover:text-orange-500 transition-colors whitespace-nowrap"
             >
               {showMegaMenu ? <X size={18} /> : <AlignLeft size={18} />}
               <span>All Categories</span>
@@ -86,12 +86,12 @@ export default function HeaderBottom() {
                     onMouseEnter={() => setActiveCategory(cat)}
                     onMouseLeave={() => setActiveCategory(null)}
                     className={`relative px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors block ${
-                      activeCategory === cat || activeCats.includes(cat) ? "text-blue-600" : "text-gray-600 hover:text-blue-600"
+                      activeCategory === cat || activeCats.includes(cat) ? "text-orange-500" : "text-gray-600 hover:text-orange-500"
                     }`}
                   >
                     {cat}
                     <span
-                      className={`absolute bottom-0 left-0 right-0 h-[2.5px] bg-blue-600 transition-all duration-200 ${
+                      className={`absolute bottom-0 left-0 right-0 h-[2.5px] bg-orange-500 transition-all duration-200 ${
                         activeCategory === cat || activeCats.includes(cat) ? "opacity-100 scale-x-100" : "opacity-0 scale-x-0"
                       } origin-left`}
                     />
@@ -110,7 +110,7 @@ export default function HeaderBottom() {
                         <Link
                           key={sub}
                           href={`/products?category=${encodeURIComponent(cat)}&subCategory=${encodeURIComponent(sub)}`}
-                          className="flex items-center justify-between px-5 py-2.5 text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors text-sm border-b border-gray-50 last:border-b-0"
+                          className="flex items-center justify-between px-5 py-2.5 text-gray-600 hover:bg-blue-50 hover:text-orange-500 transition-colors text-sm border-b border-gray-50 last:border-b-0"
                         >
                           {sub}
                           <span className="text-gray-300 text-xs">›</span>
@@ -142,7 +142,7 @@ export default function HeaderBottom() {
                   onClick={() => setShowMegaMenu(false)}
                   className={`w-full flex items-center justify-between px-5 py-3 text-sm font-medium transition-colors text-left ${
                     megaActiveCategory === cat
-                      ? "bg-blue-50 text-blue-600 border-l-[3px] border-blue-600"
+                      ? "bg-blue-50 text-orange-500 border-l-[3px] border-orange-500"
                       : "text-gray-700 hover:bg-gray-50 border-l-[3px] border-transparent"
                   }`}
                 >
@@ -155,7 +155,7 @@ export default function HeaderBottom() {
               <Link
                 href="/products"
                 onClick={() => setShowMegaMenu(false)}
-                className="block px-5 py-3 text-sm font-semibold text-blue-600 hover:underline"
+                className="block px-5 py-3 text-sm font-semibold text-orange-500 hover:underline"
               >
                 View All Categories
               </Link>
@@ -172,7 +172,7 @@ export default function HeaderBottom() {
                         <Link
                           href={`/products?category=${encodeURIComponent(megaActiveCategory)}&subCategory=${encodeURIComponent(sub)}`}
                           onClick={() => setShowMegaMenu(false)}
-                          className="block text-xs font-bold uppercase tracking-wider text-gray-800 hover:text-blue-600 mb-2"
+                          className="block text-xs font-bold uppercase tracking-wider text-gray-800 hover:text-orange-500 mb-2"
                         >
                           {sub}
                         </Link>
@@ -184,7 +184,7 @@ export default function HeaderBottom() {
                                   sub
                                 )}&productType=${encodeURIComponent(type)}`}
                                 onClick={() => setShowMegaMenu(false)}
-                                className="text-sm text-gray-500 hover:text-blue-600 transition-colors"
+                                className="text-sm text-gray-500 hover:text-orange-500 transition-colors"
                               >
                                 {type}
                               </Link>

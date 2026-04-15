@@ -51,7 +51,7 @@ function NavIcon({ href, icon, label, count, hidden }: NavIconProps) {
       <div className="relative">
         {icon}
         {count !== undefined && count > 0 && (
-          <span className="absolute -top-[7px] -right-[7px] min-w-[17px] h-[17px] bg-blue-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none px-[3px]">
+          <span className="absolute -top-[7px] -right-[7px] min-w-[17px] h-[17px] bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none px-[3px]">
             {count > 99 ? "99+" : count}
           </span>
         )}
@@ -147,7 +147,7 @@ export default function Header() {
             <div
               className={`flex items-center border rounded-lg overflow-hidden transition-all duration-300 bg-white ${
                 isShrunken ? "h-[32px]" : "h-[40px]"
-              } ${isFocused ? "border-blue-500 ring-2 ring-blue-100" : "border-gray-300 hover:border-gray-400"}`}
+              } ${isFocused ? "border-orange-400 ring-2 ring-orange-100" : "border-gray-300 hover:border-gray-400"}`}
             >
               <Search size={isShrunken ? 13 : 16} className="ml-3 shrink-0 text-gray-400 transition-all duration-300" />
               <input
@@ -168,7 +168,7 @@ export default function Header() {
               />
               <button
                 onClick={handleSearch}
-                className={`h-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium transition-all duration-300 shrink-0 rounded-r-lg ${
+                className={`h-full bg-orange-500 hover:opacity-90 transition-opacity active:bg-orange-700 text-white font-medium duration-300 shrink-0 rounded-r-lg ${
                   isShrunken ? "px-3 text-xs" : "px-4 text-sm"
                 }`}
               >
@@ -180,7 +180,7 @@ export default function Header() {
               <div className="absolute left-0 right-0 top-[calc(100%+4px)] bg-white border border-gray-200 rounded-lg shadow-lg z-[300] overflow-hidden">
                 {loadingSuggestions ? (
                   <div className="px-4 py-3 text-sm text-gray-500 flex items-center gap-2">
-                    <span className="w-3.5 h-3.5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin shrink-0" />
+                    <span className="w-3.5 h-3.5 border-2 border-orange-400 border-t-transparent rounded-full animate-spin shrink-0" />
                     Searching...
                   </div>
                 ) : (
@@ -195,7 +195,7 @@ export default function Header() {
                               <Link
                                 href={`/product/${item.slug}`}
                                 onClick={clearSearch}
-                                className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors"
+                                className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 transition-colors"
                               >
                                 <Search size={12} className="text-gray-400 shrink-0" />
                                 {item.title}
@@ -216,7 +216,7 @@ export default function Header() {
                               <Link
                                 href={`/shop/${shop.id}`}
                                 onClick={clearSearch}
-                                className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors"
+                                className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 transition-colors"
                               >
                                 <Store size={12} className="text-gray-400 shrink-0" />
                                 <span className="flex-1">{shop.name}</span>
@@ -238,7 +238,7 @@ export default function Header() {
                               <Link
                                 href={`/brands/${encodeURIComponent(brand.name.toLowerCase())}`}
                                 onClick={clearSearch}
-                                className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors"
+                                className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 transition-colors"
                               >
                                 <Tag size={12} className="text-gray-400 shrink-0" />
                                 <span className="flex-1">{brand.name}</span>
@@ -294,7 +294,7 @@ export default function Header() {
               <div className="relative">
                 <ShoppingCart size={isShrunken ? 18 : 22} className="text-gray-600 group-hover:text-gray-800 transition-colors" />
                 {(cart?.length ?? 0) > 0 && (
-                  <span className="absolute -top-[7px] -right-[7px] min-w-[17px] h-[17px] bg-blue-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none px-[3px]">
+                  <span className="absolute -top-[7px] -right-[7px] min-w-[17px] h-[17px] bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none px-[3px]">
                     {(cart?.length ?? 0) > 99 ? "99+" : cart?.length}
                   </span>
                 )}
