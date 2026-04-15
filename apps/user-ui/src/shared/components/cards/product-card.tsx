@@ -66,7 +66,6 @@ export default function ProductCard({ product, isEvent }: Props) {
     }
   }
 
-  // Correct star rendering: full, half, empty based on decimal rating
   function renderStars(rating: number) {
     return Array.from({ length: 5 }).map((_, i) => {
       const index = i + 1;
@@ -86,7 +85,7 @@ export default function ProductCard({ product, isEvent }: Props) {
   }
 
   return (
-    <div className="w-full bg-white rounded-2xl border border-gray-100 overflow-hidden flex flex-col shadow-sm">
+    <div className="w-full bg-white rounded-2xl border border-gray-100 overflow-hidden flex flex-col shadow-sm group hover:shadow-xl transition-all duration-300">
       {/* Image area */}
       <div className="relative">
         {/* Badge — top left */}
@@ -112,31 +111,31 @@ export default function ProductCard({ product, isEvent }: Props) {
           />
         </Link>
 
-        {/* Wishlist — top right */}
+        {/* Wishlist — fade in on hover */}
         <button
           onClick={() =>
             isWishlisted
               ? removeFromWishlist(product.id, user, location, deviceInfo)
               : addToWishlist({ ...product, quantity: 1 }, user, location, deviceInfo)
           }
-          className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm hover:scale-110 transition-transform z-10"
+          className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm hover:scale-110 transition-all duration-300 opacity-0 group-hover:opacity-100 z-10"
         >
           <Heart size={18} fill={isWishlisted ? "#ef4444" : "transparent"} stroke={isWishlisted ? "#ef4444" : "#9ca3af"} />
         </button>
 
-        {/* Eye preview — middle right */}
+        {/* Eye preview — fade in on hover */}
         <button
           onClick={() => setOpen(!open)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm hover:scale-110 transition-transform z-10"
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm hover:scale-110 transition-all duration-300 opacity-0 group-hover:opacity-100 z-10"
         >
           <Eye size={18} className="text-gray-400" />
         </button>
 
-        {/* Cart — bottom right, orange */}
+        {/* Cart — fade in on hover */}
         <button
           onClick={handleAddToCart}
           disabled={isInCart(product.id)}
-          className="absolute bottom-3 right-3 w-10 h-10 rounded-full flex items-center justify-center shadow-sm hover:scale-110 transition-transform z-10 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="absolute bottom-3 right-3 w-10 h-10 rounded-full flex items-center justify-center shadow-sm hover:scale-110 transition-all duration-300 opacity-0 group-hover:opacity-100 z-10 disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ background: isInCart(product.id) ? "#d1d5db" : "#f97316" }}
         >
           <ShoppingCart size={18} className="text-white" />
@@ -159,10 +158,7 @@ export default function ProductCard({ product, isEvent }: Props) {
 
         {/* Stars + rating number + review count */}
         <div className="flex items-center gap-1.5 mt-0.5">
-          {/* <div className="flex items-center gap-[2px]">{renderStars(reviewRating)}</div> */}
-
           <StarRating rating={product?.reviewRating} iconClassName="size-4" />
-
           {reviewRating > 0 && <span className="text-[13px] font-medium text-gray-700">{reviewRating.toFixed(1)}</span>}
           {reviewCount > 0 && <span className="text-[13px] text-gray-400">({reviewCount})</span>}
         </div>
