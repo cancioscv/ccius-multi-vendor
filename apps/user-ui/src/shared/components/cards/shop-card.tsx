@@ -1,4 +1,5 @@
-import { ArrowUpRight, MapPin, Star } from "lucide-react";
+import { Button } from "@e-com/ui";
+import { ExternalLink, MapPin, Star, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -18,7 +19,7 @@ interface ShopCardProps {
 
 export default function ShopCard({ shop }: ShopCardProps) {
   return (
-    <div className="w-full rounded-md bg-white border border-gray-200 shadow-sm overflow-hidden transition">
+    <div className="w-full rounded-2xl bg-white border border-gray-200 shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
       {/* Cover */}
       <div className="h-[120px] w-full relative">
         <Image src={shop?.coverBanner || "/placeholder.png"} alt="Cover" fill className="object-cover w-full h-full" />
@@ -33,12 +34,17 @@ export default function ShopCard({ shop }: ShopCardProps) {
 
       {/* Info */}
       <div className="px-4 pb-4 pt-2 text-center">
-        <h3 className="text-base font-semibold text-gray-800">{shop?.name}</h3>
+        <h3 className="text-base font-semibold font-heading text-gray-800 group-hover:text-orange-500 transition-colors duration-300">
+          {shop?.name}
+        </h3>
 
-        <p className="text-xs text-gray-500 mt-0.5">{shop?.followers?.length ?? 0} Followers</p>
+        <div className="flex items-center justify-center gap-1 mt-1 text-xs text-muted-foreground text-gray-500">
+          <Users className="h-3 w-3" />
+          <span>{shop?.followers?.length ?? 0} Followers</span>
+        </div>
 
         {/* Address + Rating */}
-        <div className="flex items-center justify-center text-xs text-gray-500 mt-2 gap-4 flex-wrap">
+        <div className="flex items-center justify-center text-xs text-gray-500 mt-3 gap-4 flex-wrap">
           {shop.address && (
             <span className="flex items-center gap-1 max-w-[120px]">
               <MapPin className="w-4 h-4 shrink-0" />
@@ -55,20 +61,20 @@ export default function ShopCard({ shop }: ShopCardProps) {
         {/* Category */}
         {shop?.category && (
           <div className="mt-3 flex flex-wrap justify-center gap-2 text-xs">
-            <span className="bg-blue-50 capitalize text-blue-600 px-2 py-0.5 rounded-full font-medium">{shop.category}</span>
+            <span className="bg-[#F3F0ED] capitalize text-[#251D18] px-2 py-0.5 rounded-full font-medium">{shop.category}</span>
           </div>
         )}
 
-        {/* Visit Button */}
-        <div className="mt-4">
-          <Link
-            href={`/shop/${shop.id}`}
-            className="inline-flex items-center text-sm text-blue-600 font-medium hover:underline hover:text-blue-700 transition"
-          >
-            Visit Shop
-            <ArrowUpRight className="w-4 h-4 ml-1" />
+        <Button
+          asChild
+          variant="outline"
+          size="sm"
+          className="mt-4 w-full text-sm gap-1.5 hover:bg-orange-500 hover:text-white transition-colors p-4 border border-[#E9E6E2] bg-[#F9F7F5] roundeds-xl"
+        >
+          <Link href={`/shop/${shop.id}`}>
+            Visit Store <ExternalLink className="h-3 w-3" />
           </Link>
-        </div>
+        </Button>
       </div>
     </div>
   );
