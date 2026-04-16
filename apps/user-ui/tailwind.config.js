@@ -26,6 +26,8 @@ module.exports = {
         Poppins: ["var(--font-poppins)"],
         Oregano: ["var(--font-oregano)"],
         Jost: ["var(--font-jost)"],
+        sans: ["var(--font-body)"],
+        heading: ["var(--font-heading)"],
       },
       keyframes: {
         progress: {

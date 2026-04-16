@@ -68,7 +68,7 @@ export default function HeaderBottom() {
             <button
               onMouseEnter={openMenu} // ✅ open
               onMouseLeave={scheduleClose} // ✅ schedule close (cancelled if mouse enters panel)
-              className="flex items-center gap-2 pr-6 py-3 font-medium text-gray-700 hover:text-orange-500 transition-colors whitespace-nowrap"
+              className="flex items-center gap-2 pr-6 py-3 font-medium text-sm hover:text-orange-500 transition-colors whitespace-nowrap font-sans text-[#8C7B73]"
             >
               {showMegaMenu ? <X size={18} /> : <AlignLeft size={18} />}
               <span>All Categories</span>
@@ -80,13 +80,13 @@ export default function HeaderBottom() {
             {/* Category tabs */}
             <nav className="flex items-center">
               {categories.map((cat) => (
-                <div key={cat} className="relative">
+                <div key={cat} className="relative text-[#8C7B73]">
                   <Link
                     href={`/products?category=${encodeURIComponent(cat)}`}
                     onMouseEnter={() => setActiveCategory(cat)}
                     onMouseLeave={() => setActiveCategory(null)}
-                    className={`relative px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors block ${
-                      activeCategory === cat || activeCats.includes(cat) ? "text-orange-500" : "text-gray-600 hover:text-orange-500"
+                    className={`relative font-sans px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors block hover:text-orange-500 ${
+                      activeCategory === cat || (activeCats.includes(cat) && "text-orange-500")
                     }`}
                   >
                     {cat}
@@ -140,9 +140,9 @@ export default function HeaderBottom() {
                   key={cat}
                   onMouseEnter={() => setMegaActiveCategory(cat)}
                   onClick={() => setShowMegaMenu(false)}
-                  className={`w-full flex items-center justify-between px-5 py-3 text-sm font-medium transition-colors text-left ${
+                  className={`w-full flex items-center justify-between px-5 py-3 text-sm font-medium transition-colors text-left font-sans ${
                     megaActiveCategory === cat
-                      ? "bg-blue-50 text-orange-500 border-l-[3px] border-orange-500"
+                      ? "bg-[#fbf0e9] text-orange-500 border-l-[3px] border-orange-500"
                       : "text-gray-700 hover:bg-gray-50 border-l-[3px] border-transparent"
                   }`}
                 >
@@ -165,14 +165,14 @@ export default function HeaderBottom() {
             <div className="flex-1 px-8 py-6 overflow-y-auto">
               {megaActiveCategory && (
                 <>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-6">{megaActiveCategory}</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6 font-headings">{megaActiveCategory}</h2>
                   <div className="grid grid-cols-3 gap-x-8 gap-y-6">
                     {activeSubs.map((sub) => (
                       <div key={sub}>
                         <Link
                           href={`/products?category=${encodeURIComponent(megaActiveCategory)}&subCategory=${encodeURIComponent(sub)}`}
                           onClick={() => setShowMegaMenu(false)}
-                          className="block text-xs font-bold uppercase tracking-wider text-gray-800 hover:text-orange-500 mb-2"
+                          className="block text-xs font-bold uppercase tracking-wider font-sans text-[#8C7B73] hover:text-orange-500 mb-2"
                         >
                           {sub}
                         </Link>
@@ -184,7 +184,7 @@ export default function HeaderBottom() {
                                   sub
                                 )}&productType=${encodeURIComponent(type)}`}
                                 onClick={() => setShowMegaMenu(false)}
-                                className="text-sm text-gray-500 hover:text-orange-500 transition-colors"
+                                className="text-sm text-gray-500 hover:text-orange-500 transition-colors font-sans"
                               >
                                 {type}
                               </Link>

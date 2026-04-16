@@ -93,7 +93,7 @@ function Section({ title, badge, children, isLoading, isEmpty, emptyMessage = "N
       <div className="flex items-center gap-3 mb-6">
         <div className="flex flex-col gap-0.5">
           {badge && <span className="text-[11px] font-semibold tracking-widest uppercase text-orange-400">{badge}</span>}
-          <h2 className="text-xl font-bold text-gray-900 tracking-tight">{title}</h2>
+          <h2 className="text-2xl font-bold text-gray-900 tracking-wide">{title}</h2>
         </div>
       </div>
 
@@ -218,7 +218,7 @@ export default function Page() {
 
         {/* Top Shops */}
         <Section
-          title="Top Shops"
+          title="Top Vendors"
           badge="Featured"
           isLoading={isLoadingTopShops}
           isEmpty={!isLoadingTopShops && topShops?.length === 0}

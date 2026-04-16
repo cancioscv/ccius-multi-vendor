@@ -44,7 +44,7 @@ function NavIcon({ href, icon, label, count, hidden }: NavIconProps) {
   return (
     <Link
       href={href}
-      className={`relative flex flex-col items-center gap-[3px] px-2.5 py-1 rounded-md hover:bg-gray-50 transition-all duration-300 group min-w-[52px] ${
+      className={`relative flex flex-col items-center gap-[3px] px-2.5 py-1 rounded-md hover:bg-[#fbf0e9] transition-all duration-300 group min-w-[52px] ${
         hidden ? "opacity-0 w-0 min-w-0 px-0 overflow-hidden pointer-events-none" : "opacity-100"
       }`}
     >
@@ -56,7 +56,7 @@ function NavIcon({ href, icon, label, count, hidden }: NavIconProps) {
           </span>
         )}
       </div>
-      <span className="text-[11px] text-gray-500 group-hover:text-gray-700 font-medium transition-colors whitespace-nowrap">{label}</span>
+      <span className="text-[11px] text-gray-500 group-hover:text-orange-700 font-medium transition-colors whitespace-nowrap">{label}</span>
     </Link>
   );
 }
@@ -145,16 +145,16 @@ export default function Header() {
           {/* ── Search ── */}
           <div ref={searchRef} className="flex-1 relative">
             <div
-              className={`flex items-center border rounded-lg overflow-hidden transition-all duration-300 bg-white ${
+              className={`flex items-center rounded-lg overflow-hidden transition-all duration-300 bg-[#F3F0ED] border ${
                 isShrunken ? "h-[32px]" : "h-[40px]"
-              } ${isFocused ? "border-orange-400 ring-2 ring-orange-100" : "border-gray-300 hover:border-gray-400"}`}
+              } ${isFocused ? "border-orange-400" : "border-stone-200"}`}
             >
-              <Search size={isShrunken ? 13 : 16} className="ml-3 shrink-0 text-gray-400 transition-all duration-300" />
+              <Search size={isShrunken ? 13 : 16} className="ml-3 shrink-0 text-[#8C7B73] transition-all duration-300 " />
               <input
                 type="text"
                 value={searchQuery}
                 placeholder={isShrunken ? "Search..." : "Search for products, brands and vendors..."}
-                className="flex-1 px-2 text-sm outline-none bg-transparent text-gray-800 placeholder:text-gray-400 h-full transition-all duration-300"
+                className="flex-1 px-2 text-sm outline-none bg-transparent text-gray-800 placeholder:text-[#8C7B73] h-full transition-all duration-300]"
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
                   if (e.target.value === "") {
@@ -168,7 +168,7 @@ export default function Header() {
               />
               <button
                 onClick={handleSearch}
-                className={`h-full bg-orange-500 hover:opacity-90 transition-opacity active:bg-orange-700 text-white font-medium duration-300 shrink-0 rounded-r-lg ${
+                className={`h-full bg-orange-500 hover:bg-orange-600 transition-opacity active:bg-orange-700 text-white font-medium duration-300 shrink-0 rounded-r-lg ${
                   isShrunken ? "px-3 text-xs" : "px-4 text-sm"
                 }`}
               >
@@ -262,18 +262,18 @@ export default function Header() {
           <div className="flex items-center shrink-0 ml-1">
             <NavIcon
               href="/shops"
-              icon={<Store size={isShrunken ? 18 : 22} className="text-gray-600 group-hover:text-gray-800 transition-colors" />}
+              icon={<Store size={isShrunken ? 18 : 22} className="text-gray-600 group-hover:text-orange-700 transition-colors" />}
               label="Stores"
               hidden={isShrunken}
             />
 
             <Link
               href={user ? "/profile" : "/login"}
-              className="relative flex flex-col items-center gap-[3px] px-2.5 py-1 rounded-md hover:bg-gray-50 transition-all duration-300 group"
+              className="relative flex flex-col items-center gap-[3px] px-2.5 py-1 rounded-md hover:bg-[#fbf0e9] transition-all duration-300 group"
             >
-              <User size={isShrunken ? 18 : 22} className="text-gray-600 group-hover:text-gray-800 transition-colors" />
+              <User size={isShrunken ? 18 : 22} className="text-gray-600 group-hover:text-orange-700 transition-colors" />
               {!isShrunken && (
-                <span className="text-[11px] text-gray-500 group-hover:text-gray-700 font-medium transition-colors whitespace-nowrap">
+                <span className="text-[11px] text-gray-500 group-hover:text-orange-700 font-medium transition-colors whitespace-nowrap">
                   {isLoading ? "..." : user ? user.name.split(" ")[0] : "Account"}
                 </span>
               )}
@@ -281,7 +281,7 @@ export default function Header() {
 
             <NavIcon
               href="/wishlist"
-              icon={<Heart size={isShrunken ? 18 : 22} className="text-gray-600 group-hover:text-gray-800 transition-colors" />}
+              icon={<Heart size={isShrunken ? 18 : 22} className="text-gray-600 group-hover:text-orange-700 transition-colors" />}
               label="Saved"
               count={wishList?.length ?? 0}
               hidden={isShrunken}
@@ -289,10 +289,10 @@ export default function Header() {
 
             <Link
               href="/cart"
-              className="relative flex flex-col items-center gap-[3px] px-2.5 py-1 rounded-md hover:bg-gray-50 transition-all duration-300 group"
+              className="relative flex flex-col items-center gap-[3px] px-2.5 py-1 rounded-md hover:bg-[#fbf0e9] transition-all duration-300 group"
             >
               <div className="relative">
-                <ShoppingCart size={isShrunken ? 18 : 22} className="text-gray-600 group-hover:text-gray-800 transition-colors" />
+                <ShoppingCart size={isShrunken ? 18 : 22} className="text-gray-600 group-hover:text-orange-700 transition-colors" />
                 {(cart?.length ?? 0) > 0 && (
                   <span className="absolute -top-[7px] -right-[7px] min-w-[17px] h-[17px] bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none px-[3px]">
                     {(cart?.length ?? 0) > 99 ? "99+" : cart?.length}
@@ -300,7 +300,7 @@ export default function Header() {
                 )}
               </div>
               {!isShrunken && (
-                <span className="text-[11px] text-gray-500 group-hover:text-gray-700 font-medium transition-colors whitespace-nowrap">Cart</span>
+                <span className="text-[11px] text-gray-500 group-hover:text-orange-700 font-medium transition-colors whitespace-nowrap">Cart</span>
               )}
             </Link>
           </div>
