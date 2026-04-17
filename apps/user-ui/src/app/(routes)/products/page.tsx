@@ -10,6 +10,35 @@ import { Range } from "react-range";
 
 const MIN = 0;
 const MAX = 1199;
+
+// ─── Skeleton Components (from landing page) ──────────────────────────────────
+
+function SkeletonCard() {
+  return (
+    <div className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
+      <div className="h-44 bg-gradient-to-br from-gray-100 to-gray-200 animate-pulse" />
+      <div className="p-4 space-y-2">
+        <div className="h-3.5 bg-gray-200 animate-pulse rounded-full w-3/4" />
+        <div className="h-3 bg-gray-100 animate-pulse rounded-full w-1/2" />
+        <div className="h-4 bg-gray-200 animate-pulse rounded-full w-1/3 mt-3" />
+      </div>
+    </div>
+  );
+}
+
+function SkeletonGrid({ count = 4 }: { count?: number }) {
+  const GRID = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6";
+  return (
+    <div className={GRID}>
+      {Array.from({ length: count }).map((_, i) => (
+        <SkeletonCard key={i} />
+      ))}
+    </div>
+  );
+}
+
+// ─── Page Component ───────────────────────────────────────────────────────────
+
 export default function ProductsPage() {
   const [isProductLoading, setIsProductLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -51,11 +80,9 @@ export default function ProductsPage() {
     staleTime: 1000 * 60 * 30,
   });
 
-  // Also need productTypes from the categories query
   const productTypes: Record<string, string[]> = data?.productTypes ?? {};
   const subCategories: Record<string, string[]> = data?.subCategories ?? {};
 
-  // Single effect — searchParams is the only dependency
   useEffect(() => {
     if (!hasHydrated.current) {
       hasHydrated.current = true;
@@ -80,7 +107,6 @@ export default function ProductsPage() {
     setSelectedColors(colors);
     setSelectedSizes(sizes);
     setPage(p);
-
     // Fetch directly with fresh values — never touches state
     fetchFilteredProducts({ categories: cats, subCategory: sub, productType: type, priceRange: price, colors, sizes, page: p });
   }, [searchParams]); // ✅ only fires when URL actually changes
@@ -187,7 +213,6 @@ export default function ProductsPage() {
 
         <div className="w-full flex flex-col lg:flex-row gap-8">
           {/* sidebar */}
-          {/* <aside className="w-full lg:w-[270px] !rounded bg-white p-4 space-y-6 shadow-md"> */}
           <aside className="w-full lg:w-[270px] shrink-0 !rounded bg-white p-4 space-y-6 shadow-md self-start sticky top-[123px] max-h-[calc(100vh-123px)] overflow-y-auto">
             <h3 className="text-xl font-Poppins font-medium">Price Filter</h3>
             <div className="ml-2">
@@ -234,7 +259,6 @@ export default function ProductsPage() {
                 Apply
               </button>
             </div>
-
             {/* Categories */}
             <h3 className="text-xl font-Poppins font-medium border-b border-b-slate-300 pb-1">Categories</h3>
             <ul className="space-y-2 !mt-3">
@@ -264,7 +288,6 @@ export default function ProductsPage() {
                 ))
               )}
             </ul>
-
             {/* Subcategories — shown when a category is selected */}
             {selectedCategories.length === 1 && subCategories[selectedCategories[0]]?.length > 0 && (
               <>
@@ -290,8 +313,7 @@ export default function ProductsPage() {
                 </ul>
               </>
             )}
-
-            {/* Product Types — shown when a subcategory is selected */}
+            {/* Product Types — shown when a subcategory is selected */}s{" "}
             {selectedSubCategory && productTypes[selectedSubCategory]?.length > 0 && (
               <>
                 <h3 className="text-xl font-Poppins font-medium border-b border-b-slate-300 pb-1">Product Type</h3>
@@ -316,7 +338,6 @@ export default function ProductsPage() {
                 </ul>
               </>
             )}
-
             {/* Colors */}
             <h3 className="text-xl font-Poppins font-medium border-b border-b-slate-300 pb-1 mt-6">Filter by Color</h3>
             <ul className="space-y-2 !mt-3">
@@ -335,7 +356,6 @@ export default function ProductsPage() {
                 </li>
               ))}
             </ul>
-
             {/* Sizes */}
             <h3 className="text-xl font-Poppins font-medium border-b border-b-slate-300 pb-1 mt-6">Filter by Size</h3>
             <ul className="space-y-2 !mt-3">
@@ -350,14 +370,10 @@ export default function ProductsPage() {
             </ul>
           </aside>
 
-          {/* product grid */}
+          {/* product grid - NOW WITH SKELETON LOADING */}
           <div className="flex-1 px-2 lg:px-3">
             {isProductLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {Array.from({ length: 10 }).map((_, index) => (
-                  <div key={index} className="h-[250px] bg-gray-300 animate-pulse rounded-xl"></div>
-                ))}
-              </div>
+              <SkeletonGrid count={12} />
             ) : products.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {products.map((product) => (
