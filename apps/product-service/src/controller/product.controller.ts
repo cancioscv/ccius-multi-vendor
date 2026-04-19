@@ -571,7 +571,18 @@ export async function getProductBySlug(req: Request, res: Response, next: NextFu
 // Get filtered products
 export async function getFilteredProducts(req: Request, res: Response, next: NextFunction) {
   try {
-    const { priceRange = [0, 10000], categories = [], subCategory, productType, colors = [], sizes = [], page = 1, limit = 12, brand } = req.query;
+    const {
+      priceRange = [0, 10000],
+      categories = [],
+      subCategories,
+      productTypes,
+      colors = [],
+      sizes = [],
+      page = 1,
+      limit = 12,
+      brand,
+      sortBy = "popular",
+    } = req.query;
 
     const parsedPriceRange = typeof priceRange === "string" ? priceRange.split(",").map(Number) : [0, 10000];
     const parsedPage = Number(page);
@@ -592,13 +603,20 @@ export async function getFilteredProducts(req: Request, res: Response, next: Nex
         in: Array.isArray(categories) ? categories : String(categories).split(","),
       };
     }
-
-    if (subCategory && String(subCategory).length > 0) {
-      filters.subCategory = String(subCategory);
+    // ✅ Multi-value subCategory filter (OR — product matches any selected subcategory)
+    if (subCategories && String(subCategories).length > 0) {
+      const subCatArray = Array.isArray(subCategories) ? subCategories : String(subCategories).split(",").filter(Boolean);
+      if (subCatArray.length > 0) {
+        filters.subCategory = { in: subCatArray };
+      }
     }
 
-    if (productType && String(productType).length > 0) {
-      filters.productType = String(productType);
+    // ✅ Multi-value productType filter (OR — product matches any selected type)
+    if (productTypes && String(productTypes).length > 0) {
+      const typeArray = Array.isArray(productTypes) ? productTypes : String(productTypes).split(",").filter(Boolean);
+      if (typeArray.length > 0) {
+        filters.productType = { in: typeArray };
+      }
     }
 
     if (colors && (colors as string[]).length > 0) {
@@ -621,11 +639,36 @@ export async function getFilteredProducts(req: Request, res: Response, next: Nex
       };
     }
 
+    // ─── Sort By ──────────────────────────────────────────────────────────────
+    // Determine Prisma orderBy clause based on sortBy param
+    let orderBy: Record<string, any> | Record<string, any>[] = { createdAt: "desc" }; // default
+
+    switch (String(sortBy)) {
+      case "price_asc":
+        orderBy = { salePrice: "asc" };
+        break;
+      case "price_desc":
+        orderBy = { salePrice: "desc" };
+        break;
+      case "newest":
+        orderBy = { createdAt: "desc" };
+        break;
+      case "rating":
+        orderBy = { ratings: "desc" };
+        break;
+      case "popular":
+      default:
+        // Popular = most sales first, fallback to newest
+        orderBy = [{ totalSales: "desc" }, { createdAt: "desc" }];
+        break;
+    }
+
     const [products, total] = await Promise.all([
       prisma.product.findMany({
         where: filters,
         skip,
         take: parsedLimit,
+        orderBy,
         include: {
           images: true,
           shop: true,

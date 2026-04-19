@@ -19,3 +19,6 @@ export * from "./components/ui/form";
 export * from "./components/ui/progress";
 export * from "./components/ui/dropdown-menu";
 export * from "./components/ui/tooltip";
+export * from "./components/ui/accordion";
+export * from "./components/ui/badge";
+export * from "./components/ui/breadcrumb";
