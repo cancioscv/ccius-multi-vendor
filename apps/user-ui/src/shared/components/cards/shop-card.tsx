@@ -22,7 +22,12 @@ export default function ShopCard({ shop }: ShopCardProps) {
     <div className="w-full rounded-2xl bg-white border border-gray-200 shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
       {/* Cover */}
       <div className="h-[120px] w-full relative">
-        <Image src={shop?.coverBanner || "/placeholder.png"} alt="Cover" fill className="object-cover w-full h-full" />
+        <Image
+          src={shop?.coverBanner || "/placeholder.png"}
+          alt="Cover"
+          fill
+          className="object-cover w-full h-full hover:scale-105 transition-all duration-300"
+        />
       </div>
 
       {/* Avatar */}

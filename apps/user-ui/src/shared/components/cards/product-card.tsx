@@ -107,7 +107,7 @@ export default function ProductCard({ product, isEvent }: Props) {
             alt={product?.title}
             width={400}
             height={260}
-            className="w-full h-[315px] object-cover"
+            className="w-full h-[315px] object-cover hover:scale-105 transition-all duration-300"
           />
         </Link>
 
