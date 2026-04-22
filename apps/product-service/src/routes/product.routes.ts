@@ -24,6 +24,7 @@ import {
   createReview,
   getReview,
   updateReview,
+  getProductReviews,
 } from "../controller/product.controller.js";
 import { isAuth, isSeller } from "@e-com/libs";
 
@@ -55,7 +56,9 @@ router.get("/all-offers", getAllOffers);
 router.post("/slug-validator", isAuth, isSeller, slugValidator);
 router.get("/product-analytics/:productId", getProductAnalytics);
 
+// Reviews
 router.post("/create-review", isAuth, createReview);
+router.get("/product/:slug/reviews", isAuth, getProductReviews);
 router.put("/update-review", isAuth, updateReview); // Check if is productId or viewId
 router.get("/review/:productId", isAuth, getReview);
 

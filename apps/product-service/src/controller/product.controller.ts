@@ -510,7 +510,11 @@ export async function getAllProducts(req: Request, res: Response, next: NextFunc
   }
 }
 
-// Get product
+// ─── getProductBySlug.ts ───────────────────────────────────────────────────────
+// Returns full product details. Reviews are NOT included in this payload —
+// they are fetched separately via the paginated getProductReviews endpoint below.
+// This keeps the initial page load fast regardless of how many reviews exist.
+
 export async function getProductBySlug(req: Request, res: Response, next: NextFunction) {
   try {
     const product = await prisma.product.findUnique({
@@ -520,10 +524,17 @@ export async function getProductBySlug(req: Request, res: Response, next: NextFu
       include: {
         images: true,
         shop: true,
+        // ✅ We still include reviews here so SSR/generateMetadata can pre-render
+        // the initial batch. The client paginates from page 2 onward via
+        // GET /product/api/product/:slug/reviews?page=N&limit=5
         reviews: {
           include: {
             user: true,
           },
+          orderBy: {
+            createdAt: "desc",
+          },
+          take: 5, // ✅ Only the first 5 reviews on initial load
         },
       },
     });
@@ -532,24 +543,21 @@ export async function getProductBySlug(req: Request, res: Response, next: NextFu
       return next(new NotFoundError("Product was not found"));
     }
 
-    const dataWithSummarizedReviews = {
-      ...product,
-      reviewCount: product?.reviews.length,
-      reviewRating: product?.reviews.length === 0 ? 0 : product?.reviews.reduce((acc, review) => acc + review.rating, 0) / product?.reviews?.length,
-    };
+    // ── Summarised review stats (uses ALL reviews, not just the paginated slice) ──
+    const allReviewsForStats = await prisma.review.findMany({
+      where: { productId: product.id },
+      select: { rating: true },
+    });
 
-    const ratingDistribution: Record<number, number> = {
-      5: 0,
-      4: 0,
-      3: 0,
-      2: 0,
-      1: 0,
-    };
+    const reviewCount = allReviewsForStats.length;
+    const reviewRating = reviewCount === 0 ? 0 : allReviewsForStats.reduce((acc, r) => acc + r.rating, 0) / reviewCount;
 
-    if (dataWithSummarizedReviews.reviews.length > 0) {
-      dataWithSummarizedReviews.reviews.forEach((review) => {
+    // ── Rating distribution ────────────────────────────────────────────────────
+    const ratingDistribution: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+
+    if (reviewCount > 0) {
+      allReviewsForStats.forEach((review) => {
         const rating = review.rating;
-
         if (rating >= 1 && rating <= 5) {
           ratingDistribution[rating] = (ratingDistribution[rating] || 0) + 1;
         }
@@ -558,11 +566,63 @@ export async function getProductBySlug(req: Request, res: Response, next: NextFu
       Object.keys(ratingDistribution).forEach((key) => {
         const rating = Number(key);
         const count = ratingDistribution[rating] || 0;
-        ratingDistribution[rating] = Math.round((count / product.reviews.length) * 100);
+        ratingDistribution[rating] = Math.round((count / reviewCount) * 100);
       });
     }
 
-    return res.status(201).json({ success: true, product: { ...dataWithSummarizedReviews, ratingDistribution } });
+    return res.status(200).json({
+      success: true,
+      product: {
+        ...product,
+        reviewCount,
+        reviewRating,
+        ratingDistribution,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// ─── getProductReviews.ts ──────────────────────────────────────────────────────
+// GET /product/api/product/:slug/reviews?page=1&limit=5
+// Paginated reviews — called by the frontend "Load more reviews" button.
+
+export async function getProductReviews(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { slug } = req.params;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(20, Math.max(1, Number(req.query.limit) || 5));
+    const skip = (page - 1) * limit;
+
+    // Resolve product id from slug
+    const product = await prisma.product.findUnique({
+      where: { slug },
+      select: { id: true },
+    });
+
+    if (!product) {
+      return next(new NotFoundError("Product was not found"));
+    }
+
+    const [reviews, total] = await Promise.all([
+      prisma.review.findMany({
+        where: { productId: product.id },
+        include: { user: { select: { id: true, name: true } } },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.review.count({ where: { productId: product.id } }),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      reviews,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    });
   } catch (error) {
     return next(error);
   }
