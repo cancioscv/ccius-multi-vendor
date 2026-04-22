@@ -22,12 +22,12 @@ import {
   Truck,
   WalletMinimal,
   CheckCircle2,
+  ZoomIn,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import ReactImageMagnify from "react-image-magnify";
+import { useEffect, useRef, useState, useCallback } from "react";
 import DOMPurify from "dompurify";
 import StarRating from "@/shared/components/ratings/star-rating";
 import { roundToDecimalPlace } from "@/utils/roundToDecimalPlace";
@@ -39,6 +39,107 @@ const REVIEWS_PER_PAGE = 5;
 // ─── Tab type ─────────────────────────────────────────────────────────────────
 type Tab = "description" | "specifications" | "shipping";
 
+// ─── Image Magnifier (Amazon-style) ───────────────────────────────────────────
+// Uses a CSS transform-based lens approach: no external library needed.
+// The lens tracks the cursor and renders a zoomed copy of the image in a
+// floating panel to the right — identical to how Amazon's magnifier works.
+
+interface ImageMagnifierProps {
+  src: string;
+  alt: string;
+  zoom?: number; // multiplier, default 2.5
+}
+
+function ImageMagnifier({ src, alt, zoom = 2.5 }: ImageMagnifierProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isHovering, setIsHovering] = useState(false);
+  const [lensPos, setLensPos] = useState({ x: 0, y: 0 });
+  // Size of the lens square shown on the image
+  const LENS_SIZE = 140;
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const container = containerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    // Raw cursor position relative to container
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+    // Clamp so the lens never overflows the image
+    x = Math.max(LENS_SIZE / 2, Math.min(x, rect.width - LENS_SIZE / 2));
+    y = Math.max(LENS_SIZE / 2, Math.min(y, rect.height - LENS_SIZE / 2));
+    setLensPos({ x, y });
+  }, []);
+
+  // The zoomed panel background-position mirrors the lens centre, scaled by zoom
+  const bgX = lensPos.x * zoom - LENS_SIZE / 2;
+  const bgY = lensPos.y * zoom - LENS_SIZE / 2;
+
+  return (
+    <div className="relative w-full">
+      {/* ── Main image container ── */}
+      <div
+        ref={containerRef}
+        className="relative w-full overflow-hidden rounded-xl bg-white border border-gray-100 cursor-crosshair select-none"
+        style={{ aspectRatio: "1 / 1" }}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+        onMouseMove={handleMouseMove}
+      >
+        <Image src={src || "/placeholder.png"} alt={alt} fill sizes="(max-width: 768px) 100vw, 400px" className="object-contain" priority />
+
+        {/* ── Lens overlay ── */}
+        {isHovering && (
+          <div
+            className="absolute border-2 border-orange-400 bg-orange-100/20 pointer-events-none rounded-sm"
+            style={{
+              width: LENS_SIZE,
+              height: LENS_SIZE,
+              left: lensPos.x - LENS_SIZE / 2,
+              top: lensPos.y - LENS_SIZE / 2,
+              zIndex: 10,
+            }}
+          />
+        )}
+
+        {/* Zoom hint icon when not hovering */}
+        {!isHovering && (
+          <div className="absolute bottom-3 right-3 bg-white/80 backdrop-blur-sm rounded-full p-1.5 shadow-sm border border-gray-100">
+            <ZoomIn size={14} className="text-gray-400" />
+          </div>
+        )}
+      </div>
+
+      {/* ── Zoomed panel (rendered to the right of the container) ── */}
+      {isHovering && (
+        <div
+          className="absolute top-0 left-[calc(100%+16px)] z-50 rounded-xl border border-gray-200 shadow-2xl overflow-hidden bg-white pointer-events-none"
+          style={{
+            width: 380,
+            height: 380,
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              // The background-image + size recreates the zoomed view:
+              // container width/height × zoom gives the "virtual" image size.
+              // background-position then shifts to centre the lens area.
+              backgroundImage: `url(${src || "/placeholder.png"})`,
+              backgroundRepeat: "no-repeat",
+              backgroundSize: `${containerRef.current?.offsetWidth ? containerRef.current.offsetWidth * zoom : 800}px ${
+                containerRef.current?.offsetHeight ? containerRef.current.offsetHeight * zoom : 800
+              }px`,
+              backgroundPosition: `-${bgX}px -${bgY}px`,
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Page Component ────────────────────────────────────────────────────────────
 export default function ProductDetails({ product }: any) {
   const { user } = useUser();
   const { location } = useLocationTracking();
@@ -172,42 +273,25 @@ export default function ProductDetails({ product }: any) {
       </Breadcrumb>
 
       {/* ── TOP SECTION: 3-column grid ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr_280px] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr_280px] gap-6">
         {/* ── LEFT: Images ── */}
         <div>
-          {/* Main image */}
-          <div className="relative rounded-xl overflow-hidden bg-white border border-gray-100">
+          {/* Main image with Amazon-style magnifier */}
+          <div className="relative">
             {/* Badges */}
             {product?.stock <= 5 && product?.stock > 0 && (
-              <span className="absolute top-3 left-3 z-10 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-orange-500 text-white">
+              <span className="absolute top-3 left-3 z-20 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-orange-500 text-white shadow-sm">
                 Limited Stock
               </span>
             )}
             {discountPercentage > 0 && (
-              <span className="absolute top-3 right-3 z-10 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-orange-600 text-white">
+              <span className="absolute top-3 right-3 z-20 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-orange-600 text-white shadow-sm">
                 -{discountPercentage}%
               </span>
             )}
-            <ReactImageMagnify
-              {...{
-                smallImage: {
-                  alt: product?.title ?? "product Image",
-                  isFluidWidth: true,
-                  src: currentImage || "/placeholder.png",
-                },
-                largeImage: {
-                  src: currentImage || "/placeholder.png",
-                  width: 1200,
-                  height: 1200,
-                },
-                enlargedImageContainerDimensions: {
-                  width: "150%",
-                  height: "150%",
-                },
-                enlargedImageStyle: { border: "none", boxShadow: "none" },
-                enlargedImagePosition: "right",
-              }}
-            />
+
+            {/* Amazon-style magnifier — no react-image-magnify */}
+            <ImageMagnifier src={currentImage || "/placeholder.png"} alt={product?.title ?? "Product image"} zoom={2.5} />
           </div>
 
           {/* Thumbnails */}
@@ -266,7 +350,11 @@ export default function ProductDetails({ product }: any) {
                   isWishlisted(product?.id)
                     ? removeFromWishlist(product.id, user, location, deviceInfo)
                     : addToWishlist(
-                        { ...product, quantity, selectedOptions: { color: isSelected, size: isSizeSelected } },
+                        {
+                          ...product,
+                          quantity,
+                          selectedOptions: { color: isSelected, size: isSizeSelected },
+                        },
                         user,
                         location,
                         deviceInfo
@@ -336,7 +424,7 @@ export default function ProductDetails({ product }: any) {
             </div>
           )}
 
-          {/* Size picker */}
+          {/* Size picker — orange-toned, matches app palette */}
           {product?.sizes?.length > 0 && (
             <div className="mb-5">
               <p className="text-sm font-semibold text-gray-700 mb-2">
@@ -347,10 +435,10 @@ export default function ProductDetails({ product }: any) {
                   <button
                     key={index}
                     onClick={() => setIsSizeSelected(size)}
-                    className={`px-4 py-1.5 text-sm font-semibold rounded-md border transition-all ${
+                    className={`px-4 py-1.5 text-sm font-semibold rounded-lg border-2 transition-all ${
                       isSizeSelected === size
-                        ? "bg-gray-900 text-white border-gray-900"
-                        : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                        ? "bg-orange-500 text-white border-orange-500 shadow-sm"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-orange-400 hover:text-orange-500"
                     }`}
                   >
                     {size}
@@ -360,19 +448,22 @@ export default function ProductDetails({ product }: any) {
             </div>
           )}
 
-          {/* Quantity + Stock + Add to Cart */}
-          <div className="flex items-center gap-3 mb-3">
-            {/* Stepper */}
-            <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+          {/* ── Quantity + Add to Cart + Buy Now ──────────────────────────────
+              Layout: [– qty +]  [🛒 Add to Cart]  [Buy Now]
+              Three equal-weight items in a single row — no button dominates.
+          ─────────────────────────────────────────────────────────────────── */}
+          <div className="flex items-center gap-2">
+            {/* Quantity stepper */}
+            <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden shrink-0">
               <button
-                className="w-9 h-10 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors"
+                className="w-9 h-10 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors text-lg"
                 onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
               >
                 –
               </button>
               <span className="w-9 text-center text-sm font-semibold text-gray-800 select-none">{quantity}</span>
               <button
-                className="w-9 h-10 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors"
+                className="w-9 h-10 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors text-lg"
                 onClick={() => setQuantity((prev) => prev + 1)}
               >
                 +
@@ -384,26 +475,38 @@ export default function ProductDetails({ product }: any) {
               suppressHydrationWarning
               disabled={isInCart(product?.id) || product?.stock === 0}
               onClick={() =>
-                addToCart({ ...product, quantity, selectedOptions: { color: isSelected, size: isSizeSelected } }, user, location, deviceInfo)
+                addToCart(
+                  {
+                    ...product,
+                    quantity,
+                    selectedOptions: { color: isSelected, size: isSizeSelected },
+                  },
+                  user,
+                  location,
+                  deviceInfo
+                )
               }
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg transition-colors ${
                 isInCart(product?.id) || product?.stock === 0
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
                   : "bg-orange-500 hover:bg-orange-600 text-white cursor-pointer"
               }`}
             >
-              <ShoppingCart size={16} />
+              <ShoppingCart size={15} />
               {isInCart(product?.id) ? "In Cart" : "Add to Cart"}
+            </button>
+
+            {/* Buy Now — outlined style so it doesn't compete with Add to Cart */}
+            <button
+              disabled={product?.stock === 0}
+              className="flex-1 py-2.5 text-sm font-semibold rounded-lg border-2 border-orange-500 text-orange-600 hover:bg-orange-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Buy Now
             </button>
           </div>
 
-          {/* Buy Now button */}
-          <button
-            disabled={product?.stock === 0}
-            className="w-full py-2.5 text-sm font-semibold rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Buy Now
-          </button>
+          {/* Out of stock hint */}
+          {product?.stock === 0 && <p className="text-xs text-red-400 mt-2 text-center">This item is currently out of stock.</p>}
         </div>
 
         {/* ── RIGHT: Seller / Delivery panel ── */}
@@ -421,7 +524,7 @@ export default function ProductDetails({ product }: any) {
 
           {/* Return & Warranty */}
           <div className="pb-3 border-b border-gray-100">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Return & Warranty</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Return &amp; Warranty</p>
             <div className="flex items-center gap-1.5 text-sm text-gray-600 mb-1">
               <RotateCcw size={14} className="text-gray-400 shrink-0" />7 Days Returns
             </div>
@@ -597,7 +700,7 @@ export default function ProductDetails({ product }: any) {
 
           {activeTab === "shipping" && (
             <div className="max-w-xl">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">Shipping & Returns</h2>
+              <h2 className="text-lg font-bold text-gray-900 mb-4">Shipping &amp; Returns</h2>
               <div className="space-y-3 text-sm text-gray-600">
                 <div className="flex items-start gap-3">
                   <Truck size={18} className="text-orange-500 mt-0.5 shrink-0" />
