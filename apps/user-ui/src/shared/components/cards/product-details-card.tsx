@@ -148,7 +148,7 @@ export default function ProductDetailsCard({ product, setOpen }: Props) {
     >
       {/* ── Modal card ─────────────────────────────────────────────────────── */}
       <div
-        className="relative flex w-[900px] max-w-[95vw] h-[520px] max-h-[90vh] bg-white rounded-2xl overflow-hidden shadow-2xl"
+        className="relative flex w-[900px] max-w-[95vw] h-[540px] max-h-[90vh] bg-white rounded-2xl overflow-hidden shadow-2xl"
         // Stop clicks inside the card from bubbling up to the backdrop
         onClick={(e) => e.stopPropagation()}
       >

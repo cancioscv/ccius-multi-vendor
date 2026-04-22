@@ -273,7 +273,7 @@ export default function ProductDetails({ product }: any) {
       </Breadcrumb>
 
       {/* ── TOP SECTION: 3-column grid ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr_280px] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[460px_1fr_280px] gap-6">
         {/* ── LEFT: Images ── */}
         <div>
           {/* Main image with Amazon-style magnifier */}
@@ -448,22 +448,21 @@ export default function ProductDetails({ product }: any) {
             </div>
           )}
 
-          {/* ── Quantity + Add to Cart + Buy Now ──────────────────────────────
-              Layout: [– qty +]  [🛒 Add to Cart]  [Buy Now]
-              Three equal-weight items in a single row — no button dominates.
-          ─────────────────────────────────────────────────────────────────── */}
-          <div className="flex items-center gap-2">
-            {/* Quantity stepper */}
-            <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden shrink-0">
+          {/* ── Quantity + Add to Cart row ── */}
+          <div className="flex items-center gap-3 mb-3">
+            {/* Stepper */}
+            <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
               <button
-                className="w-9 h-10 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors text-lg"
+                aria-label="Decrease quantity"
+                className="w-9 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors"
                 onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
               >
                 –
               </button>
               <span className="w-9 text-center text-sm font-semibold text-gray-800 select-none">{quantity}</span>
               <button
-                className="w-9 h-10 flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors text-lg"
+                aria-label="Increase quantity"
+                className="w-9 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors"
                 onClick={() => setQuantity((prev) => prev + 1)}
               >
                 +
@@ -475,38 +474,29 @@ export default function ProductDetails({ product }: any) {
               suppressHydrationWarning
               disabled={isInCart(product?.id) || product?.stock === 0}
               onClick={() =>
-                addToCart(
-                  {
-                    ...product,
-                    quantity,
-                    selectedOptions: { color: isSelected, size: isSizeSelected },
-                  },
-                  user,
-                  location,
-                  deviceInfo
-                )
+                addToCart({ ...product, quantity, selectedOptions: { color: isSelected, size: isSizeSelected } }, user, location, deviceInfo)
               }
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg transition-colors ${
                 isInCart(product?.id) || product?.stock === 0
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
-                  : "bg-orange-500 hover:bg-orange-600 text-white cursor-pointer"
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-white hover:bg-orange-100 text-orange-400 cursor-pointer border border-orange-400"
               }`}
             >
-              <ShoppingCart size={15} />
+              <ShoppingCart size={16} />
               {isInCart(product?.id) ? "In Cart" : "Add to Cart"}
-            </button>
-
-            {/* Buy Now — outlined style so it doesn't compete with Add to Cart */}
-            <button
-              disabled={product?.stock === 0}
-              className="flex-1 py-2.5 text-sm font-semibold rounded-lg border-2 border-orange-500 text-orange-600 hover:bg-orange-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Buy Now
             </button>
           </div>
 
+          {/* Buy Now — full width, gray border, white background */}
+          <button
+            disabled={product?.stock === 0}
+            className="w-full py-2.5 text-sm font-semibold rounded-lg bg-orange-500 hover:bg-orange-600 transform: translateY(-1px) text-white cursor-pointer transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Buy Now
+          </button>
+
           {/* Out of stock hint */}
-          {product?.stock === 0 && <p className="text-xs text-red-400 mt-2 text-center">This item is currently out of stock.</p>}
+          {product?.stock === 0 && <p className="text-xs text-red-400 mt-2">This item is currently out of stock.</p>}
         </div>
 
         {/* ── RIGHT: Seller / Delivery panel ── */}
@@ -537,17 +527,15 @@ export default function ProductDetails({ product }: any) {
           {/* Sold by */}
           <div className="pb-3 border-b border-gray-100">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Sold By</p>
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-gray-900 text-sm">{product?.shop?.name}</span>
-              <button
-                onClick={handleChat}
-                disabled={isChatLoading}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                <MessageSquareText size={13} />
-                Chat with Vendor
-              </button>
-            </div>
+            <span className="font-semibold text-gray-900 text-sm block mb-2">{product?.shop?.name}</span>
+            <button
+              onClick={handleChat}
+              disabled={isChatLoading}
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold border bg-[#E3F2FD] border-gray-200 rounded-lg text-[#1976D2] hover:bg-[#1565C0] hover:text-white transition-colors disabled:opacity-50"
+            >
+              <MessageSquareText size={13} />
+              Chat with Vendor
+            </button>
 
             {/* Seller stats */}
             <div className="grid grid-cols-3 gap-1 mt-3">
