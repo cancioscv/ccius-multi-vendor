@@ -193,6 +193,14 @@ export default function ProductDetails({ product }: any) {
     }
   }
 
+  const handleBuyNow = useCallback(() => {
+    if (product?.stock === 0) return;
+    if (!isInCart(product?.id)) {
+      addToCart({ ...product, quantity, selectedOptions: { color: isSelected, size: isSizeSelected } }, user, location, deviceInfo);
+    }
+    router.push("/cart");
+  }, [product, quantity, isSelected, isSizeSelected, user, location, deviceInfo, isInCart, addToCart, router]);
+
   // ── Load more reviews from backend (paginated) ─────────────────────────────
   async function handleLoadMoreReviews() {
     setIsLoadingMoreReviews(true);
@@ -240,6 +248,9 @@ export default function ProductDetails({ product }: any) {
 
   // Stock label
   const stockLabel = product?.stock === 0 ? "Out of Stock" : product?.stock <= 5 ? "Limited" : "In Stock";
+
+  const estimatedDelivery = new Date(); // This depends on DHL or so.
+  estimatedDelivery.setDate(estimatedDelivery.getDate() + 5);
 
   return (
     <div className="w-full py-4">
@@ -437,8 +448,8 @@ export default function ProductDetails({ product }: any) {
                     onClick={() => setIsSizeSelected(size)}
                     className={`px-4 py-1.5 text-sm font-semibold rounded-lg border-2 transition-all ${
                       isSizeSelected === size
-                        ? "bg-orange-500 text-white border-orange-500 shadow-sm"
-                        : "bg-white text-gray-600 border-gray-200 hover:border-orange-400 hover:text-orange-500"
+                        ? "bg-orange-400 text-white border-orange-400 shadow-sm"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:text-orange-500 hover:bg-orange-50"
                     }`}
                   >
                     {size}
@@ -487,13 +498,31 @@ export default function ProductDetails({ product }: any) {
             </button>
           </div>
 
-          {/* Buy Now — full width, gray border, white background */}
+          {/* Buy Now  */}
           <button
+            onClick={handleBuyNow}
             disabled={product?.stock === 0}
             className="w-full py-2.5 text-sm font-semibold rounded-lg bg-orange-500 hover:bg-orange-600 transform: translateY(-1px) text-white cursor-pointer transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Buy Now
           </button>
+
+          {/* Estimated Delivery */}
+          {product?.stock > 0 && (
+            <div className="flex items-center gap-2 mt-3">
+              <Truck size={16} className="text-orange-500 shrink-0" />
+              <span className="text-sm text-gray-600">
+                Estimated delivery by{" "}
+                <span className="font-semibold text-gray-900">
+                  {estimatedDelivery.toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </span>
+              </span>
+            </div>
+          )}
 
           {/* Out of stock hint */}
           {product?.stock === 0 && <p className="text-xs text-red-400 mt-2">This item is currently out of stock.</p>}
@@ -555,7 +584,7 @@ export default function ProductDetails({ product }: any) {
           {/* Go to Store */}
           <Link
             href={`/shop/${product?.shop?.id}`}
-            className="flex items-center justify-center gap-2 w-full py-2 text-sm font-semibold border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex items-center justify-center gap-2 w-full py-2 text-sm font-semibold border border-gray-200 rounded-lg text-gray-800 hover:bg-gray-50 transition-colors"
           >
             <Store size={14} />
             Go to Store
@@ -719,7 +748,10 @@ export default function ProductDetails({ product }: any) {
 
       {/* ── RATINGS & REVIEWS ── */}
       <div id="reviews" className="mt-6 bg-white rounded-xl border border-gray-100 p-6">
-        <h3 className="text-xl font-bold text-gray-900 mb-6">Ratings &amp; Reviews</h3>
+        <h3 className="text-2xl font-bold text-gray-900">Ratings &amp; Reviews</h3>
+        <h3 className="mb-6 font-sans text-sm text-gray-600">
+          What customers says about <span className="font-bold">{product?.title}</span>
+        </h3>
 
         {product.reviews.length > 0 ? (
           <div className="flex gap-8">

@@ -66,24 +66,6 @@ export default function ProductCard({ product, isEvent }: Props) {
     }
   }
 
-  function renderStars(rating: number) {
-    return Array.from({ length: 5 }).map((_, i) => {
-      const index = i + 1;
-      if (rating >= index) {
-        return <Star key={i} size={15} className="fill-amber-400 text-amber-400" />;
-      } else if (rating >= index - 0.5) {
-        return (
-          <span key={i} className="relative" style={{ width: 15, height: 15, display: "inline-block" }}>
-            <Star size={15} className="absolute inset-0 text-gray-300" />
-            <StarHalf size={15} className="absolute inset-0 fill-amber-400 text-amber-400" />
-          </span>
-        );
-      } else {
-        return <Star key={i} size={15} className="text-gray-300" />;
-      }
-    });
-  }
-
   return (
     <div className="w-full bg-white rounded-2xl border border-gray-100 overflow-hidden flex flex-col shadow-sm group hover:shadow-xl transition-all duration-300">
       {/* Image area */}
@@ -107,7 +89,7 @@ export default function ProductCard({ product, isEvent }: Props) {
             alt={product?.title}
             width={400}
             height={260}
-            className="w-full h-[315px] object-cover hover:scale-105 transition-all duration-300"
+            className="w-full h-[315px] object-cover"
           />
         </Link>
 
