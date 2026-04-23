@@ -13,8 +13,7 @@ export default function WishlistPage() {
   const { deviceInfo } = useDeviceTracking();
   const { location } = useLocationTracking();
 
-  const { wishList, cart, removeFromWishlist, addToCart } = useCartStore();
-  //  const isInCart = cart.some((item) => item.id === product.id);
+  const { wishList, removeFromWishlist, addToCart } = useCartStore();
 
   function decreaseQuantity(id: string | undefined) {
     useCartStore.setState((state: any) => ({
@@ -95,6 +94,7 @@ export default function WishlistPage() {
 
                     <td>
                       <button
+                        disabled={item.stock === 0}
                         className="bg-[#2295FF] cursor-öpointer text-white px-5 py-2 rounded-md hover:bg-[#007bff] transition-all"
                         onClick={() => handleAddToCart(item)}
                       >

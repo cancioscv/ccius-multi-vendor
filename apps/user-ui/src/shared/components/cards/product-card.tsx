@@ -74,12 +74,21 @@ export default function ProductCard({ product, isEvent }: Props) {
         {badge && (
           <span className="absolute top-3 left-3 z-10 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-orange-500 text-white">{badge}</span>
         )}
-        {product?.stock <= 5 && (
+        {product?.stock <= 5 && product?.stock > 0 && (
           <span
             className="absolute z-10 text-[11px] font-semibold px-2.5 py-1 rounded-xl bg-orange-600 text-white"
             style={{ top: badge ? "2.5rem" : "0.75rem", left: "0.75rem" }}
           >
             Limited Stock
+          </span>
+        )}
+
+        {product?.stock === 0 && (
+          <span
+            className="absolute z-10 text-[11px] font-semibold px-2.5 py-1 rounded-xl bg-red-600 text-white"
+            style={{ top: badge ? "2.5rem" : "0.75rem", left: "0.75rem" }}
+          >
+            Out of Stock
           </span>
         )}
 
@@ -114,14 +123,16 @@ export default function ProductCard({ product, isEvent }: Props) {
         </button>
 
         {/* Cart — fade in on hover */}
-        <button
-          onClick={handleAddToCart}
-          disabled={isInCart(product.id)}
-          className="absolute bottom-3 right-3 w-10 h-10 rounded-full flex items-center justify-center shadow-sm hover:scale-110 transition-all duration-300 opacity-0 group-hover:opacity-100 z-10 disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ background: isInCart(product.id) ? "#d1d5db" : "#f97316" }}
-        >
-          <ShoppingCart size={18} className="text-white" />
-        </button>
+        {product?.stock > 0 && (
+          <button
+            onClick={handleAddToCart}
+            disabled={isInCart(product.id)}
+            className="absolute bottom-3 right-3 w-10 h-10 rounded-full flex items-center justify-center shadow-sm hover:scale-110 transition-all duration-300 opacity-0 group-hover:opacity-100 z-10 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ background: isInCart(product.id) ? "#d1d5db" : "#f97316" }}
+          >
+            <ShoppingCart size={18} className="text-white" />
+          </button>
+        )}
       </div>
 
       {/* Content */}

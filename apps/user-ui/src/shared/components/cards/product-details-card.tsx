@@ -218,10 +218,10 @@ export default function ProductDetailsCard({ product, setOpen }: Props) {
             <button
               onClick={handleChat}
               disabled={isLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-gray-200 rounded-lg text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-gray-200 rounded-lg bg-[#E3F2FD] text-[#1976D2]  hover:border-gray-300 hover:bg-[#1565C0] hover:text-white transition-colors disabled:opacity-50"
             >
               <MessageCircleMore size={14} />
-              Chat with Seller
+              Chat with Vendor
             </button>
           </div>
 
@@ -253,7 +253,7 @@ export default function ProductDetailsCard({ product, setOpen }: Props) {
           </div>
 
           {/* ── Description ── */}
-          <p className="text-sm text-gray-500 leading-relaxed mb-4 line-clamp-3">{product?.description}</p>
+          <p className="text-sm text-gray-500 leading-relaxed mb-4 line-clamp-3 w-96 truncate">{product?.description}</p>
 
           {/* ── Brand ── */}
           {product?.brand && (
@@ -326,10 +326,12 @@ export default function ProductDetailsCard({ product, setOpen }: Props) {
 
             {/* Add to Cart */}
             <button
-              disabled={isInCart}
+              disabled={isInCart || product?.stock === 0}
               onClick={handleAddToCart}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg transition-colors ${
-                isInCart ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-orange-500 hover:bg-orange-600 text-white cursor-pointer"
+                isInCart || product?.stock === 0
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-orange-500 hover:bg-orange-600 text-white cursor-pointer"
               }`}
             >
               <ShoppingCart size={16} />
@@ -365,9 +367,11 @@ export default function ProductDetailsCard({ product, setOpen }: Props) {
             ) : (
               <span className="text-xs font-semibold text-red-500">● Out of Stock</span>
             )}
-            <p className="text-xs text-gray-400">
-              Estimated Delivery: <strong className="text-gray-600">{estimatedDelivery.toDateString()}</strong>
-            </p>
+            {product?.stock > 0 && (
+              <p className="text-xs text-gray-400">
+                Estimated Delivery: <strong className="text-gray-600">{estimatedDelivery.toDateString()}</strong>
+              </p>
+            )}
           </div>
         </div>
 
