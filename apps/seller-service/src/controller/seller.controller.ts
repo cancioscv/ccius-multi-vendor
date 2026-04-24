@@ -475,3 +475,14 @@ export async function markNotificationAsRead(req: any, res: Response, next: Next
     return next();
   }
 }
+
+// get shop categories
+export async function getShopCategories(req: Request, res: Response, next: NextFunction) {
+  try {
+    const config = await prisma.siteConfig.findFirst({ select: { categories: true } });
+    if (!config) return res.status(404).json({ message: "Config not found" });
+    return res.status(200).json({ categories: config.categories as string[] });
+  } catch (error) {
+    return next(error);
+  }
+}

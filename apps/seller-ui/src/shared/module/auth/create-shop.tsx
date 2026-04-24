@@ -1,7 +1,6 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import axios from "axios";
-import { shopCategories } from "@/utils/categories";
 
 interface CreateShopProps {
   sellerId: string;
@@ -13,6 +12,16 @@ export default function CreateShop({ sellerId, setActiveStep }: CreateShopProps)
     handleSubmit,
     formState: { errors },
   } = useForm();
+
+  // Fetch categories from DB
+  const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
+    queryKey: ["shop-categories"],
+    queryFn: async () => {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_SERVER_URL}/seller/api/shop-categories`);
+
+      return res.data.categories as string[];
+    },
+  });
 
   const createShopMutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -100,12 +109,13 @@ export default function CreateShop({ sellerId, setActiveStep }: CreateShopProps)
         </label>
         <select
           className="w-full p-2 border border-gray-300 outline-none rounded-[4px] mb-1"
-          {...register("category", { required: "Cateegory is required" })}
+          {...register("category", { required: "Category is required" })}
+          disabled={categoriesLoading}
         >
-          <option value="">Select a category</option>
-          {shopCategories.map((category) => (
-            <option key={category.value} value={category.value}>
-              {category.label}
+          <option value="">{categoriesLoading ? "Loading categories..." : "Select a category"}</option>
+          {categoriesData?.map((category) => (
+            <option key={category} value={category}>
+              {category}
             </option>
           ))}
         </select>

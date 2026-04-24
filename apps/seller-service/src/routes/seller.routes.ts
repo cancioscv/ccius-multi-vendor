@@ -14,6 +14,7 @@ import {
   unfollowShop,
   updateProfilePicture,
   uploadImage,
+  getShopCategories,
 } from "../controller/seller.controller.js";
 
 const router: Router = Router();
@@ -31,5 +32,6 @@ router.post("/unfollow-shop", isAuth, unfollowShop); // Watch: Should not be thi
 router.get("/is-following/:id", isAuth, isFollowing);
 router.get("/seller-notifications", isAuth, isSeller, getSellerNotifications);
 router.post("/mark-notification-as-read", isAuth, markNotificationAsRead);
+router.get("/shop-categories", getShopCategories);
 
 export default router;
