@@ -309,7 +309,11 @@ export default function Header() {
         <div className="border-b border-gray-300 w-full" />
 
         {/* ── Nav bar (categories) — slides in/out ── */}
-        <div className={`transition-all duration-300 ease-in-out overflow-hidden ${showNav ? "max-h-[56px] opacity-100" : "max-h-0 opacity-0"}`}>
+        <div
+          className={`transition-all duration-300 ease-in-out  ${
+            showNav ? "max-h-[56px] opacity-100 overflow-visible" : "max-h-0 opacity-0 overflow-hidden"
+          }`}
+        >
           <Suspense>
             <HeaderBottom />
           </Suspense>
