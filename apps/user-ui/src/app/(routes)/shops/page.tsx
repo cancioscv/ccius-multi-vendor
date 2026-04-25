@@ -1,12 +1,12 @@
 "use client";
 
-import { categories } from "@/configs/categories";
-import { countries } from "@/configs/countries";
 import ShopCard from "@/shared/components/cards/shop-card";
 import axiosInstance from "@/utils/axiosInstance";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+
 export default function ShopsPage() {
   const router = useRouter();
   const [isShopLoading, setIsShopLoading] = useState(false);
@@ -18,8 +18,8 @@ export default function ShopsPage() {
 
   function updateURL() {
     const params = new URLSearchParams();
-    if (selectedCategories.length > 0) params.set("categories", selectedCategories.join(","));
-    if (selectedCountries.length > 0) params.set("countries", selectedCountries.join(","));
+    // ✅ Changed: categories → shopCategories
+    if (selectedCategories.length > 0) params.set("shopCategories", selectedCategories.join(","));
 
     params.set("page", page.toString());
     router.replace(`/shops?${decodeURIComponent(params.toString())}`);
@@ -30,8 +30,8 @@ export default function ShopsPage() {
     try {
       const query = new URLSearchParams();
 
-      if (selectedCategories.length > 0) query.set("categories", selectedCategories.join(","));
-      if (selectedCountries.length > 0) query.set("countries", selectedCountries.join(","));
+      // ✅ Changed: categories → shopCategories
+      if (selectedCategories.length > 0) query.set("shopCategories", selectedCategories.join(","));
 
       query.set("page", page.toString());
       query.set("limit", "12");
@@ -46,10 +46,21 @@ export default function ShopsPage() {
     }
   }
 
+  // Fetch categories from DB
+  const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
+    queryKey: ["shop-categories"],
+    queryFn: async () => {
+      const res = await axiosInstance.get(`/seller/api/shop-categories`);
+      return res.data.categories as string[];
+    },
+  });
+
+  // ✅ Fixed: added selectedCountries to dependency array
   useEffect(() => {
     updateURL();
     fetchFilteredShops();
-  }, [selectedCategories, page]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategories, selectedCountries, page]);
 
   function toggleCategory(label: string) {
     setSelectedCategories((prev) => (prev.includes(label) ? prev.filter((cat) => cat !== label) : [...prev, label]));
@@ -74,40 +85,32 @@ export default function ShopsPage() {
           {/* Sidebar */}
           <aside className="w-full lg:w-[270px] !rounded bg-white p-4 space-y-6 shadow-sm">
             {/* Categories */}
-            <h3 className="text-xl font-Poppins font-medium border-b border-b-slate-300 pb-1">Categories</h3>
-            <ul className="space-y-2 !mt-3">
-              {categories?.map((category: any) => (
-                <li key={category.value} className="flex items-center justify-between">
-                  <label className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedCategories.includes(category.value)}
-                      onChange={() => toggleCategory(category.value)}
-                      className="accent-blue-600"
-                    />
-                    {category.label}
-                  </label>
-                </li>
-              ))}
-            </ul>
+            <h3 className="text-xl font-Poppins font-medium border-b border-b-slate-300 pb-1">Shop Categories</h3>
 
-            {/* Countries */}
-            <h3 className="text-xl font-Poppins font-medium border-b border-b-slate-300 pb-1">Countries</h3>
-            <ul className="space-y-2 !mt-3">
-              {countries?.map((country: any) => (
-                <li key={country.code} className="flex items-center justify-between">
-                  <label className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedCountries.includes(country.code)}
-                      onChange={() => toggleCountry(country.code)}
-                      className="accent-blue-600"
-                    />
-                    {country.name}
-                  </label>
-                </li>
-              ))}
-            </ul>
+            {/* ✅ Added: loading skeleton for categories */}
+            {categoriesLoading ? (
+              <div className="space-y-3 !mt-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-4 bg-gray-200 rounded animate-pulse w-full" />
+                ))}
+              </div>
+            ) : (
+              <ul className="space-y-2 !mt-3">
+                {categoriesData?.map((category: any) => (
+                  <li key={category} className="flex items-center justify-between">
+                    <label className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories.includes(category)}
+                        onChange={() => toggleCategory(category)}
+                        className="accent-blue-600"
+                      />
+                      {category}
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            )}
           </aside>
 
           {/* Shop Grid */}

@@ -835,24 +835,19 @@ export async function getFilteredOffers(req: Request, res: Response, next: NextF
 // Get filtered shops
 export async function getFilteredShops(req: Request, res: Response, next: NextFunction) {
   try {
-    const { categories = [], countries = [], page = 1, limit = 12 } = req.query;
+    // ✅ Changed: categories → shopCategories
+    const { shopCategories = [], page = 1, limit = 12 } = req.query;
 
     const parsedPage = Number(page);
     const parsedLimit = Number(limit);
-
     const skip = (parsedPage - 1) * parsedLimit;
 
     const filters: Record<string, any> = {};
 
-    if (categories && String(categories).length > 0) {
+    // ✅ Changed: check shopCategories instead of categories
+    if (shopCategories && String(shopCategories).length > 0) {
       filters.category = {
-        in: Array.isArray(categories) ? categories : String(categories).split(","),
-      };
-    }
-
-    if (countries && String(countries).length > 0) {
-      filters.countries = {
-        in: Array.isArray(countries) ? countries : String(countries).split(","),
+        in: Array.isArray(shopCategories) ? shopCategories : String(shopCategories).split(","),
       };
     }
 
@@ -862,7 +857,6 @@ export async function getFilteredShops(req: Request, res: Response, next: NextFu
         skip,
         take: parsedLimit,
         include: {
-          // sellers: true, // TODO: Find out why it does not work with this
           products: {
             include: {
               reviews: true,
