@@ -836,7 +836,8 @@ export async function getFilteredOffers(req: Request, res: Response, next: NextF
 export async function getFilteredShops(req: Request, res: Response, next: NextFunction) {
   try {
     // ✅ Changed: categories → shopCategories
-    const { shopCategories = [], page = 1, limit = 12 } = req.query;
+    // ✅ Added: sortBy
+    const { shopCategories = [], page = 1, limit = 12, sortBy = "popular" } = req.query;
 
     const parsedPage = Number(page);
     const parsedLimit = Number(limit);
@@ -851,11 +852,37 @@ export async function getFilteredShops(req: Request, res: Response, next: NextFu
       };
     }
 
+    // ─── Sort ──────────────────────────────────────────────────────────────────
+    // "popular"        → most total product sales (sum of product.totalSales)
+    //                    Prisma doesn't support aggregate orderBy directly on
+    //                    relations, so we sort in JS after the query.
+    // "top_rated"      → shop.ratings desc
+    // "most_followers" → follower count desc (we count after include)
+    // "name_asc"       → shop.name asc
+
+    // For top_rated and name_asc we can push the sort into Prisma directly.
+    // For popular/most_followers we sort in JS because they depend on relation counts.
+    let prismaOrderBy: Record<string, any> | undefined;
+
+    switch (String(sortBy)) {
+      case "top_rated":
+        prismaOrderBy = { ratings: "desc" };
+        break;
+      case "name_asc":
+        prismaOrderBy = { name: "asc" };
+        break;
+      // popular & most_followers are handled in JS below
+      default:
+        prismaOrderBy = { createdAt: "desc" }; // neutral fallback
+        break;
+    }
+
     const [shops, total] = await Promise.all([
       prisma.shop.findMany({
         where: filters,
         skip,
         take: parsedLimit,
+        orderBy: prismaOrderBy,
         include: {
           products: {
             include: {
@@ -868,14 +895,25 @@ export async function getFilteredShops(req: Request, res: Response, next: NextFu
       prisma.shop.count({ where: filters }),
     ]);
 
-    const shopsWithSummarizedReviews = shops.map((shop) => ({
+    // ── Summarise reviews per product ─────────────────────────────────────────
+    let shopsWithSummarizedReviews = shops.map((shop) => ({
       ...shop,
+      followerCount: shop.followers.length,
       products: shop.products.map((product) => ({
         ...product,
         reviewCount: product.reviews.length,
         reviewRating: product.reviews.length === 0 ? 0 : product.reviews.reduce((acc, review) => acc + review.rating, 0) / product.reviews.length,
       })),
+      // Convenience field: total sales across all products in this shop
+      totalSales: shop.products.reduce((acc, p) => acc + (p.totalSales ?? 0), 0),
     }));
+
+    // ── JS-level sort for relation-based orderings ─────────────────────────────
+    if (String(sortBy) === "popular") {
+      shopsWithSummarizedReviews = shopsWithSummarizedReviews.sort((a, b) => b.totalSales - a.totalSales);
+    } else if (String(sortBy) === "most_followers") {
+      shopsWithSummarizedReviews = shopsWithSummarizedReviews.sort((a, b) => b.followerCount - a.followerCount);
+    }
 
     const totalPages = Math.ceil(total / parsedLimit);
 
