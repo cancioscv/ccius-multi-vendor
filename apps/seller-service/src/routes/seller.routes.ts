@@ -15,6 +15,10 @@ import {
   updateProfilePicture,
   uploadImage,
   getShopCategories,
+  getShopReviews,
+  getShopReview,
+  createShopReview,
+  updateShopReview,
 } from "../controller/seller.controller.js";
 
 const router: Router = Router();
@@ -33,5 +37,11 @@ router.get("/is-following/:id", isAuth, isFollowing);
 router.get("/seller-notifications", isAuth, isSeller, getSellerNotifications);
 router.post("/mark-notification-as-read", isAuth, markNotificationAsRead);
 router.get("/shop-categories", getShopCategories);
+
+// Shop reviews
+router.get("/shop-reviews/:shopId", getShopReviews); // public
+router.get("/shop-review/:shopId", isAuth, getShopReview); // auth required
+router.post("/shop-reviews", isAuth, createShopReview);
+router.put("/shop-reviews/:reviewId", isAuth, updateShopReview);
 
 export default router;

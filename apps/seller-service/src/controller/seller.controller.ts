@@ -207,16 +207,65 @@ export async function editSellerShop(req: any, res: Response, next: NextFunction
 }
 
 // Get seller info (public preview)
+// Updated to include aggregated review stats on the shop payload so the
+// Reviews tab can display the avg rating and distribution immediately.
 export async function getSellerInfo(req: Request, res: Response, next: NextFunction) {
   const shopId = req.params.id;
+
   try {
     const shop = await prisma.shop.findUnique({
       where: { id: shopId },
+      include: {
+        // Include only the first 5 reviews for the initial SSR render.
+        // The client paginates the rest via GET /seller/api/shop-reviews/:shopId
+        reviews: {
+          include: {
+            user: { select: { id: true, name: true } },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 5,
+        },
+      },
     });
 
     const followersCount = await prisma.follower.count({ where: { shopId: shop?.id } });
 
-    return res.status(200).json({ success: true, shop, followersCount });
+    // ── Aggregated rating stats across ALL reviews ──────────────────────────
+    const allRatings = await prisma.shopReview.findMany({
+      where: { shopId: shop?.id ?? "" },
+      select: { rating: true },
+    });
+
+    const reviewCount = allRatings.length;
+    const avgRating = reviewCount === 0 ? 0 : allRatings.reduce((acc, r) => acc + r.rating, 0) / reviewCount;
+
+    const ratingDistribution: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    const ratingCounts: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+
+    if (reviewCount > 0) {
+      allRatings.forEach((r) => {
+        const star = Math.round(r.rating);
+        if (star >= 1 && star <= 5) {
+          ratingCounts[star] = (ratingCounts[star] || 0) + 1;
+        }
+      });
+      Object.keys(ratingDistribution).forEach((key) => {
+        const star = Number(key);
+        ratingDistribution[star] = Math.round(((ratingCounts[star] || 0) / reviewCount) * 100);
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      shop: {
+        ...shop,
+        reviewCount,
+        avgRating,
+        ratingDistribution,
+        ratingCounts,
+      },
+      followersCount,
+    });
   } catch (error) {
     return next();
   }
@@ -486,3 +535,208 @@ export async function getShopCategories(req: Request, res: Response, next: NextF
     return next(error);
   }
 }
+
+// ─── getShopReviews.ts ─────────────────────────────────────────────────────────
+// GET /seller/api/shop-reviews/:shopId?page=1&limit=5&sort=most_recent
+// Paginated + sortable shop reviews for the Reviews tab.
+
+export async function getShopReviews(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { shopId } = req.params;
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(20, Math.max(1, Number(req.query.limit) || REVIEWS_PER_PAGE));
+    const sort = (req.query.sort as string) || "most_recent";
+    const skip = (page - 1) * limit;
+
+    // ── Map sort option to Prisma orderBy ─────────────────────────────────────
+    let orderBy: Record<string, any> = { createdAt: "desc" }; // most_recent default
+    if (sort === "most_helpful") orderBy = { helpfulCount: "desc" };
+    if (sort === "highest_rating") orderBy = { rating: "desc" };
+    if (sort === "lowest_rating") orderBy = { rating: "asc" };
+
+    const [reviews, total] = await Promise.all([
+      prisma.shopReview.findMany({
+        where: { shopId },
+        include: {
+          user: { select: { id: true, name: true } },
+        },
+        orderBy,
+        skip,
+        take: limit,
+      }),
+      prisma.shopReview.count({ where: { shopId } }),
+    ]);
+
+    // ── Rating distribution for this shop ─────────────────────────────────────
+    const allRatings = await prisma.shopReview.findMany({
+      where: { shopId },
+      select: { rating: true },
+    });
+
+    const avgRating = allRatings.length === 0 ? 0 : allRatings.reduce((acc, r) => acc + r.rating, 0) / allRatings.length;
+
+    const ratingDistribution: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    const ratingCounts: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+
+    if (allRatings.length > 0) {
+      allRatings.forEach((r) => {
+        const star = Math.round(r.rating);
+        if (star >= 1 && star <= 5) {
+          ratingCounts[star] = (ratingCounts[star] || 0) + 1;
+        }
+      });
+      Object.keys(ratingDistribution).forEach((key) => {
+        const star = Number(key);
+        ratingDistribution[star] = Math.round(((ratingCounts[star] || 0) / allRatings.length) * 100);
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      reviews,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      avgRating,
+      ratingDistribution,
+      ratingCounts,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// ─── createShopReview.ts ───────────────────────────────────────────────────────
+// POST /seller/api/shop-reviews
+// Creates a new ShopReview. Follows the same pattern as createReview for products.
+
+export async function createShopReview(req: any, res: Response, next: NextFunction) {
+  const userId = req.user?.id;
+  const { shopId, rating, reviews: reviewText, comment } = req.body;
+
+  // TODO: optionally validate that the user has actually purchased from this shop
+  // TODO: prevent duplicate reviews per user per shop (add @@unique in schema if needed)
+
+  try {
+    const review = await prisma.shopReview.create({
+      data: {
+        userId,
+        shopId,
+        rating: Number(rating),
+        reviews: reviewText ?? comment ?? null,
+      },
+    });
+
+    // ── Update the shop's aggregate rating ────────────────────────────────────
+    const allRatings = await prisma.shopReview.findMany({
+      where: { shopId },
+      select: { rating: true },
+    });
+    const newAvg = allRatings.reduce((acc, r) => acc + r.rating, 0) / allRatings.length;
+
+    await prisma.shop.update({
+      where: { id: shopId },
+      data: { ratings: newAvg },
+    });
+
+    return res.status(201).json({ success: true, data: review });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// ─── updateShopReview.ts ───────────────────────────────────────────────────────
+// PUT /seller/api/shop-reviews/:reviewId
+// Follows the same pattern as updateReview for products.
+
+export async function updateShopReview(req: any, res: Response, next: NextFunction) {
+  const userId = req.user?.id;
+  const { reviewId } = req.params;
+  const { rating, reviews: reviewText } = req.body;
+
+  try {
+    // Find existing shop review
+    const existing = await prisma.shopReview.findFirst({
+      where: { id: reviewId, userId },
+    });
+
+    if (!existing) {
+      return next(new ValidationError("Review not found"));
+    }
+
+    if (existing.userId !== userId) {
+      return next(new AuthError("You are not allowed to update this review"));
+    }
+
+    const updated = await prisma.shopReview.update({
+      where: { id: reviewId },
+      data: {
+        rating: rating !== undefined ? Number(rating) : existing.rating,
+        reviews: reviewText ?? existing.reviews,
+        updateAt: new Date(),
+      },
+    });
+
+    // ── Re-calculate shop aggregate rating ────────────────────────────────────
+    if (rating !== undefined) {
+      const allRatings = await prisma.shopReview.findMany({
+        where: { shopId: existing.shopId ?? "" },
+        select: { rating: true },
+      });
+      const newAvg = allRatings.reduce((acc, r) => acc + r.rating, 0) / allRatings.length;
+
+      await prisma.shop.update({
+        where: { id: existing.shopId ?? "" },
+        data: { ratings: newAvg },
+      });
+    }
+
+    return res.status(200).json({ success: true, data: updated });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// ─── getShopReview.ts ──────────────────────────────────────────────────────────
+// GET /seller/api/shop-review/:shopId
+// Returns the current user's review for a given shop (if any).
+// Mirrors getReview for products.
+
+export async function getShopReview(req: any, res: Response, next: NextFunction) {
+  const userId = req.user?.id;
+  const { shopId } = req.params;
+
+  try {
+    if (!shopId || !userId) return res.status(200).json({ success: true, review: null });
+
+    const review = await prisma.shopReview.findFirst({
+      where: { userId, shopId },
+    });
+
+    return res.status(200).json({ success: true, review });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+// ─── ROUTES TO REGISTER ───────────────────────────────────────────────────────
+// Add these to your seller router:
+//
+//   router.get("/shop-reviews/:shopId",    getShopReviews);       // public
+//   router.get("/shop-review/:shopId",     protect, getShopReview);  // auth required
+//   router.post("/shop-reviews",           protect, createShopReview);
+//   router.put("/shop-reviews/:reviewId",  protect, updateShopReview);
+//
+// ── PRISMA SCHEMA NOTE ────────────────────────────────────────────────────────
+// The existing ShopReview model already has rating, reviews (String?), shopId,
+// userId — all we need. No schema changes required.
+// Optional improvement: add helpfulCount Int @default(0) to ShopReview to
+// support the "Helpful (N)" button in the UI.
+//
+// model ShopReview {
+//   ...existing fields...
+//   helpfulCount Int @default(0)  // ← optional, for "Helpful" voting
+// }
+
+// ─── Constants (shared with frontend) ─────────────────────────────────────────
+const REVIEWS_PER_PAGE = 5;
