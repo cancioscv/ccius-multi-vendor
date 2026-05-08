@@ -101,7 +101,10 @@ model ShopReview {
   updateAt     DateTime @updatedAt
   shopId       String?  @db.ObjectId
   shop         Shop?    @relation(fields: [shopId], references: [id])
+  comment      String?
   helpfulCount Int      @default(0) // ← optional, for "Helpful" voting
+
+  @@unique([userId, shopId]) // to prevent a user submitting more than one review per shops
 }
 
 model Seller {
