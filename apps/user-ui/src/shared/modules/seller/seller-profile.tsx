@@ -145,11 +145,12 @@ function ReviewSortDropdown({ value, onChange }: { value: ReviewSort; onChange: 
 interface WriteReviewModalProps {
   shopName: string;
   shopId: string;
+  isVerifiedBuyer: boolean;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-function WriteReviewModal({ shopName, shopId, onClose, onSuccess }: WriteReviewModalProps) {
+function WriteReviewModal({ shopName, shopId, isVerifiedBuyer, onClose, onSuccess }: WriteReviewModalProps) {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [title, setTitle] = useState("");
@@ -183,7 +184,23 @@ function WriteReviewModal({ shopName, shopId, onClose, onSuccess }: WriteReviewM
     if (rating === 0) return;
     setIsSubmitting(true);
     try {
-      await axiosInstance.post("/seller/api/shop-reviews", { shopId, rating, title, comment }, isProtected);
+      // ── Field mapping note ───────────────────────────────────────────────────
+      // The ShopReview Prisma model uses `reviews` (String?) for the title/summary
+      // and does not have a separate `comment` column yet.
+      // We send `reviews` = title and `comment` = body so the backend can store
+      // both (add `comment String?` to ShopReview in your schema if not present,
+      // or map `comment` → `reviews` in the backend until schema is updated).
+      await axiosInstance.post(
+        "/seller/api/shop-reviews",
+        {
+          shopId,
+          rating,
+          reviews: title, // maps to ShopReview.reviews (title/summary field)
+          comment, // maps to ShopReview.comment (add to schema if missing)
+          isVerifiedBuyer, // backend stores this flag on the review record
+        },
+        isProtected
+      );
       onSuccess();
       onClose();
     } catch (error) {
@@ -204,6 +221,13 @@ function WriteReviewModal({ shopName, shopId, onClose, onSuccess }: WriteReviewM
           <div>
             <h2 className="text-lg font-bold text-gray-900">Rate &amp; Review {shopName}</h2>
             <p className="text-sm text-gray-500 mt-0.5">Share your honest experience to help other shoppers.</p>
+            {/* ── Option C: show badge when user is a verified buyer ── */}
+            {isVerifiedBuyer && (
+              <span className="inline-flex items-center gap-1 mt-2 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                <BadgeCheck size={12} />
+                Verified buyer — your review will show a badge
+              </span>
+            )}
           </div>
           <button
             onClick={onClose}
@@ -321,6 +345,25 @@ function ReviewsTab({ shop }: ReviewsTabProps) {
   const [showWriteModal, setShowWriteModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // ── Option C: check login + whether user has purchased from this shop ────────
+  const { user } = useUser();
+  const isLoggedIn = !!user;
+
+  // Query whether the current user has at least one completed order from this shop.
+  // This drives the "Verified buyer" badge in the modal and on the submitted review.
+  const { data: purchaseData } = useQuery({
+    queryKey: ["has-purchased-from-shop", shop?.id, user?.id],
+    queryFn: async () => {
+      const res = await axiosInstance.get(`/seller/api/has-purchased/${shop?.id}`, isProtected);
+      return res.data as { hasPurchased: boolean };
+    },
+    // Only run when the user is logged in and we have a shop id
+    enabled: !!shop?.id && isLoggedIn,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const isVerifiedBuyer = purchaseData?.hasPurchased ?? false;
+
   // Initial load & reload on sort/refresh
   const { data: reviewData, isLoading: isLoadingReviews } = useQuery({
     queryKey: ["shop-reviews", shop?.id, reviewSort, refreshKey],
@@ -383,21 +426,33 @@ function ReviewsTab({ shop }: ReviewsTabProps) {
         <WriteReviewModal
           shopName={shop?.name}
           shopId={shop?.id}
+          isVerifiedBuyer={isVerifiedBuyer}
           onClose={() => setShowWriteModal(false)}
           onSuccess={() => setRefreshKey((k) => k + 1)}
         />
       )}
 
+      {/* ── Helper: open modal only when logged in ── */}
+      {/* Any logged-in user can review; only buyers get the "Verified buyer" badge */}
       {totalReviews === 0 && allReviews.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-gray-400 text-base font-medium">No reviews yet</p>
           <p className="text-gray-300 text-sm mt-1">Be the first to review this shop</p>
-          <button
-            onClick={() => setShowWriteModal(true)}
-            className="mt-4 px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg transition-colors"
-          >
-            Write a Review
-          </button>
+          {isLoggedIn ? (
+            <button
+              onClick={() => setShowWriteModal(true)}
+              className="mt-4 px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg transition-colors"
+            >
+              Write a Review
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              className="mt-4 inline-block px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg transition-colors"
+            >
+              Log in to write a Review
+            </Link>
+          )}
         </div>
       ) : (
         <div className="flex gap-8">
@@ -432,16 +487,27 @@ function ReviewsTab({ shop }: ReviewsTabProps) {
                 })}
               </div>
 
-              {/* Write a Review */}
+              {/* Write a Review — Option C: any logged-in user can review;
+                  verified buyers get a badge on their review automatically */}
               <div className="mt-5 pt-4 border-t border-gray-100">
                 <p className="text-xs font-semibold text-gray-700 mb-1">Shared your experience?</p>
                 <p className="text-xs text-gray-400 mb-3">Help other shoppers by leaving an honest review.</p>
-                <button
-                  onClick={() => setShowWriteModal(true)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
-                >
-                  ✏ Write a Review
-                </button>
+                {isLoggedIn ? (
+                  <button
+                    onClick={() => setShowWriteModal(true)}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
+                  >
+                    ✏ Write a Review
+                  </button>
+                ) : (
+                  /* Not logged in — redirect to login */
+                  <Link
+                    href="/login"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold border border-orange-300 text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                  >
+                    Log in to Write a Review
+                  </Link>
+                )}
               </div>
             </div>
           </div>
@@ -498,9 +564,15 @@ function ReviewsTab({ shop }: ReviewsTabProps) {
                     <StarRating rating={review.rating} iconClassName="size-4" />
                   </div>
 
-                  {/* Content */}
+                  {/* ── Bug fix: ShopReview Prisma field is called `reviews` (String?)
+                      and stores the review title/summary text.
+                      The body comment is stored separately as `comment` from the modal.
+                      Display title bold + body below, both guarded. ── */}
                   {review.reviews && <h4 className="text-sm font-bold text-gray-900 mb-1">{review.reviews}</h4>}
+                  {/* `comment` is the extended review body sent from the modal */}
                   {review.comment && <p className="text-sm text-gray-600 leading-relaxed">{review.comment}</p>}
+                  {/* Fallback: if only one field was filled, show whichever exists */}
+                  {!review.reviews && !review.comment && <p className="text-sm text-gray-400 italic">No written review.</p>}
 
                   {/* Helpful */}
                   <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-gray-50">

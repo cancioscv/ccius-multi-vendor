@@ -19,6 +19,7 @@ import {
   getShopReview,
   createShopReview,
   updateShopReview,
+  hasPurchasedFromShop,
 } from "../controller/seller.controller.js";
 
 const router: Router = Router();
@@ -43,5 +44,6 @@ router.get("/shop-reviews/:shopId", getShopReviews); // public
 router.get("/shop-review/:shopId", isAuth, getShopReview); // auth required
 router.post("/shop-reviews", isAuth, createShopReview);
 router.put("/shop-reviews/:reviewId", isAuth, updateShopReview);
+router.get("/has-purchased/:shopId", isAuth, hasPurchasedFromShop); // auth
 
 export default router;

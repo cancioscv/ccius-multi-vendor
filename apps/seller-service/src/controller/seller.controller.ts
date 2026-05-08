@@ -538,7 +538,7 @@ export async function getShopCategories(req: Request, res: Response, next: NextF
 
 // ─── getShopReviews.ts ─────────────────────────────────────────────────────────
 // GET /seller/api/shop-reviews/:shopId?page=1&limit=5&sort=most_recent
-// Paginated + sortable shop reviews for the Reviews tab.
+// Now returns isVerifiedBuyer on each review (computed from orders).
 
 export async function getShopReviews(req: Request, res: Response, next: NextFunction) {
   try {
@@ -550,9 +550,10 @@ export async function getShopReviews(req: Request, res: Response, next: NextFunc
 
     // ── Map sort option to Prisma orderBy ─────────────────────────────────────
     let orderBy: Record<string, any> = { createdAt: "desc" }; // most_recent default
-    if (sort === "most_helpful") orderBy = { helpfulCount: "desc" };
     if (sort === "highest_rating") orderBy = { rating: "desc" };
     if (sort === "lowest_rating") orderBy = { rating: "asc" };
+    // most_helpful would need a helpfulCount field on ShopReview; fallback to recent
+    if (sort === "most_helpful") orderBy = { createdAt: "desc" };
 
     const [reviews, total] = await Promise.all([
       prisma.shopReview.findMany({
@@ -566,6 +567,21 @@ export async function getShopReviews(req: Request, res: Response, next: NextFunc
       }),
       prisma.shopReview.count({ where: { shopId } }),
     ]);
+
+    // ── Annotate each review with isVerifiedBuyer ─────────────────────────────
+    // Batch: get all unique userIds from this page of reviews, then check orders once.
+    const reviewerIds = [...new Set(reviews.map((r) => r.userId))];
+    const buyerOrders = await prisma.order.findMany({
+      where: { shopId, userId: { in: reviewerIds } },
+      select: { userId: true },
+      distinct: ["userId"],
+    });
+    const buyerSet = new Set(buyerOrders.map((o) => o.userId));
+
+    const annotatedReviews = reviews.map((r) => ({
+      ...r,
+      isVerifiedBuyer: buyerSet.has(r.userId),
+    }));
 
     // ── Rating distribution for this shop ─────────────────────────────────────
     const allRatings = await prisma.shopReview.findMany({
@@ -593,7 +609,7 @@ export async function getShopReviews(req: Request, res: Response, next: NextFunc
 
     return res.status(200).json({
       success: true,
-      reviews,
+      reviews: annotatedReviews,
       total,
       page,
       totalPages: Math.ceil(total / limit),
@@ -608,22 +624,41 @@ export async function getShopReviews(req: Request, res: Response, next: NextFunc
 
 // ─── createShopReview.ts ───────────────────────────────────────────────────────
 // POST /seller/api/shop-reviews
-// Creates a new ShopReview. Follows the same pattern as createReview for products.
+// ── Option C: any logged-in user can leave a review.
+//    Buyers are flagged with isVerifiedBuyer = true automatically.
+//    The `isProtected` middleware already ensures only logged-in users can POST.
 
 export async function createShopReview(req: any, res: Response, next: NextFunction) {
   const userId = req.user?.id;
-  const { shopId, rating, reviews: reviewText, comment } = req.body;
+  const {
+    shopId,
+    rating,
+    reviews: reviewTitle,
+    comment,
+    // isVerifiedBuyer
+  } = req.body;
 
-  // TODO: optionally validate that the user has actually purchased from this shop
-  // TODO: prevent duplicate reviews per user per shop (add @@unique in schema if needed)
+  // TODO: optionally add @@unique([userId, shopId]) to ShopReview in schema
+  //       to prevent a user submitting more than one review per shop.
 
   try {
+    // ── Double-check buyer status server-side (never trust client alone) ────────
+    // Even if the client sends isVerifiedBuyer=true, we verify it here.
+    const purchaseCount = await prisma.order.count({
+      where: { userId, shopId },
+    });
+    const verifiedBuyer = purchaseCount > 0;
+
     const review = await prisma.shopReview.create({
       data: {
         userId,
         shopId,
         rating: Number(rating),
-        reviews: reviewText ?? comment ?? null,
+        reviews: reviewTitle ?? null, // ShopReview.reviews = title/summary
+        // NOTE: add `comment String?` to ShopReview in your Prisma schema
+        // if you want to store the long-form body separately from the title.
+        // Until then, concatenate them or store only reviews (title).
+        comment: comment ?? null,
       },
     });
 
@@ -639,7 +674,7 @@ export async function createShopReview(req: any, res: Response, next: NextFuncti
       data: { ratings: newAvg },
     });
 
-    return res.status(201).json({ success: true, data: review });
+    return res.status(201).json({ success: true, data: review, isVerifiedBuyer: verifiedBuyer });
   } catch (error) {
     return next(error);
   }
@@ -652,7 +687,7 @@ export async function createShopReview(req: any, res: Response, next: NextFuncti
 export async function updateShopReview(req: any, res: Response, next: NextFunction) {
   const userId = req.user?.id;
   const { reviewId } = req.params;
-  const { rating, reviews: reviewText } = req.body;
+  const { rating, reviews: reviewTitle } = req.body;
 
   try {
     // Find existing shop review
@@ -672,7 +707,7 @@ export async function updateShopReview(req: any, res: Response, next: NextFuncti
       where: { id: reviewId },
       data: {
         rating: rating !== undefined ? Number(rating) : existing.rating,
-        reviews: reviewText ?? existing.reviews,
+        reviews: reviewTitle ?? existing.reviews,
         updateAt: new Date(),
       },
     });
@@ -698,9 +733,8 @@ export async function updateShopReview(req: any, res: Response, next: NextFuncti
 }
 
 // ─── getShopReview.ts ──────────────────────────────────────────────────────────
-// GET /seller/api/shop-review/:shopId
+// GET /seller/api/shop-review/:shopId   (requires auth)
 // Returns the current user's review for a given shop (if any).
-// Mirrors getReview for products.
 
 export async function getShopReview(req: any, res: Response, next: NextFunction) {
   const userId = req.user?.id;
@@ -719,23 +753,42 @@ export async function getShopReview(req: any, res: Response, next: NextFunction)
   }
 }
 
+// ─── hasPurchasedFromShop.ts ───────────────────────────────────────────────────
+// GET /seller/api/has-purchased/:shopId    (requires auth via isProtected)
+// Used by the frontend (Option C) to decide whether to show the "Verified buyer"
+// badge in the Write Review modal before submission.
+
+export async function hasPurchasedFromShop(req: any, res: Response, next: NextFunction) {
+  const userId = req.user?.id;
+  const { shopId } = req.params;
+
+  try {
+    const count = await prisma.order.count({
+      where: { userId, shopId },
+    });
+    return res.status(200).json({ success: true, hasPurchased: count > 0 });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 // ─── ROUTES TO REGISTER ───────────────────────────────────────────────────────
 // Add these to your seller router:
 //
-//   router.get("/shop-reviews/:shopId",    getShopReviews);       // public
-//   router.get("/shop-review/:shopId",     protect, getShopReview);  // auth required
-//   router.post("/shop-reviews",           protect, createShopReview);
-//   router.put("/shop-reviews/:reviewId",  protect, updateShopReview);
+//   router.get("/shop-reviews/:shopId",       getShopReviews);              // public
+//   router.get("/has-purchased/:shopId",      protect, hasPurchasedFromShop); // auth
+//   router.get("/shop-review/:shopId",        protect, getShopReview);        // auth
+//   router.post("/shop-reviews",              protect, createShopReview);     // auth
+//   router.put("/shop-reviews/:reviewId",     protect, updateShopReview);     // auth
 //
 // ── PRISMA SCHEMA NOTE ────────────────────────────────────────────────────────
-// The existing ShopReview model already has rating, reviews (String?), shopId,
-// userId — all we need. No schema changes required.
-// Optional improvement: add helpfulCount Int @default(0) to ShopReview to
-// support the "Helpful (N)" button in the UI.
+// The existing ShopReview model already covers rating + reviews (String?).
+// Optionally add these fields for a richer experience:
 //
 // model ShopReview {
 //   ...existing fields...
-//   helpfulCount Int @default(0)  // ← optional, for "Helpful" voting
+//   comment      String?   // ← long-form body, separate from the title
+//   helpfulCount Int       @default(0)  // ← for "Helpful (N)" voting
 // }
 
 // ─── Constants (shared with frontend) ─────────────────────────────────────────
