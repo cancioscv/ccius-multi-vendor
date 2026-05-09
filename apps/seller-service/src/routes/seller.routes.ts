@@ -20,6 +20,8 @@ import {
   createShopReview,
   updateShopReview,
   hasPurchasedFromShop,
+  markReviewHelpful,
+  unmarkReviewHelpful,
 } from "../controller/seller.controller.js";
 
 const router: Router = Router();
@@ -40,10 +42,12 @@ router.post("/mark-notification-as-read", isAuth, markNotificationAsRead);
 router.get("/shop-categories", getShopCategories);
 
 // Shop reviews
-router.get("/shop-reviews/:shopId", getShopReviews); // public
-router.get("/shop-review/:shopId", isAuth, getShopReview); // auth required
+router.get("/shop-reviews/:shopId", getShopReviews);
+router.get("/shop-review/:shopId", isAuth, getShopReview);
 router.post("/shop-reviews", isAuth, createShopReview);
 router.put("/shop-reviews/:reviewId", isAuth, updateShopReview);
-router.get("/has-purchased/:shopId", isAuth, hasPurchasedFromShop); // auth
+router.get("/has-purchased/:shopId", isAuth, hasPurchasedFromShop);
+router.post("/shop-reviews/:reviewId/helpful", isAuth, markReviewHelpful);
+router.delete("/shop-reviews/:reviewId/helpful", isAuth, unmarkReviewHelpful);
 
 export default router;

@@ -539,6 +539,7 @@ export async function getShopCategories(req: Request, res: Response, next: NextF
 // ─── getShopReviews.ts ─────────────────────────────────────────────────────────
 // GET /seller/api/shop-reviews/:shopId?page=1&limit=5&sort=most_recent
 // Now returns isVerifiedBuyer on each review (computed from orders).
+// Paginated + sortable shop reviews for the Reviews tab.
 
 export async function getShopReviews(req: Request, res: Response, next: NextFunction) {
   try {
@@ -552,8 +553,8 @@ export async function getShopReviews(req: Request, res: Response, next: NextFunc
     let orderBy: Record<string, any> = { createdAt: "desc" }; // most_recent default
     if (sort === "highest_rating") orderBy = { rating: "desc" };
     if (sort === "lowest_rating") orderBy = { rating: "asc" };
-    // most_helpful would need a helpfulCount field on ShopReview; fallback to recent
-    if (sort === "most_helpful") orderBy = { createdAt: "desc" };
+    // most_helpful: now uses the actual helpfulCount field on ShopReview
+    if (sort === "most_helpful") orderBy = { helpfulCount: "desc" };
 
     const [reviews, total] = await Promise.all([
       prisma.shopReview.findMany({
@@ -578,9 +579,24 @@ export async function getShopReviews(req: Request, res: Response, next: NextFunc
     });
     const buyerSet = new Set(buyerOrders.map((o) => o.userId));
 
+    // ── Annotate userHasVotedHelpful per review for the current user ────────────
+    // Only meaningful when userId is present (authenticated requests).
+    // For public (unauthenticated) requests we skip this query entirely.
+    const requestUserId = (req as any).user?.id ?? null;
+    let votedSet = new Set<string>();
+    if (requestUserId) {
+      const reviewIds = reviews.map((r) => r.id);
+      const votes = await prisma.shopReviewHelpful.findMany({
+        where: { userId: requestUserId, reviewId: { in: reviewIds } },
+        select: { reviewId: true },
+      });
+      votedSet = new Set(votes.map((v) => v.reviewId));
+    }
+
     const annotatedReviews = reviews.map((r) => ({
       ...r,
       isVerifiedBuyer: buyerSet.has(r.userId),
+      userHasVotedHelpful: votedSet.has(r.id),
     }));
 
     // ── Rating distribution for this shop ─────────────────────────────────────
@@ -687,7 +703,7 @@ export async function createShopReview(req: any, res: Response, next: NextFuncti
 export async function updateShopReview(req: any, res: Response, next: NextFunction) {
   const userId = req.user?.id;
   const { reviewId } = req.params;
-  const { rating, reviews: reviewTitle } = req.body;
+  const { rating, reviews: reviewTitle, comment } = req.body;
 
   try {
     // Find existing shop review
@@ -708,6 +724,7 @@ export async function updateShopReview(req: any, res: Response, next: NextFuncti
       data: {
         rating: rating !== undefined ? Number(rating) : existing.rating,
         reviews: reviewTitle ?? existing.reviews,
+        comment: comment !== undefined ? comment : (existing as any).comment,
         updateAt: new Date(),
       },
     });
@@ -772,14 +789,88 @@ export async function hasPurchasedFromShop(req: any, res: Response, next: NextFu
   }
 }
 
+// ─── toggleShopReviewHelpful.ts ────────────────────────────────────────────────
+// POST   /seller/api/shop-reviews/:reviewId/helpful  → mark helpful
+// DELETE /seller/api/shop-reviews/:reviewId/helpful  → unmark helpful
+//
+// We store votes in a ShopReviewHelpful join model (see schema note below).
+// A user can only vote once per review (enforced by @@unique + try/catch).
+// helpfulCount on ShopReview is updated atomically for fast reads.
+//
+// ── PRISMA SCHEMA to add ─────────────────────────────────────────────────────
+// model ShopReviewHelpful {
+//   id       String @id @default(auto()) @map("_id") @db.ObjectId
+//   userId   String @db.ObjectId
+//   reviewId String @db.ObjectId
+//   createdAt DateTime @default(now())
+//   @@unique([userId, reviewId])   // one vote per user per review
+// }
+// Also add to ShopReview:
+//   helpfulCount Int @default(0)
+//   helpfulVotes ShopReviewHelpful[]
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function markReviewHelpful(req: any, res: Response, next: NextFunction) {
+  const userId = req.user?.id;
+  const { reviewId } = req.params;
+
+  try {
+    // createMany not available in MongoDB driver — use create with try/catch
+    // for the @@unique constraint
+    await prisma.shopReviewHelpful.create({
+      data: { userId, reviewId },
+    });
+
+    // Increment helpfulCount atomically
+    await prisma.shopReview.update({
+      where: { id: reviewId },
+      data: { helpfulCount: { increment: 1 } },
+    });
+
+    return res.status(200).json({ success: true, voted: true });
+  } catch (error: any) {
+    // Duplicate key = user already voted. Return 200 (idempotent).
+    if (error?.code === "P2002") {
+      return res.status(200).json({ success: true, voted: true, message: "Already voted" });
+    }
+    return next(error);
+  }
+}
+
+export async function unmarkReviewHelpful(req: any, res: Response, next: NextFunction) {
+  const userId = req.user?.id;
+  const { reviewId } = req.params;
+
+  try {
+    // Delete the vote record
+    const deleted = await prisma.shopReviewHelpful.deleteMany({
+      where: { userId, reviewId },
+    });
+
+    if (deleted.count > 0) {
+      // Only decrement if a record was actually removed
+      await prisma.shopReview.update({
+        where: { id: reviewId },
+        data: { helpfulCount: { decrement: 1 } },
+      });
+    }
+
+    return res.status(200).json({ success: true, voted: false });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 // ─── ROUTES TO REGISTER ───────────────────────────────────────────────────────
 // Add these to your seller router:
 //
-//   router.get("/shop-reviews/:shopId",       getShopReviews);              // public
-//   router.get("/has-purchased/:shopId",      protect, hasPurchasedFromShop); // auth
-//   router.get("/shop-review/:shopId",        protect, getShopReview);        // auth
-//   router.post("/shop-reviews",              protect, createShopReview);     // auth
-//   router.put("/shop-reviews/:reviewId",     protect, updateShopReview);     // auth
+//   router.get("/shop-reviews/:shopId",               getShopReviews);                // public
+//   router.get("/has-purchased/:shopId",             protect, hasPurchasedFromShop);   // auth
+//   router.get("/shop-review/:shopId",               protect, getShopReview);           // auth
+//   router.post("/shop-reviews",                     protect, createShopReview);        // auth
+//   router.put("/shop-reviews/:reviewId",            protect, updateShopReview);        // auth
+//   router.post("/shop-reviews/:reviewId/helpful",   protect, markReviewHelpful);       // auth
+//   router.delete("/shop-reviews/:reviewId/helpful", protect, unmarkReviewHelpful);     // auth
 //
 // ── PRISMA SCHEMA NOTE ────────────────────────────────────────────────────────
 // The existing ShopReview model already covers rating + reviews (String?).
@@ -787,8 +878,17 @@ export async function hasPurchasedFromShop(req: any, res: Response, next: NextFu
 //
 // model ShopReview {
 //   ...existing fields...
-//   comment      String?   // ← long-form body, separate from the title
-//   helpfulCount Int       @default(0)  // ← for "Helpful (N)" voting
+//   comment      String?             // ← long-form body, separate from the title
+//   helpfulCount Int    @default(0)  // ← for "Helpful (N)" voting
+//   helpfulVotes ShopReviewHelpful[] // ← relation to vote records
+// }
+//
+// model ShopReviewHelpful {
+//   id        String   @id @default(auto()) @map("_id") @db.ObjectId
+//   userId    String   @db.ObjectId
+//   reviewId  String   @db.ObjectId
+//   createdAt DateTime @default(now())
+//   @@unique([userId, reviewId])  // one vote per user per review
 // }
 
 // ─── Constants (shared with frontend) ─────────────────────────────────────────

@@ -36,7 +36,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
+
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@e-com/ui";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -146,15 +147,20 @@ interface WriteReviewModalProps {
   shopName: string;
   shopId: string;
   isVerifiedBuyer: boolean;
+  // ── Duplicate prevention: if set, modal opens in "Edit" mode pre-filled ──
+  existingReview?: any | null;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-function WriteReviewModal({ shopName, shopId, isVerifiedBuyer, onClose, onSuccess }: WriteReviewModalProps) {
-  const [rating, setRating] = useState(0);
+function WriteReviewModal({ shopName, shopId, isVerifiedBuyer, existingReview, onClose, onSuccess }: WriteReviewModalProps) {
+  const isEditMode = !!existingReview;
+
+  // Pre-fill from existing review when editing; empty when creating
+  const [rating, setRating] = useState<number>(existingReview?.rating ?? 0);
   const [hoverRating, setHoverRating] = useState(0);
-  const [title, setTitle] = useState("");
-  const [comment, setComment] = useState("");
+  const [title, setTitle] = useState<string>(existingReview?.reviews ?? "");
+  const [comment, setComment] = useState<string>(existingReview?.comment ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -185,22 +191,35 @@ function WriteReviewModal({ shopName, shopId, isVerifiedBuyer, onClose, onSucces
     setIsSubmitting(true);
     try {
       // ── Field mapping note ───────────────────────────────────────────────────
-      // The ShopReview Prisma model uses `reviews` (String?) for the title/summary
-      // and does not have a separate `comment` column yet.
-      // We send `reviews` = title and `comment` = body so the backend can store
-      // both (add `comment String?` to ShopReview in your schema if not present,
-      // or map `comment` → `reviews` in the backend until schema is updated).
-      await axiosInstance.post(
-        "/seller/api/shop-reviews",
-        {
-          shopId,
-          rating,
-          reviews: title, // maps to ShopReview.reviews (title/summary field)
-          comment, // maps to ShopReview.comment (add to schema if missing)
-          isVerifiedBuyer, // backend stores this flag on the review record
-        },
-        isProtected
-      );
+      // ShopReview.reviews (String?) stores the title/summary.
+      // ShopReview.comment (String?) stores the long-form body — add to schema if missing.
+      if (isEditMode) {
+        // ── EDIT: user already has a review → call updateShopReview ─────────────
+        // The @@unique([userId, shopId]) constraint means only one review per user
+        // per shop exists, so we update the existing one by its id.
+        await axiosInstance.put(
+          `/seller/api/shop-reviews/${existingReview.id}`,
+          {
+            rating,
+            reviews: title, // maps to ShopReview.reviews (title/summary field)
+            comment, // maps to ShopReview.comment (add to schema if missing)
+          },
+          isProtected
+        );
+      } else {
+        // ── CREATE: first time reviewing this shop ─────────────────────────────
+        await axiosInstance.post(
+          "/seller/api/shop-reviews",
+          {
+            shopId,
+            rating,
+            reviews: title, // maps to ShopReview.reviews (title/summary field)
+            comment, // maps to ShopReview.comment (add to schema if missing)
+            isVerifiedBuyer, // backend re-verifies server-side; client value is a hint only
+          },
+          isProtected
+        );
+      }
       onSuccess();
       onClose();
     } catch (error) {
@@ -219,7 +238,8 @@ function WriteReviewModal({ shopName, shopId, isVerifiedBuyer, onClose, onSucces
         {/* Header */}
         <div className="flex items-start justify-between p-6 pb-4">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Rate &amp; Review {shopName}</h2>
+            {/* ── Edit vs Create mode title ── */}
+            <h2 className="text-lg font-bold text-gray-900">{isEditMode ? "Edit your Review" : `Rate & Review ${shopName}`}</h2>
             <p className="text-sm text-gray-500 mt-0.5">Share your honest experience to help other shoppers.</p>
             {/* ── Option C: show badge when user is a verified buyer ── */}
             {isVerifiedBuyer && (
@@ -315,6 +335,8 @@ function WriteReviewModal({ shopName, shopId, isVerifiedBuyer, onClose, onSucces
                   <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   Submitting…
                 </>
+              ) : isEditMode ? (
+                "Save Changes"
               ) : (
                 "Submit Review"
               )}
@@ -364,6 +386,27 @@ function ReviewsTab({ shop }: ReviewsTabProps) {
 
   const isVerifiedBuyer = purchaseData?.hasPurchased ?? false;
 
+  // ── Fetch the current user's own review for this shop (if any) ───────────────
+  // Used to switch "Write a Review" → "Edit your Review" and pre-fill the modal.
+  const { data: existingReviewData, refetch: refetchExistingReview } = useQuery({
+    queryKey: ["my-shop-review", shop?.id, user?.id],
+    queryFn: async () => {
+      const res = await axiosInstance.get(`/seller/api/shop-review/${shop?.id}`, isProtected);
+      return res.data as { review: any | null };
+    },
+    enabled: !!shop?.id && isLoggedIn,
+    staleTime: 0,
+  });
+  // null  = user has not reviewed this shop yet
+  // object = user already has a review (pre-fill edit mode)
+  const myExistingReview = existingReviewData?.review ?? null;
+
+  // ── Optimistic helpful votes: track which reviewIds *this user* has voted ────
+  // Keyed by reviewId → boolean. Initialised from server flag userHasVotedHelpful.
+  const [helpfulVotes, setHelpfulVotes] = useState<Record<string, boolean>>({});
+  // Local helpfulCount overrides (optimistic UI): reviewId → count
+  const [helpfulCounts, setHelpfulCounts] = useState<Record<string, number>>({});
+
   // Initial load & reload on sort/refresh
   const { data: reviewData, isLoading: isLoadingReviews } = useQuery({
     queryKey: ["shop-reviews", shop?.id, reviewSort, refreshKey],
@@ -371,6 +414,57 @@ function ReviewsTab({ shop }: ReviewsTabProps) {
     staleTime: 0,
     enabled: !!shop?.id,
   });
+
+  // Seed helpful vote state whenever a new page of reviews arrives
+  useEffect(() => {
+    if (!reviewData?.reviews) return;
+    setHelpfulVotes((prev) => {
+      const next = { ...prev };
+      (reviewData.reviews as any[]).forEach((r: any) => {
+        // Only set if not already tracked (preserve optimistic updates)
+        if (!(r.id in next)) {
+          next[r.id] = r.userHasVotedHelpful ?? false;
+        }
+      });
+      return next;
+    });
+    setHelpfulCounts((prev) => {
+      const next = { ...prev };
+      (reviewData.reviews as any[]).forEach((r: any) => {
+        if (!(r.id in next)) {
+          next[r.id] = r.helpfulCount ?? 0;
+        }
+      });
+      return next;
+    });
+  }, [reviewData]);
+
+  // ── Toggle helpful vote for a review ─────────────────────────────────────────
+  async function handleToggleHelpful(reviewId: string) {
+    if (!isLoggedIn) return; // silently ignore — button is hidden for guests
+    const alreadyVoted = helpfulVotes[reviewId] ?? false;
+    const currentCount = helpfulCounts[reviewId] ?? 0;
+
+    // Optimistic update — flip immediately so the UI feels instant
+    setHelpfulVotes((prev) => ({ ...prev, [reviewId]: !alreadyVoted }));
+    setHelpfulCounts((prev) => ({
+      ...prev,
+      [reviewId]: alreadyVoted ? Math.max(0, currentCount - 1) : currentCount + 1,
+    }));
+
+    try {
+      if (alreadyVoted) {
+        await axiosInstance.delete(`/seller/api/shop-reviews/${reviewId}/helpful`, isProtected);
+      } else {
+        await axiosInstance.post(`/seller/api/shop-reviews/${reviewId}/helpful`, {}, isProtected);
+      }
+    } catch (err) {
+      // Rollback on failure
+      console.error("Failed to toggle helpful vote", err);
+      setHelpfulVotes((prev) => ({ ...prev, [reviewId]: alreadyVoted }));
+      setHelpfulCounts((prev) => ({ ...prev, [reviewId]: currentCount }));
+    }
+  }
 
   useEffect(() => {
     if (reviewData) {
@@ -427,8 +521,14 @@ function ReviewsTab({ shop }: ReviewsTabProps) {
           shopName={shop?.name}
           shopId={shop?.id}
           isVerifiedBuyer={isVerifiedBuyer}
+          // ── Duplicate prevention: pass existing review so modal opens in Edit mode
+          existingReview={myExistingReview}
           onClose={() => setShowWriteModal(false)}
-          onSuccess={() => setRefreshKey((k) => k + 1)}
+          onSuccess={() => {
+            setRefreshKey((k) => k + 1);
+            // Re-fetch so the button label updates after submitting
+            refetchExistingReview();
+          }}
         />
       )}
 
@@ -443,11 +543,12 @@ function ReviewsTab({ shop }: ReviewsTabProps) {
               onClick={() => setShowWriteModal(true)}
               className="mt-4 px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg transition-colors"
             >
-              Write a Review
+              {/* ── Duplicate prevention: label switches based on existing review ── */}
+              {myExistingReview ? "Edit your Review" : "Write a Review"}
             </button>
           ) : (
             <Link
-              href="/login"
+              href={`/login?callbackUrl=${encodeURIComponent(`/shop/${shop?.id}?tab=Reviews`)}`}
               className="mt-4 inline-block px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg transition-colors"
             >
               Log in to write a Review
@@ -497,12 +598,13 @@ function ReviewsTab({ shop }: ReviewsTabProps) {
                     onClick={() => setShowWriteModal(true)}
                     className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
                   >
-                    ✏ Write a Review
+                    {/* ── Duplicate prevention: label switches based on existing review ── */}
+                    {myExistingReview ? "✏ Edit your Review" : "✏ Write a Review"}
                   </button>
                 ) : (
                   /* Not logged in — redirect to login */
                   <Link
-                    href="/login"
+                    href={`/login?callbackUrl=${encodeURIComponent(`/shop/${shop?.id}?tab=Reviews`)}`}
                     className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold border border-orange-300 text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
                   >
                     Log in to Write a Review
@@ -574,13 +676,33 @@ function ReviewsTab({ shop }: ReviewsTabProps) {
                   {/* Fallback: if only one field was filled, show whichever exists */}
                   {!review.reviews && !review.comment && <p className="text-sm text-gray-400 italic">No written review.</p>}
 
-                  {/* Helpful */}
+                  {/* ── Helpful toggle ────────────────────────────────────────────────
+                      - Optimistic: flips instantly, rolls back on API error.
+                      - isLoggedIn guard: guests see a greyed-out non-clickable button.
+                      - helpfulVotes / helpfulCounts are local overrides seeded from server. */}
                   <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-gray-50">
-                    <button className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-orange-500 transition-colors">
-                      <ThumbsUp size={13} />
-                      Helpful
-                      {review.helpfulCount > 0 && ` (${review.helpfulCount})`}
-                    </button>
+                    {isLoggedIn ? (
+                      <button
+                        onClick={() => handleToggleHelpful(review.id)}
+                        className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
+                          helpfulVotes[review.id] ? "text-orange-500" : "text-gray-400 hover:text-orange-400"
+                        }`}
+                        title={helpfulVotes[review.id] ? "Remove helpful vote" : "Mark as helpful"}
+                      >
+                        <ThumbsUp size={13} className={helpfulVotes[review.id] ? "fill-orange-500 text-orange-500" : ""} />
+                        Helpful
+                        {(helpfulCounts[review.id] ?? 0) > 0 && <span className="text-gray-400 font-normal">({helpfulCounts[review.id]})</span>}
+                      </button>
+                    ) : (
+                      /* Guests see the count but can't click */
+                      <span className="flex items-center gap-1.5 text-xs text-gray-300 cursor-default select-none">
+                        <ThumbsUp size={13} />
+                        Helpful
+                        {(helpfulCounts[review.id] ?? review.helpfulCount ?? 0) > 0 && (
+                          <span>({helpfulCounts[review.id] ?? review.helpfulCount})</span>
+                        )}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
@@ -623,7 +745,13 @@ function stringToColor(str: string): string {
 // ─── Main SellerProfile Component ────────────────────────────────────────────
 
 export default function SellerProfile({ shop, followersCount }: SellerProfile) {
-  const [activeTab, setActiveTab] = useState<TabType>("Products");
+  // ── Deep-link to a specific tab via ?tab=Reviews (used by callbackUrl after login) ──
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab") as TabType | null;
+  const validTabs: TabType[] = ["Products", "Offers", "Reviews"];
+  const initialTab: TabType = tabParam && validTabs.includes(tabParam) ? tabParam : "Products";
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab);
+
   const [followers, setFollowers] = useState(followersCount);
   const [isFollowing, setIsFollowing] = useState(false);
 

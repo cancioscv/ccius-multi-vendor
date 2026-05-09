@@ -91,18 +91,30 @@ model Order {
   paymentMethod String @default("card") // ← "card" | "klarna" | "paypal" | "SEPA"
 }
 
+model ShopReviewHelpful {
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String      @db.ObjectId
+  reviewId     String      @db.ObjectId
+  createdAt    DateTime    @default(now())
+  shopReview   ShopReview? @relation(fields: [shopReviewId], references: [id])
+  shopReviewId String?     @db.ObjectId
+
+  @@unique([userId, reviewId]) // one vote per user per review
+}
+
 model ShopReview {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId       String   @db.ObjectId
-  user         User     @relation(fields: [userId], references: [id])
+  id           String              @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String              @db.ObjectId
+  user         User                @relation(fields: [userId], references: [id])
   rating       Float
   reviews      String?
-  createdAt    DateTime @default(now())
-  updateAt     DateTime @updatedAt
-  shopId       String?  @db.ObjectId
-  shop         Shop?    @relation(fields: [shopId], references: [id])
+  createdAt    DateTime            @default(now())
+  updateAt     DateTime            @updatedAt
+  shopId       String?             @db.ObjectId
+  shop         Shop?               @relation(fields: [shopId], references: [id])
   comment      String?
-  helpfulCount Int      @default(0) // ← optional, for "Helpful" voting
+  helpfulCount Int                 @default(0) // ← optional, for "Helpful" voting
+  helpfulVotes ShopReviewHelpful[]
 
   @@unique([userId, shopId]) // to prevent a user submitting more than one review per shops
 }
