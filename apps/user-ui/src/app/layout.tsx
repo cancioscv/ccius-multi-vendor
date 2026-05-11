@@ -50,13 +50,14 @@ const jakarta = Plus_Jakarta_Sans({
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="h-full">
       <body
-        className={`antialiased ${roboto.variable} ${poppins.variable}  ${oregano.variable} ${jost.variable} ${inter.variable} ${jakarta.variable} bg-[#f5f5f5]`}
+        className={`antialiased ${roboto.variable} ${poppins.variable} ${oregano.variable} ${jost.variable} ${inter.variable} ${jakarta.variable} bg-[#f5f5f5] min-h-screen flex flex-col`}
       >
         <Providers>
           <Header />
-          <main className="max-w-[1370px] mx-auto px-4">{children}</main> <Footer />
+          <main className="flex-1 w-full max-w-[1370px] mx-auto px-4">{children}</main>
+          <Footer />
           <ToastContainer position="bottom-right" />
         </Providers>
       </body>
