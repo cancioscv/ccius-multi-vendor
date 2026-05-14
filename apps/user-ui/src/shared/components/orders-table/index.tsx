@@ -4,8 +4,8 @@ import axiosInstance from "@/utils/axiosInstance";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Eye, ChevronLeft, ChevronRight, Search } from "lucide-react";
-import { useState, useMemo } from "react";
+import { Eye, ChevronLeft, ChevronRight, Search, ChevronDown, Check } from "lucide-react";
+import { useState, useMemo, useRef, useEffect } from "react";
 
 // Payment status badge styles
 const PAYMENT_STATUS_STYLES: Record<string, string> = {
@@ -38,6 +38,76 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
 
 const PAGE_SIZE = 8;
 
+// ─── Custom dropdown component ────────────────────────────────────────────────
+interface StatusDropdownProps {
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+}
+
+function StatusDropdown({ value, options, onChange }: StatusDropdownProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const allOptions = ["All statuses", ...options];
+
+  const displayLabel = value === "All statuses" ? "All statuses" : ORDER_STATUS_LABELS[value] ?? value;
+
+  return (
+    <div ref={ref} className="relative min-w-[155px]">
+      {/* Trigger button */}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={`w-full flex items-center justify-between gap-2 px-3.5 py-2 text-sm border rounded-lg bg-white transition
+          ${open ? "border-[#e07b39] ring-1 ring-[#e07b39]/20" : "border-gray-200 hover:border-gray-300"}
+          text-gray-700`}
+      >
+        <span>{displayLabel}</span>
+        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {/* Dropdown panel */}
+      {open && (
+        <div className="absolute right-0 mt-1.5 w-full min-w-[155px] bg-white border border-gray-100 rounded-xl shadow-lg z-50 py-1 overflow-hidden">
+          {allOptions.map((option) => {
+            const label = option === "All statuses" ? "All statuses" : ORDER_STATUS_LABELS[option] ?? option;
+            const isSelected = value === option;
+
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => {
+                  onChange(option);
+                  setOpen(false);
+                }}
+                className={`w-full flex items-center justify-between px-4 py-2 text-sm transition
+                  ${isSelected ? "bg-orange-50 text-[#e07b39] font-medium" : "text-gray-700 hover:bg-gray-50"}`}
+              >
+                <span>{label}</span>
+                {isSelected && <Check className="w-3.5 h-3.5 text-[#e07b39]" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 export default function OrdersTable() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
@@ -54,14 +124,14 @@ export default function OrdersTable() {
 
   const allOrders: any[] = data || [];
 
-  // Collect unique order (delivery) statuses for the filter dropdown
+  // Collect unique order (delivery) statuses for the dropdown
   const uniqueStatuses = useMemo(() => {
     const set = new Set<string>();
     allOrders.forEach((o) => set.add(o.deliveryStatus));
     return Array.from(set);
   }, [allOrders]);
 
-  // Filter by search + order status
+  // Filter by search + delivery status
   const filtered = useMemo(() => {
     return allOrders.filter((order) => {
       const matchesSearch =
@@ -100,21 +170,16 @@ export default function OrdersTable() {
             className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-[#e07b39] transition"
           />
         </div>
-        <select
+
+        {/* Custom dropdown */}
+        <StatusDropdown
           value={statusFilter}
-          onChange={(e) => {
-            setStatusFilter(e.target.value);
+          options={uniqueStatuses}
+          onChange={(v) => {
+            setStatusFilter(v);
             setCurrentPage(1);
           }}
-          className="text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-[#e07b39] bg-white text-gray-700 min-w-[140px]"
-        >
-          <option>All statuses</option>
-          {uniqueStatuses.map((s) => (
-            <option key={s} value={s}>
-              {ORDER_STATUS_LABELS[s] ?? s}
-            </option>
-          ))}
-        </select>
+        />
       </div>
 
       {/* Table */}
@@ -125,7 +190,6 @@ export default function OrdersTable() {
               <th className="py-3 px-4 font-semibold text-gray-500 text-xs uppercase tracking-wide">Order ID</th>
               <th className="py-3 px-4 font-semibold text-gray-500 text-xs uppercase tracking-wide">Product</th>
               <th className="py-3 px-4 font-semibold text-gray-500 text-xs uppercase tracking-wide">Payment Status</th>
-              {/* ✅ New column */}
               <th className="py-3 px-4 font-semibold text-gray-500 text-xs uppercase tracking-wide">Order Status</th>
               <th className="py-3 px-4 font-semibold text-gray-500 text-xs uppercase tracking-wide">Total</th>
               <th className="py-3 px-4 font-semibold text-gray-500 text-xs uppercase tracking-wide">Date</th>
@@ -167,7 +231,7 @@ export default function OrdersTable() {
                     </span>
                   </td>
 
-                  {/* ✅ Order (delivery) status badge */}
+                  {/* Order (delivery) status badge */}
                   <td className="py-3 px-4">
                     <span
                       className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
@@ -190,11 +254,11 @@ export default function OrdersTable() {
                     })}
                   </td>
 
-                  {/* Actions */}
+                  {/* Action */}
                   <td className="py-3 px-4">
                     <button
                       onClick={() => router.push(`/order/${order.id}`)}
-                      className="flex items-center gap-1 text-xs text-gray-500 border border-gray-200 rounded-lg px-2.5 py-1.5 hover:bg-[#fbf0e9] transition-colors hover:border-[#fbf0e9] hover:text-orange-700"
+                      className="flex items-center gap-1 text-xs text-gray-500 border border-gray-200 rounded-lg px-2.5 py-1.5 hover:bg-[#fbf0e9] hover:border-[#fbf0e9] hover:text-orange-700 transition-colors"
                     >
                       <Eye className="w-3.5 h-3.5" /> View Order
                     </button>
