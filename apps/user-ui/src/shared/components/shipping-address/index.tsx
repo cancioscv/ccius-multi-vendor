@@ -3,7 +3,7 @@
 import { countries } from "@/configs/countries";
 import axiosInstance from "@/utils/axiosInstance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MapPin, Plus, Trash2, X } from "lucide-react";
+import { Home, Briefcase, MapPin, Plus, Trash2, Pencil, X, Check } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -12,6 +12,13 @@ enum ADDRESS_TYPE { // TODO: Get this enum from prisma
   WORK = "WORK",
   OTHER = "OTHER",
 }
+
+const addressTypeIcon: Record<string, any> = {
+  HOME: Home,
+  WORK: Briefcase,
+  OTHER: MapPin,
+};
+
 export default function ShippingAddress() {
   const [showModal, setShowModal] = useState(false);
   const queryClient = useQueryClient();
@@ -70,124 +77,191 @@ export default function ShippingAddress() {
     },
   });
 
+  const { mutate: setDefaultAddress } = useMutation({
+    mutationFn: async (id: string) => {
+      await axiosInstance.put(`/api/set-default-address/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["shipping-addresses"] });
+    },
+  });
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-gray-800">Saved Address</h2>
-        <button onClick={() => setShowModal(true)} className="flex items-center gap-1 text-sm text-blue-600 font-medium hover:underline">
-          <Plus className="w-4 h-4" /> Add New Address
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Shipping Address</h2>
+          <p className="text-sm text-gray-400 mt-0.5">Manage where your orders are delivered.</p>
+        </div>
+        <button
+          onClick={() => setShowModal(true)}
+          className="flex items-center gap-1.5 text-sm text-white bg-[#e07b39] rounded-lg px-4 py-2 hover:bg-[#c96a2a] transition flex-shrink-0"
+        >
+          <Plus className="w-4 h-4" /> Add address
         </button>
       </div>
 
-      {/* Address List */}
-      <div>
-        {isLoading ? (
-          <p className="text-sm text-gray-500">Loading Addresses...</p>
-        ) : !addresses || addresses.length === 0 ? (
-          <p className="text-sm text-gray-600">No saved addresses found.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {addresses.map((address: any) => (
-              <div key={address.id} className="border border-gray-200 rounded-md p-4 relative">
-                {address.isDefault && (
-                  <span className="absolute top-2 right-2 bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full">Default</span>
-                )}
-                <div className="flex items-start gap-2 text-sm text-gray-700 min-h-20">
-                  <MapPin className="w-5 h-5 mt-0.5 text-gray-500" />
-                  <div>
-                    <p className="font-medium">
-                      {address.addressType} - {address.name}
-                    </p>
-                    <p>
-                      {address.street}, {address.city}, {address.zip}, {address.country}
-                    </p>
+      {/* Address Cards */}
+      {isLoading ? (
+        <p className="text-sm text-gray-400">Loading addresses...</p>
+      ) : !addresses || addresses.length === 0 ? (
+        <div className="text-center py-12 text-gray-400">
+          <MapPin className="w-8 h-8 mx-auto mb-2 opacity-30" />
+          <p className="text-sm">No saved addresses yet.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {addresses.map((address: any) => {
+            const TypeIcon = addressTypeIcon[address.addressType] || MapPin;
+            return (
+              <div
+                key={address.id}
+                className={`border rounded-xl p-4 relative transition ${
+                  address.isDefault ? "border-orange-200 bg-orange-50/30" : "border-gray-200 bg-white"
+                }`}
+              >
+                {/* Address type + default badge */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center ${address.isDefault ? "bg-orange-100" : "bg-gray-100"}`}>
+                      <TypeIcon className={`w-3.5 h-3.5 ${address.isDefault ? "text-[#e07b39]" : "text-gray-400"}`} />
+                    </div>
+                    <span className="text-sm font-semibold text-gray-800 capitalize">
+                      {address.addressType.charAt(0) + address.addressType.slice(1).toLowerCase()}
+                    </span>
+                    {address.isDefault && (
+                      <span className="text-[10px] font-bold bg-[#e07b39] text-white px-2 py-0.5 rounded-full uppercase tracking-wide">Default</span>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition"
+                      title="Edit address"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition"
+                      onClick={() => deleteAddress(address.id)}
+                      title="Delete address"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
-                <div className="flex gap-3 mt-4 absolute bottom-2">
-                  <button
-                    className="flex items-center gap-1 !cursor-pointer text-xs text-red-500 hover:underline "
-                    onClick={() => deleteAddress(address.id)}
-                  >
-                    <Trash2 className="w-4 h-4" /> Remove
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
-      {/* Modal */}
+                {/* Address details */}
+                <div className="text-sm text-gray-600 space-y-0.5 pl-9">
+                  <p className="font-medium text-gray-800">{address.name}</p>
+                  <p className="flex items-center gap-1 text-gray-500 text-xs">
+                    <MapPin className="w-3 h-3 flex-shrink-0" />
+                    {address.street}
+                  </p>
+                  <p className="text-xs text-gray-500 pl-4">
+                    {address.zip} {address.city}, {address.country}
+                  </p>
+                </div>
+
+                {/* Set as default */}
+                {!address.isDefault && (
+                  <button
+                    onClick={() => setDefaultAddress(address.id)}
+                    className="mt-4 w-full text-xs text-gray-500 border border-gray-200 rounded-lg py-1.5 hover:bg-gray-50 hover:border-gray-300 transition"
+                  >
+                    Set as default
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Add Address Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
-          <div className="bg-white w-full max-w-md p-6 rounded-md shadow-md relative">
-            <button className="absolute top-3 right-3 text-gray-500 hover:text-gray-800" onClick={() => setShowModal(false)}>
-              <X className="w-5 h-5" />
-            </button>
-            <h3 className="text-lg font-semibold mb-4 text-gray-800">Add New Address</h3>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-              <select {...register("addressType")} className="w-full border outline-none border-gray-300 bg-transparent rounded-md p-2">
-                <option value={ADDRESS_TYPE.HOME} className="bg-black">
-                  Home
-                </option>
-                <option value={ADDRESS_TYPE.WORK} className="bg-black">
-                  Work
-                </option>
-                <option value={ADDRESS_TYPE.OTHER} className="bg-black">
-                  Other
-                </option>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-xl relative">
+            <div className="flex items-center justify-between p-6 pb-0">
+              <h3 className="text-lg font-bold text-gray-900">Add New Address</h3>
+              <button
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400 transition"
+                onClick={() => setShowModal(false)}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-3">
+              {/* Address type */}
+              <select
+                {...register("addressType")}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#e07b39] bg-white text-gray-700 transition"
+              >
+                <option value={ADDRESS_TYPE.HOME}>Home</option>
+                <option value={ADDRESS_TYPE.WORK}>Work</option>
+                <option value={ADDRESS_TYPE.OTHER}>Other</option>
               </select>
 
               <input
                 type="text"
-                placeholder="Name"
+                placeholder="Full name"
                 {...register("name", { required: "Name is required" })}
-                className="w-full p-2 border border-gray-300 rounded-[4px] mb-1 outline-none"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#e07b39] transition"
               />
-              {errors.name && <p className="text-red-500 text-xs">{errors.name.message}</p>}
+              {errors.name && <p className="text-red-500 text-xs">{errors.name.message as string}</p>}
 
               <input
                 type="text"
-                placeholder="Street"
+                placeholder="Street address"
                 {...register("street", { required: "Street is required" })}
-                className="w-full p-2 border border-gray-300 rounded-[4px] mb-1 outline-none"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#e07b39] transition"
               />
-              {errors.street && <p className="text-red-500 text-xs">{errors.street.message}</p>}
+              {errors.street && <p className="text-red-500 text-xs">{errors.street.message as string}</p>}
 
-              <input
-                type="text"
-                placeholder="City"
-                {...register("city", { required: "City is required" })}
-                className="w-full p-2 border border-gray-300 rounded-[4px] mb-1 outline-none"
-              />
-              {errors.city && <p className="text-red-500 text-xs">{errors.city.message}</p>}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <input
+                    type="text"
+                    placeholder="City"
+                    {...register("city", { required: "City is required" })}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#e07b39] transition"
+                  />
+                  {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city.message as string}</p>}
+                </div>
+                <input
+                  type="text"
+                  placeholder="ZIP code"
+                  {...register("zip", { required: "ZIP is required" })}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#e07b39] transition"
+                />
+              </div>
 
-              <input
-                type="text"
-                placeholder="ZIP Code"
-                {...register("zip", { required: "ZIP code is required" })}
-                className="w-full p-2 border border-gray-300 rounded-[4px] mb-1 outline-none"
-              />
-
-              <select {...register("country")} className="w-full border outline-none border-gray-300 bg-transparent rounded-md p-2">
+              <select
+                {...register("country")}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#e07b39] bg-white text-gray-700 transition"
+              >
                 {countries.map((country) => (
-                  <option key={country.code} value={country.code} className="bg-black">
+                  <option key={country.code} value={country.code}>
                     {country.name}
                   </option>
                 ))}
               </select>
 
-              <select {...register("isDefault")} className="w-full border outline-none border-gray-300 bg-transparent rounded-md p-2">
-                <option value="true" className="">
-                  Set as Default
-                </option>
-                <option value="false" className="">
-                  Not Default
-                </option>
+              <select
+                {...register("isDefault")}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#e07b39] bg-white text-gray-700 transition"
+              >
+                <option value="true">Set as default</option>
+                <option value="false">Not default</option>
               </select>
 
-              <button type="submit" className="w-full bg-blue-600 text-white text-sm py-2 rounded-md hover:bg-blue-300 transition">
+              <button
+                type="submit"
+                className="w-full bg-[#e07b39] text-white text-sm py-2.5 rounded-xl hover:bg-[#c96a2a] transition font-medium mt-1"
+              >
                 Save Address
               </button>
             </form>

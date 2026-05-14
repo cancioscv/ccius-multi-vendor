@@ -26,6 +26,7 @@ import {
   logoutSeller,
   loginAdmin,
   logoutAdmin,
+  updateUserProfile,
 } from "../controller/auth.controller.js";
 
 const router: Router = Router();
@@ -33,6 +34,7 @@ const router: Router = Router();
 // User
 router.post("/create-user", createUser);
 router.post("/verify-user", verifyUser);
+router.put("/update-profile", isAuth, updateUserProfile);
 router.post("/login", loginUser);
 router.get("/logout-user", isAuth, logoutUser);
 router.post("/refresh-token", refreshToken);

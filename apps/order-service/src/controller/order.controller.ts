@@ -480,6 +480,7 @@ export async function getOrderDetails(req: any, res: Response, next: NextFunctio
         id: true,
         title: true,
         images: true,
+        reviews: true,
       },
     });
 

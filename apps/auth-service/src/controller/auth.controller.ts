@@ -77,6 +77,58 @@ export async function verifyUser(req: Request, res: Response, next: NextFunction
   }
 }
 
+// Updates the authenticated user's name and email.
+export async function updateUserProfile(req: any, res: Response, next: NextFunction) {
+  try {
+    const userId = (req as any).user?.id; // assumes auth middleware attaches user
+    if (!userId) {
+      return next(new ValidationError("Unauthorized."));
+    }
+
+    const { name, email } = req.body;
+
+    if (!name && !email) {
+      return next(new ValidationError("Please provide at least name or email to update."));
+    }
+
+    // If email is being changed, check it isn't already taken
+    if (email) {
+      const existing = await prisma.user.findFirst({
+        where: {
+          email,
+          NOT: { id: userId },
+        },
+      });
+      if (existing) {
+        return next(new ValidationError("This email is already in use by another account."));
+      }
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(name && { name }),
+        ...(email && { email }),
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+        role: true,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully.",
+      user: updatedUser,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 // Login
 export async function loginUser(req: Request, res: Response, next: NextFunction) {
   try {

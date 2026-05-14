@@ -315,15 +315,14 @@ export async function createReview(req: any, res: Response, next: NextFunction) 
 // Update product review
 export async function updateReview(req: any, res: Response, next: NextFunction) {
   const userId = req.user?.id;
-  const { productId, rating, comment, title } = req.body;
+  // ✅ Accept reviewId from URL params (e.g. PUT /product/api/update-review/:reviewId)
+  const { reviewId } = req.params;
+  const { rating, comment, title } = req.body;
 
   try {
-    // Find existing product's review
-    const existingReview = await prisma.review.findFirst({
-      where: {
-        userId,
-        productId,
-      },
+    // Find the review by ID first
+    const existingReview = await prisma.review.findUnique({
+      where: { id: reviewId },
     });
 
     if (!existingReview) {
@@ -341,15 +340,54 @@ export async function updateReview(req: any, res: Response, next: NextFunction) 
         title,
       },
       where: {
-        id: existingReview?.id,
+        id: reviewId,
       },
     });
 
-    return res.status(201).json({ success: true, data: updatedReview });
+    return res.status(200).json({ success: true, data: updatedReview });
   } catch (error) {
     return next(error);
   }
 }
+
+// Update product review
+// export async function updateReview(req: any, res: Response, next: NextFunction) {
+//   const userId = req.user?.id;
+//   const { productId, rating, comment, title } = req.body;
+
+//   try {
+//     // Find existing product's review
+//     const existingReview = await prisma.review.findFirst({
+//       where: {
+//         userId,
+//         productId,
+//       },
+//     });
+
+//     if (!existingReview) {
+//       return next(new ValidationError("Review not found"));
+//     }
+
+//     if (existingReview.userId !== userId) {
+//       return next(new AuthError("You are not allowed to update this review"));
+//     }
+
+//     const updatedReview = await prisma.review.update({
+//       data: {
+//         rating,
+//         comment,
+//         title,
+//       },
+//       where: {
+//         id: existingReview?.id,
+//       },
+//     });
+
+//     return res.status(201).json({ success: true, data: updatedReview });
+//   } catch (error) {
+//     return next(error);
+//   }
+// }
 
 // Gt product review
 export async function getReview(req: any, res: Response, next: NextFunction) {
@@ -505,6 +543,40 @@ export async function getAllProducts(req: Request, res: Response, next: NextFunc
       currentPage: page,
       totalPages: Math.ceil(total / limit),
     });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function getProductById(req: Request, res: Response, next: NextFunction) {
+  const { productId } = req.params;
+
+  try {
+    const product = await prisma.product.findUnique({
+      where: {
+        id: productId,
+      },
+      select: {
+        id: true,
+        title: true,
+        images: {
+          select: {
+            url: true,
+          },
+        },
+        shop: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!product) {
+      return next(new NotFoundError("Product was not found"));
+    }
+
+    return res.status(200).json({ success: true, product });
   } catch (error) {
     return next(error);
   }
