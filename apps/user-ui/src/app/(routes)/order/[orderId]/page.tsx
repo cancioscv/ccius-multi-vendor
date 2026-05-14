@@ -30,15 +30,20 @@ const PAYMENT_STATUS_STYLES: Record<string, string> = {
 // Accepts the order delivery status and the item's existing review (if any).
 function ReviewButton({
   productId,
+  orderId,
   deliveryStatus,
   existingReview,
 }: {
   productId: string;
+  orderId: string;
   deliveryStatus: string;
   existingReview?: { id: string; createdAt: string } | null;
 }) {
   const router = useRouter();
   const isDelivered = deliveryStatus === "DELIVERED";
+
+  // ✅ Always include orderId so the review page can invalidate this order's cache on submit
+  const reviewUrl = `/review/${productId}?orderId=${orderId}`;
 
   if (!isDelivered) {
     // Order not yet delivered — show disabled pill
@@ -55,7 +60,7 @@ function ReviewButton({
     return (
       <div className="flex flex-col items-end gap-0.5">
         <button
-          onClick={() => router.push(`/review/${productId}`)}
+          onClick={() => router.push(reviewUrl)}
           className="flex items-center gap-1 text-xs text-white bg-[#e07b39] border border-[#e07b39] rounded-lg px-2.5 py-1.5 hover:bg-[#c96a2a] transition"
         >
           <Star className="w-3.5 h-3.5" /> Edit Review
@@ -74,7 +79,7 @@ function ReviewButton({
   // Delivered, no review yet
   return (
     <button
-      onClick={() => router.push(`/review/${productId}`)}
+      onClick={() => router.push(reviewUrl)}
       className="flex items-center gap-1 text-xs text-white bg-[#e07b39] border border-[#e07b39] rounded-lg px-2.5 py-1.5 hover:bg-[#c96a2a] transition"
     >
       <Star className="w-3.5 h-3.5" /> Write Review
@@ -239,6 +244,7 @@ export default function OrderDetailPage() {
                     {/* ✅ Smart review button: shows correct state based on delivery + existing review */}
                     <ReviewButton
                       productId={item.productId}
+                      orderId={order.id}
                       deliveryStatus={order.deliveryStatus}
                       existingReview={item.product?.reviews?.[0] ?? null}
                     />

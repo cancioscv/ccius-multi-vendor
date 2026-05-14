@@ -2,7 +2,7 @@
 
 import axiosInstance from "@/utils/axiosInstance";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { ArrowLeft, Star, ImagePlus } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
@@ -10,6 +10,10 @@ import { useForm } from "react-hook-form";
 
 export default function WriteReviewPage() {
   const { productId } = useParams<{ productId: string }>();
+  const searchParams = useSearchParams();
+  // ✅ orderId passed as ?orderId=... so we can invalidate the order cache on success
+  const orderId = searchParams.get("orderId");
+
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -69,7 +73,7 @@ export default function WriteReviewPage() {
   const { mutate: submitReview } = useMutation({
     mutationFn: async (data: { rating: number; title: string; comment: string; anonymous: boolean }) => {
       if (existingReview) {
-        // ✅ Pass reviewId in the URL param — backend now reads it from req.params
+        // ✅ Pass reviewId in the URL param — backend reads it from req.params
         const res = await axiosInstance.put(`/product/api/update-review/${existingReview.id}`, data);
         return res.data;
       } else {
@@ -81,8 +85,16 @@ export default function WriteReviewPage() {
       }
     },
     onSuccess: () => {
+      // Invalidate the review query so edit flow detects the new review next time
       queryClient.invalidateQueries({ queryKey: ["user-review", productId] });
-      router.push("/profile?active=My+Orders");
+
+      // ✅ Invalidate the specific order so ReviewButton re-renders as "Edit Review"
+      // when the user lands back on the order detail page
+      if (orderId) {
+        queryClient.invalidateQueries({ queryKey: ["order", orderId] });
+      }
+
+      router.push(orderId ? `/order/${orderId}` : "/profile?active=My+Orders");
     },
   });
 

@@ -54,21 +54,21 @@ export default function OrdersTable() {
 
   const allOrders: any[] = data || [];
 
-  // Collect unique payment statuses for the filter dropdown
+  // Collect unique order (delivery) statuses for the filter dropdown
   const uniqueStatuses = useMemo(() => {
     const set = new Set<string>();
-    allOrders.forEach((o) => set.add(o.paymentStatus));
+    allOrders.forEach((o) => set.add(o.deliveryStatus));
     return Array.from(set);
   }, [allOrders]);
 
-  // Filter by search + payment status
+  // Filter by search + order status
   const filtered = useMemo(() => {
     return allOrders.filter((order) => {
       const matchesSearch =
         !searchQuery ||
         order.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         order.items?.[0]?.product?.title?.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus = statusFilter === "All statuses" || order.paymentStatus === statusFilter;
+      const matchesStatus = statusFilter === "All statuses" || order.deliveryStatus === statusFilter;
       return matchesSearch && matchesStatus;
     });
   }, [allOrders, searchQuery, statusFilter]);
@@ -111,7 +111,7 @@ export default function OrdersTable() {
           <option>All statuses</option>
           {uniqueStatuses.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {ORDER_STATUS_LABELS[s] ?? s}
             </option>
           ))}
         </select>
@@ -196,8 +196,7 @@ export default function OrdersTable() {
                       onClick={() => router.push(`/order/${order.id}`)}
                       className="flex items-center gap-1 text-xs text-gray-500 border border-gray-200 rounded-lg px-2.5 py-1.5 hover:bg-[#fbf0e9] transition-colors hover:border-[#fbf0e9] hover:text-orange-700"
                     >
-                      <Eye className="w-3.5 h-3.5" />
-                      View Order
+                      <Eye className="w-3.5 h-3.5" /> View Order
                     </button>
                   </td>
                 </tr>
