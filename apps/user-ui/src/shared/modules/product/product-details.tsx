@@ -28,6 +28,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useCallback } from "react";
+// ✅ Added: useQuery for purchase check + existing review check
+import { useQuery } from "@tanstack/react-query";
 import DOMPurify from "dompurify";
 import StarRating from "@/shared/components/ratings/star-rating";
 import { roundToDecimalPlace } from "@/utils/roundToDecimalPlace";
@@ -163,6 +165,37 @@ export default function ProductDetails({ product }: any) {
   const [isLoadingMoreReviews, setIsLoadingMoreReviews] = useState(false);
   const [allReviews, setAllReviews] = useState<any[]>(product?.reviews ?? []);
   const [hasMoreReviews, setHasMoreReviews] = useState((product?.reviews?.length ?? 0) > REVIEWS_PER_PAGE);
+
+  // ✅ Added: whether this user is logged in
+  const isLoggedIn = !!user;
+
+  // ✅ Added: check if user has purchased this product (gates the review button)
+  // Only runs when logged in — guests never see the purchase check.
+  const { data: purchaseData } = useQuery({
+    queryKey: ["has-purchased-product", product?.id, user?.id],
+    queryFn: async () => {
+      const res = await axiosInstance.get(`/product/api/has-purchased-product/${product?.id}`, isProtected);
+      return res.data as { hasPurchased: boolean };
+    },
+    enabled: !!product?.id && isLoggedIn,
+    staleTime: 1000 * 60 * 5,
+  });
+  const hasPurchasedProduct = purchaseData?.hasPurchased ?? false;
+
+  // ✅ Added: fetch user's own existing review for this product (if any)
+  // Drives "Write a Review" vs "Edit your Review" button label + edit mode.
+  const { data: existingReviewData } = useQuery({
+    queryKey: ["my-product-review", product?.id, user?.id],
+    queryFn: async () => {
+      const res = await axiosInstance.get(`/product/api/review/${product?.id}`, isProtected);
+      return res.data as { review: any | null };
+    },
+    enabled: !!product?.id && isLoggedIn,
+    staleTime: 0,
+  });
+  // null = user has not reviewed this product yet
+  // object = user already has a review → open edit mode
+  const myExistingProductReview = existingReviewData?.review ?? null;
 
   // Navigate to Previous Image
   function prevImage() {
@@ -778,10 +811,50 @@ export default function ProductDetails({ product }: any) {
                 ))}
               </div>
 
-              {/* Write a Review button */}
-              <button className="mt-5 w-full py-2.5 text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors">
-                Write a Review
-              </button>
+              {/* ✅ Smart Write / Edit Review button
+                  ─────────────────────────────────────────────────────────────
+                  Branch 1 — Not logged in:
+                    → Link to /login with callbackUrl back to this product.
+                  Branch 2 — Logged in, has NOT purchased:
+                    → Disabled button + hover tooltip "Only verified buyers…"
+                  Branch 3 — Logged in, purchased, already has a review:
+                    → Outlined link to /review/[productId] in edit mode.
+                  Branch 4 — Logged in, purchased, no review yet:
+                    → Solid orange link to /review/[productId] to create.
+                  ───────────────────────────────────────────────────────────── */}
+              {!isLoggedIn ? (
+                <Link
+                  href={`/login?callbackUrl=${encodeURIComponent(`/product/${product?.slug}`)}`}
+                  className="mt-5 w-full py-2.5 text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors flex items-center justify-center"
+                >
+                  Log in to Write a Review
+                </Link>
+              ) : !hasPurchasedProduct ? (
+                <div className="mt-5 group relative">
+                  <button disabled className="w-full py-2.5 text-sm font-semibold bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed">
+                    Write a Review
+                  </button>
+                  {/* Tooltip shown on hover */}
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-10 bg-gray-800 text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap shadow-lg">
+                    Only verified buyers can review this product.
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800" />
+                  </div>
+                </div>
+              ) : myExistingProductReview ? (
+                <Link
+                  href={`/review/${product?.id}?slug=${product?.slug}`}
+                  className="mt-5 w-full py-2.5 text-sm font-semibold border-2 border-orange-500 text-orange-500 hover:bg-orange-50 rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  ✏ Edit your Review
+                </Link>
+              ) : (
+                <Link
+                  href={`/review/${product?.id}?slug=${product?.slug}`}
+                  className="mt-5 w-full py-2.5 text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors flex items-center justify-center"
+                >
+                  Write a Review
+                </Link>
+              )}
             </div>
 
             {/* ── Right: review cards ── */}

@@ -13,6 +13,8 @@ export default function WriteReviewPage() {
   const searchParams = useSearchParams();
   // ✅ orderId passed as ?orderId=... so we can invalidate the order cache on success
   const orderId = searchParams.get("orderId");
+  // ✅ slug passed as ?slug=... so we can redirect back to the product page after submit
+  const productSlug = searchParams.get("slug");
 
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -70,6 +72,14 @@ export default function WriteReviewPage() {
     }
   }, [existingReview, reset]);
 
+  // ── Determine where to redirect after submit ──────────────────────────────
+  // Priority: slug → orderId → profile orders
+  function getRedirectUrl() {
+    if (productSlug) return `/product/${productSlug}`;
+    if (orderId) return `/order/${orderId}`;
+    return "/profile?active=My+Orders";
+  }
+
   const { mutate: submitReview } = useMutation({
     mutationFn: async (data: { rating: number; title: string; comment: string; anonymous: boolean }) => {
       if (existingReview) {
@@ -87,6 +97,8 @@ export default function WriteReviewPage() {
     onSuccess: () => {
       // Invalidate the review query so edit flow detects the new review next time
       queryClient.invalidateQueries({ queryKey: ["user-review", productId] });
+      // Invalidate product review queries so the product page refreshes the list
+      queryClient.invalidateQueries({ queryKey: ["my-product-review", productId] });
 
       // ✅ Invalidate the specific order so ReviewButton re-renders as "Edit Review"
       // when the user lands back on the order detail page
@@ -94,7 +106,8 @@ export default function WriteReviewPage() {
         queryClient.invalidateQueries({ queryKey: ["order", orderId] });
       }
 
-      router.push(orderId ? `/order/${orderId}` : "/profile?active=My+Orders");
+      // ✅ Redirect back to product page (or order/profile as fallback)
+      router.push(getRedirectUrl());
     },
   });
 
@@ -116,12 +129,22 @@ export default function WriteReviewPage() {
 
   const isEditing = !!existingReview;
 
+  // ── Back navigation: prefer product page, fallback to browser history ─────
+  function handleBack() {
+    if (productSlug) {
+      router.push(`/product/${productSlug}`);
+    } else {
+      router.back();
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#f5f5f0] px-4 py-8">
       <div className="max-w-xl mx-auto">
         {/* Back */}
-        <button onClick={() => router.back()} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition mb-6">
-          <ArrowLeft className="w-4 h-4" /> Back to Orders
+        <button onClick={handleBack} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition mb-6">
+          <ArrowLeft className="w-4 h-4" />
+          {productSlug ? "Back to Product" : "Back to Orders"}
         </button>
 
         {/* Card */}
@@ -251,7 +274,7 @@ export default function WriteReviewPage() {
               </button>
               <button
                 type="button"
-                onClick={() => router.back()}
+                onClick={handleBack}
                 className="text-sm text-gray-500 border border-gray-200 px-5 py-2.5 rounded-xl hover:bg-gray-50 transition"
               >
                 Cancel

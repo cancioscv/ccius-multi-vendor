@@ -287,15 +287,65 @@ export async function deleteProduct(req: any, res: Response, next: NextFunction)
   }
 }
 
+// Returns { hasPurchased: boolean } — true if the logged-in user has at least
+// one DELIVERED order that contains this product.
+//
+// This gates the "Write a Review" button: only verified buyers can review.
+// The backend re-checks this independently in createReview (never trust client).
+export async function hasPurchasedProduct(req: any, res: Response, next: NextFunction) {
+  const userId = req.user?.id;
+  const { productId } = req.params;
+
+  try {
+    // Check if user has any order containing this product with DELIVERED status.
+    // We join through OrderItem since Order doesn't have a direct productId.
+    const orderItem = await prisma.orderItem.findFirst({
+      where: {
+        productId,
+        order: {
+          userId,
+          // ── Only count delivered orders as "verified purchase" ────────────────
+          // Change to include more statuses (e.g. SHIPPED) if your policy differs.
+          deliveryStatus: "DELIVERED",
+        },
+      },
+      select: { id: true },
+    });
+
+    return res.status(200).json({
+      success: true,
+      hasPurchased: orderItem !== null,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 // Create product review
 export async function createReview(req: any, res: Response, next: NextFunction) {
   const userId = req.user?.id;
   const { rating, comment, title, productId } = req.body;
 
-  // TODO: - find Product to create review?
-  // TODO: - find existing review for that product. Below already implemented
-
   try {
+    // ── Server-side verification: must be a verified buyer ────────────────────
+    const orderItem = await prisma.orderItem.findFirst({
+      where: {
+        productId,
+        order: {
+          userId,
+          deliveryStatus: "DELIVERED",
+        },
+      },
+      select: { id: true },
+    });
+
+    if (!orderItem) {
+      return res.status(403).json({
+        success: false,
+        message: "Only verified buyers can review this product.",
+      });
+    }
+
     const review = await prisma.review.create({
       data: {
         rating,

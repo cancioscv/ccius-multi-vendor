@@ -26,6 +26,7 @@ import {
   updateReview,
   getProductReviews,
   getProductById,
+  hasPurchasedProduct,
 } from "../controller/product.controller.js";
 import { isAuth, isSeller } from "@e-com/libs";
 
@@ -63,5 +64,6 @@ router.post("/create-review", isAuth, createReview);
 router.get("/product/:slug/reviews", isAuth, getProductReviews);
 router.put("/update-review/:reviewId", isAuth, updateReview);
 router.get("/review/:productId", isAuth, getReview);
+router.get("/has-purchased-product/:productId", isAuth, hasPurchasedProduct);
 
 export default router;
