@@ -26,27 +26,33 @@ const PAYMENT_STATUS_STYLES: Record<string, string> = {
   REFUNDED: "bg-purple-100 text-purple-700 border-purple-200",
 };
 
-// ─── Review button per item ────────────────────────────────────────────────────
-// Accepts the order delivery status and the item's existing review (if any).
-function ReviewButton({
-  productId,
-  orderId,
-  deliveryStatus,
-  existingReview,
-}: {
-  productId: string;
-  orderId: string;
-  deliveryStatus: string;
-  existingReview?: { id: string; createdAt: string } | null;
-}) {
+// ─── Review button — fetches its own review state independently ───────────────
+// This is the key fix: instead of relying on the review data embedded in the
+// order payload (which is stale after the user submits a review and navigates
+// back), each button queries /product/api/review/:productId fresh on mount.
+// The queryKey ["reviews", productId] is the same key used by the review page
+// and by ReviewForm, so React Query's cache is already warm when the user
+// navigates back — no extra network request in the happy path.
+function ReviewButton({ productId, orderId, deliveryStatus }: { productId: string; orderId: string; deliveryStatus: string }) {
   const router = useRouter();
   const isDelivered = deliveryStatus === "DELIVERED";
 
-  // ✅ Always include orderId so the review page can invalidate this order's cache on submit
+  // Fetch this user's own review for this product.
+  // staleTime: 0 ensures we always revalidate when this component mounts,
+  // so navigating back from the review page picks up the newly created review.
+  const { data: reviewData, isLoading } = useQuery({
+    queryKey: ["reviews", productId],
+    queryFn: async () => {
+      const res = await axiosInstance.get(`/product/api/review/${productId}`);
+      return res.data.review ?? null;
+    },
+    enabled: isDelivered, // no point fetching if order not delivered
+    staleTime: 0, // always revalidate on mount — catches reviews just written
+  });
+
   const reviewUrl = `/review/${productId}?orderId=${orderId}`;
 
   if (!isDelivered) {
-    // Order not yet delivered — show disabled pill
     return (
       <div className="flex items-center gap-1 text-xs text-gray-400 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 cursor-not-allowed select-none">
         <Clock className="w-3.5 h-3.5" />
@@ -55,8 +61,18 @@ function ReviewButton({
     );
   }
 
-  if (existingReview) {
-    // Already reviewed — show "Edit Review" + date
+  // While the review check is in-flight, show a neutral placeholder
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-1 text-xs text-gray-400 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 select-none">
+        <span className="w-3 h-3 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
+        Loading…
+      </div>
+    );
+  }
+
+  if (reviewData) {
+    // User already has a review for this product
     return (
       <div className="flex flex-col items-end gap-0.5">
         <button
@@ -67,7 +83,7 @@ function ReviewButton({
         </button>
         <span className="text-[10px] text-gray-400">
           Reviewed on{" "}
-          {new Date(existingReview.createdAt).toLocaleDateString("en-US", {
+          {new Date(reviewData.createdAt).toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
           })}
@@ -241,13 +257,8 @@ export default function OrderDetailPage() {
                   </div>
                   <div className="flex flex-col items-end gap-2">
                     <p className="font-bold text-gray-900 text-sm">${(item.price * item.quantity).toFixed(2)}</p>
-                    {/* ✅ Smart review button: shows correct state based on delivery + existing review */}
-                    <ReviewButton
-                      productId={item.productId}
-                      orderId={order.id}
-                      deliveryStatus={order.deliveryStatus}
-                      existingReview={item.product?.reviews?.[0] ?? null}
-                    />
+                    {/* ✅ Each ReviewButton fetches its own fresh review state */}
+                    <ReviewButton productId={item.productId} orderId={order.id} deliveryStatus={order.deliveryStatus} />
                   </div>
                 </div>
               ))}
