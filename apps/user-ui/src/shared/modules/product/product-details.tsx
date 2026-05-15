@@ -911,7 +911,54 @@ export default function ProductDetails({ product }: any) {
             </div>
           </div>
         ) : (
-          <p className="text-center py-10 text-gray-400">No reviews available yet!</p>
+          /* ── No reviews yet — still show the Write a Review button for eligible users ── */
+          <div className="flex flex-col items-center gap-6 py-6 sm:flex-row sm:items-start sm:gap-10">
+            {/* Write a Review button (same logic as above, extracted for the empty state) */}
+            <div className="w-full sm:w-[280px] shrink-0 bg-gray-50 rounded-xl border border-gray-100 p-5">
+              <p className="text-sm font-semibold text-gray-700 mb-1">Be the first to review</p>
+              <p className="text-xs text-gray-400 mb-5">Share your experience to help other shoppers.</p>
+
+              {!isLoggedIn ? (
+                <Link
+                  href={`/login?callbackUrl=${encodeURIComponent(`/product/${product?.slug}`)}`}
+                  className="w-full py-2.5 text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors flex items-center justify-center"
+                >
+                  Log in to Write a Review
+                </Link>
+              ) : !hasPurchasedProduct ? (
+                <div className="group relative">
+                  <button disabled className="w-full py-2.5 text-sm font-semibold bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed">
+                    Write a Review
+                  </button>
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-10 bg-gray-800 text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap shadow-lg">
+                    Only verified buyers can review this product.
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800" />
+                  </div>
+                </div>
+              ) : myExistingProductReview ? (
+                <Link
+                  href={`/review/${product?.id}?slug=${product?.slug}`}
+                  className="w-full py-2.5 text-sm font-semibold border-2 border-orange-500 text-orange-500 hover:bg-orange-50 rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  ✏ Edit your Review
+                </Link>
+              ) : (
+                <Link
+                  href={`/review/${product?.id}?slug=${product?.slug}`}
+                  className="w-full py-2.5 text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors flex items-center justify-center"
+                >
+                  Write a Review
+                </Link>
+              )}
+            </div>
+
+            {/* Empty state message */}
+            <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
+              <p className="text-4xl mb-3">⭐</p>
+              <p className="text-base font-semibold text-gray-700 mb-1">No reviews yet</p>
+              <p className="text-sm text-gray-400">This product hasn't been reviewed yet. Be the first!</p>
+            </div>
+          </div>
         )}
       </div>
 
