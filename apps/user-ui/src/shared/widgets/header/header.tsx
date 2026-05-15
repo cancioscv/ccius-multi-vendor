@@ -268,7 +268,7 @@ export default function Header() {
             />
 
             <Link
-              href={user ? "/profile" : "/login"}
+              href={user ? "/profile" : "/login?callbackUrl=/profile"}
               className="relative flex flex-col items-center gap-[3px] px-2.5 py-1 rounded-md hover:bg-[#fbf0e9] transition-all duration-300 group"
             >
               <User size={isShrunken ? 18 : 22} className="text-gray-600 group-hover:text-orange-700 transition-colors" />

@@ -168,10 +168,8 @@ export default function CartPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("stripe");
 
   useEffect(() => {
-    if (isLoading && !user) {
-      router.push("/login?callbackUrl=/cart");
-    }
-  }, [user, isLoading]);
+    router.push(user ? "/cart" : "/login?callbackUrl=/cart");
+  }, [user]);
 
   function decreaseQuantity(id: string | undefined) {
     useCartStore.setState((state: any) => ({
